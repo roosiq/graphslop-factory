@@ -1,0 +1,109 @@
+schema_version: 1
+baseline_id: intent-v1
+project_id: graphslop
+status: approved
+immutable: true
+approved_at: 2026-07-27T14:25:00-04:00
+approval:
+  actor: authenticated_project_owner
+  message_id: msg-approval-intent-v1-20260727-01
+  quote: Approved
+  displayed_artifact: revised_intent_baseline_summary
+  authority_granted:
+    - generate_proposed_solution_graph
+    - create_solution_plan
+    - create_execution_task_plan
+  authority_not_granted:
+    - modify_application_code
+    - execute_repository_tasks
+    - create_pull_request
+    - merge
+    - deploy
+    - change_domain_or_traffic
+source:
+  specification: specs/001-initial-product-intent/spec.md
+  specification_sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  constitution: .specify/memory/constitution.md
+  constitution_version: 1.1.0
+  constitution_sha256: fd053f3743192283045a165c0675ae69b8057c8b2284c7984ef4c34124faeea2
+intent_node_versions:
+  INT-001: 2
+  INT-002: 1
+  INT-003: 1
+  INT-004: 1
+  INT-005: 1
+  INT-006: 1
+  INT-007: 1
+  INT-008: 1
+  INT-009: 1
+  INT-010: 1
+  INT-011: 1
+  INT-012: 1
+  INT-013: 1
+  INT-014: 1
+  INT-015: 2
+  INT-016: 1
+  INT-017: 2
+  INT-018: 1
+  INT-019: 2
+  INT-020: 1
+  INT-021: 2
+  INT-022: 1
+  INT-023: 1
+  INT-024: 1
+exclusion_versions:
+  EXC-001: 1
+  EXC-002: 1
+  EXC-003: 1
+  EXC-004: 1
+  EXC-005: 1
+  EXC-006: 1
+  EXC-007: 1
+  EXC-008: 1
+  EXC-009: 1
+  EXC-010: 1
+  EXC-011: 1
+  EXC-012: 1
+  EXC-013: 1
+  EXC-014: 1
+decision_versions:
+  UNR-001: 2
+  DEC-002: 1
+unresolved_blocking_questions: []
+protected_assertions:
+  - id: no-premature-code
+    statement: No application code or repository execution may begin before both intent and solution baselines are approved.
+    source_intent_nodes: [INT-003, INT-009, INT-010, INT-011]
+  - id: three-real-graphs
+    statement: Intent, Solution, and Execution are persistent typed runtime graphs, not prose substitutes.
+    source_intent_nodes: [INT-005, INT-010, INT-011, INT-021, INT-022]
+  - id: caveman-control-surface
+    statement: The owner controls and corrects the factory in ordinary language without authoring graph syntax or prompts.
+    source_intent_nodes: [INT-004, INT-023]
+  - id: complete-traceability
+    statement: Execution traces to Solution, and Solution traces to approved Intent.
+    source_intent_nodes: [INT-010, INT-011, INT-012, INT-018]
+  - id: immutable-baselines
+    statement: Approved baseline versions are never silently overwritten.
+    source_intent_nodes: [INT-006, INT-009, INT-016]
+  - id: owner-only-private-workspace
+    statement: Only the one authenticated project owner may access project state, connect the repository, or authorize execution.
+    source_intent_nodes: [INT-019]
+  - id: single-project-repository
+    statement: The first release supports one active project and one connected repository.
+    source_intent_nodes: [INT-017, INT-019, INT-024]
+  - id: sequential-single-adapter
+    statement: The first release implements one execution-provider adapter and dispatches at most one task at a time.
+    source_intent_nodes: [INT-017, INT-024]
+  - id: owner-authorized-repair
+    statement: Repair tasks are typed graph work but cannot dispatch without explicit owner authorization.
+    source_intent_nodes: [INT-015, INT-024]
+  - id: no-public-api-requirement
+    statement: A public developer API is not required for the first release.
+    source_intent_nodes: [INT-024]
+  - id: no-hosted-execution-requirement
+    statement: The first release does not require repository code to execute inside the hosted web runtime.
+    source_intent_nodes: [INT-024]
+  - id: no-autonomous-release
+    statement: Draft pull request readiness grants no merge, deployment, domain, or traffic authority.
+    source_intent_nodes: [INT-017, INT-018, INT-019]

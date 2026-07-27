@@ -1,0 +1,2751 @@
+schema_version: 1
+execution_id: execution-v1
+project_id: graphslop
+status: authorized
+compiled_at: '2026-07-27T15:45:07-04:00'
+authorized_at: '2026-07-27T15:45:07-04:00'
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-approval-solution-v1-20260727-01
+  quote: Approved
+  scope: bounded_local_execution_only
+  does_not_authorize:
+  - push
+  - pull_request
+  - merge
+  - deploy
+  - domain_cutover
+  - traffic_cutover
+source_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+transformation:
+  id: transform-solution-v1-to-execution-v1
+  compiler_contract_version: 1
+  source_graph: solution-graph-v1
+  source_node_count: 72
+  generated_task_count: 40
+  validation:
+    all_tasks_trace_to_solution: true
+    all_solution_nodes_have_task_coverage: true
+    all_tasks_trace_transitively_to_intent: true
+    dependency_graph_acyclic: true
+    exactly_one_task_ready: true
+    bounded_paths_and_retries: true
+    independent_review_assignments: true
+graph:
+  id: execution-graph-v1
+  kind: Execution
+  nodes:
+  - id: T001
+    contract_id: TC-001
+    type: Implement
+    objective: Create the deterministic npm-workspace and TypeScript build skeleton
+    status: ready
+    satisfies_solution_nodes:
+    - SOL-TECH-001
+    - SOL-APP-001
+    traces_to_intent_nodes:
+    - INT-017
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies: []
+    allowed_paths:
+    - package.json
+    - package-lock.json
+    - tsconfig*.json
+    - ".nvmrc"
+    - apps/*/package.json
+    - packages/*/package.json
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No runtime behavior or dependency outside approved stack
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-001
+      statement: "`npm ci`, workspace package discovery, `npm run typecheck`, and
+        Node 24 engine rejection fixture."
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T002
+    contract_id: TC-002
+    type: Implement
+    objective: Configure formatting, lint, type, unit, browser, and build commands
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-TEST-001
+    - SOL-TEST-002
+    - SOL-TEST-003
+    - SOL-TEST-004
+    - SOL-TEST-005
+    - SOL-TEST-006
+    - SOL-TEST-007
+    - SOL-TEST-008
+    - SOL-TEST-009
+    - SOL-TEST-010
+    - SOL-TEST-011
+    - SOL-TEST-012
+    traces_to_intent_nodes:
+    - INT-018
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T001
+    allowed_paths:
+    - ".prettierrc*"
+    - eslint.config.*
+    - vitest*.ts
+    - playwright.config.ts
+    - vite.config.ts
+    - ".gitignore"
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No hosted CI or deploy workflow
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-002
+      statement: "`npm run format:check`, `npm run lint`, `npm run test -- --run`,
+        `npm run build`, and Playwright config discovery."
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T003
+    contract_id: TC-003
+    type: Implement
+    objective: Define common strict, implementation-portable schemas and exported
+      JSON Schema registry
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-TECH-003
+    - SOL-API-001
+    - SOL-API-002
+    - SOL-RULE-008
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-020
+    - INT-021
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T001
+    allowed_paths:
+    - packages/contracts/**
+    - tests/contract/common-*
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No graph-specific behavior or provider-specific authority
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-003
+      statement: common-contract valid/invalid fixtures, unknown-field rejection,
+        exported JSON Schema round-trip, and provider/runtime substitution without
+        contract or authority changes.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T004
+    contract_id: TC-004
+    type: Implement
+    objective: Implement canonical graph schemas, RFC 8785 hashing, and immutable
+      delta application
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-001
+    - SOL-DATA-001
+    - SOL-DATA-002
+    - SOL-DATA-003
+    - SOL-DATA-004
+    traces_to_intent_nodes:
+    - INT-005
+    - INT-006
+    - INT-021
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T003
+    allowed_paths:
+    - packages/graph-kernel/src/schema/**
+    - packages/graph-kernel/src/canonical/**
+    - packages/graph-kernel/src/delta/**
+    - packages/graph-kernel/test/schema/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No filesystem, UI, model, Git, or mutable graph authority
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-004
+      statement: schema enumeration fixtures, RFC 8785 vectors and errata, stable
+        SHA-256, input immutability, atomic delta rejection.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T005
+    contract_id: TC-005
+    type: Implement
+    objective: Implement deterministic indexes, traversal, trace, impact, and stable
+      topological order
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-001
+    traces_to_intent_nodes:
+    - INT-008
+    - INT-011
+    - INT-016
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T004
+    allowed_paths:
+    - packages/graph-kernel/src/indexes/**
+    - packages/graph-kernel/src/traversal/**
+    - packages/graph-kernel/test/traversal/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No Graphology authority or persisted indexes
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-005
+      statement: bounded BFS/DFS, active versions, contradiction, trace, impact, cycle
+        rejection, ready tasks, and stable topological order.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T006
+    contract_id: TC-006
+    type: Implement
+    objective: Implement single-writer atomic file persistence, recovery, export,
+      and deletion
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-002
+    - SOL-TECH-004
+    traces_to_intent_nodes:
+    - INT-006
+    - INT-009
+    - INT-017
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T004
+    allowed_paths:
+    - packages/file-store/**
+    - tests/integration/file-store/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No repository-local authority or database
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-006
+      statement: expected-head CAS, atomic write fault points, recovery, export, closure,
+        complete deletion, and content-free receipt.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T007
+    contract_id: TC-007
+    type: Implement
+    objective: Implement lifecycle, readiness, approvals, protected assertions, and
+      rejected-transition records
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-003
+    - SOL-DATA-005
+    - SOL-RULE-001
+    - SOL-RULE-002
+    - SOL-RULE-003
+    - SOL-RULE-004
+    - SOL-RULE-005
+    - SOL-RULE-006
+    - SOL-RULE-007
+    - SOL-RULE-008
+    traces_to_intent_nodes:
+    - INT-007
+    - INT-009
+    - INT-013
+    - INT-015
+    - INT-020
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T003
+    - T004
+    allowed_paths:
+    - packages/control-state/src/**
+    - packages/control-state/test/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No model judgment advances state
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-007
+      statement: every allowed and rejected lifecycle transition, formula fixture,
+        blocking override, protected assertion, exact approval authority.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T008
+    contract_id: TC-008
+    type: Implement
+    objective: Implement loopback owner claim, session, CSRF, and sole-owner enforcement
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-PAGE-001
+    - SOL-RULE-004
+    traces_to_intent_nodes:
+    - INT-019
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T001
+    - T003
+    allowed_paths:
+    - apps/control-plane/src/auth/**
+    - apps/control-plane/tests/auth/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No accounts, OAuth, collaborators, or hosted auth
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-008
+      statement: one-time claim, reuse/expiry, CSRF, session expiry, non-loopback,
+        anonymous, second-owner, and runner-credential rejection.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T009
+    contract_id: TC-009
+    type: Implement
+    objective: Implement structured evidence, secret redaction, safe logs, and health
+      contracts
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-DATA-007
+    - SOL-DATA-008
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-015
+    - INT-018
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T003
+    allowed_paths:
+    - apps/runner/src/evidence/**
+    - packages/contracts/src/evidence/**
+    - tests/security/evidence/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No raw stream or repository-content retention
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-009
+      statement: secret corpus redaction, size limits, log field allowlist, raw stream
+        deletion, health response, and evidence-schema rejection.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T010
+    contract_id: TC-010
+    type: Test
+    objective: Build versioned conformance manifests, graph fixtures, and disposable
+      Git repositories
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-TEST-001
+    - SOL-TEST-002
+    - SOL-TEST-003
+    - SOL-TEST-004
+    - SOL-TEST-005
+    - SOL-TEST-006
+    - SOL-TEST-007
+    - SOL-TEST-008
+    - SOL-TEST-009
+    - SOL-TEST-010
+    - SOL-TEST-011
+    - SOL-TEST-012
+    traces_to_intent_nodes:
+    - INT-018
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T001
+    - T003
+    allowed_paths:
+    - tests/fixtures/**
+    - packages/testing/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No live provider or external mutations
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-010
+      statement: fixture-manifest minimum counts, unique IDs, requirement mappings,
+        disposable repo cleanup, and zero network/external mutation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T011
+    contract_id: TC-011
+    type: Implement
+    objective: Implement Intent graph schemas, edge compatibility, answer classification,
+      question ranking, and readiness tests
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-001
+    - SOL-FEAT-002
+    - SOL-FEAT-003
+    - SOL-TEST-001
+    - SOL-TEST-002
+    - SOL-TEST-003
+    traces_to_intent_nodes:
+    - INT-003
+    - INT-004
+    - INT-005
+    - INT-006
+    - INT-007
+    - INT-008
+    - INT-021
+    - INT-022
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T005
+    - T010
+    allowed_paths:
+    - packages/contracts/src/intent/**
+    - packages/graph-kernel/src/intent/**
+    - tests/contract/intent/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No code execution or Solution generation
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-011
+      statement: all Intent enums and compatibility rows, correction/supersession,
+        contradiction, question ties, readiness weights, blockers.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T012
+    contract_id: TC-012
+    type: Implement
+    objective: Implement schema-bound Codex proposal invocation and all failure dispositions
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-004
+    - SOL-RULE-001
+    traces_to_intent_nodes:
+    - INT-003
+    - INT-004
+    - INT-007
+    - INT-014
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T003
+    - T009
+    - T011
+    allowed_paths:
+    - packages/codex-adapter/src/proposal/**
+    - packages/codex-adapter/test/proposal/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No direct graph mutation, repository access, or unbounded retry
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-012
+      statement: typed proposal success plus timeout, termination, auth/quota, refusal,
+        invalid JSON, schema, stale hash, unknown enum, and secret failure.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T013
+    contract_id: TC-013
+    type: Implement
+    objective: Implement message append, Intent delta validation/application, contradiction
+      detection, projection, and next-question orchestration
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-WORK-001
+    - SOL-FEAT-001
+    - SOL-FEAT-002
+    - SOL-FEAT-003
+    traces_to_intent_nodes:
+    - INT-002
+    - INT-003
+    - INT-004
+    - INT-005
+    - INT-006
+    - INT-007
+    - INT-008
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T006
+    - T007
+    - T011
+    - T012
+    allowed_paths:
+    - apps/control-plane/src/services/intent/**
+    - apps/control-plane/src/api/messages/**
+    - apps/control-plane/tests/intent/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No approval inference or repository mutation
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-013
+      statement: raw-message-first ordering, complete graph delta, deterministic projection,
+        exactly one question, failure without graph mutation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T014
+    contract_id: TC-014
+    type: Implement
+    objective: Implement accessible conversation and compact graph-projection owner
+      interface
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-001
+    - SOL-COMP-002
+    - SOL-PAGE-001
+    - SOL-TECH-002
+    traces_to_intent_nodes:
+    - INT-004
+    - INT-008
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T002
+    - T008
+    - T011
+    allowed_paths:
+    - apps/control-plane/src/web/features/intent/**
+    - apps/control-plane/src/web/components/project-state/**
+    - apps/control-plane/tests/components/intent/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No raw graph editor or prompt editor
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-014
+      statement: component tests for empty/loading/error/blocked/history/provenance
+        states, keyboard and non-color state distinctions.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T015
+    contract_id: TC-015
+    type: Verify
+    objective: Prove rough input produces graph state, one question, and zero repository
+      change
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-TEST-001
+    - SOL-TEST-002
+    - SOL-TEST-003
+    traces_to_intent_nodes:
+    - INT-003
+    - INT-004
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T013
+    - T014
+    allowed_paths:
+    - tests/e2e/us1-intent.spec.ts
+    - tests/fixtures/conversations/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - Fixture provider only; no live model
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-015
+      statement: first rough request produces Intent graph/projection/question and
+        leaves repository commit, status, and worktrees unchanged.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T016
+    contract_id: TC-016
+    type: Implement
+    objective: Implement exact graph/projection approval and immutable Intent Baseline
+      service
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-004
+    - SOL-RULE-002
+    traces_to_intent_nodes:
+    - INT-007
+    - INT-009
+    - INT-019
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T006
+    - T007
+    - T013
+    allowed_paths:
+    - apps/control-plane/src/services/approval/**
+    - apps/control-plane/src/api/intent/**
+    - apps/control-plane/tests/approval/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No Solution approval or approval of stale/blocked state
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-016
+      statement: exact hash approval, stale/wrong projection rejection, blocking rejection,
+        immutable baseline bytes, authority-not-granted fields.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T017
+    contract_id: TC-017
+    type: Verify
+    objective: Implement Intent approval review UI and stale/blocking/second-owner
+      acceptance
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-003
+    - SOL-TEST-004
+    traces_to_intent_nodes:
+    - INT-008
+    - INT-009
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T014
+    - T016
+    allowed_paths:
+    - apps/control-plane/src/web/features/approval/**
+    - tests/e2e/us2-intent-approval.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No approval from model or runner credentials
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-017
+      statement: owner can review and approve current version; stale, blocked, model,
+        runner, anonymous, and second-owner attempts fail.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T018
+    contract_id: TC-018
+    type: Implement
+    objective: Implement Solution graph schema, proposal compiler, trace validation,
+      transformation, and approval tests
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-005
+    - SOL-WORK-002
+    - SOL-TEST-005
+    traces_to_intent_nodes:
+    - INT-010
+    - INT-021
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T005
+    - T012
+    - T016
+    allowed_paths:
+    - packages/contracts/src/solution/**
+    - packages/graph-kernel/src/solution/**
+    - apps/control-plane/src/services/solution/**
+    - tests/contract/solution/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No orphan product node or observable support-only behavior
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-018
+      statement: every Solution type, product trace, support label, orphan rejection,
+        transformation record, immutable Solution approval candidate.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T019
+    contract_id: TC-019
+    type: Implement
+    objective: Implement plain-language Solution review, technical-default separation,
+      and exact approval UI
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-003
+    - SOL-FEAT-005
+    traces_to_intent_nodes:
+    - INT-010
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T017
+    - T018
+    allowed_paths:
+    - apps/control-plane/src/web/features/solution/**
+    - apps/control-plane/src/api/solution/**
+    - tests/e2e/us3-solution.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No implementation start or hidden technical approval
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-019
+      statement: plain-language Solution projection separates product behavior and
+        technical defaults and cannot trigger implementation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T020
+    contract_id: TC-020
+    type: Implement
+    objective: Implement Execution task schema, DAG validation, stable readiness,
+      and Solution-to-Execution compiler
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-006
+    - SOL-DATA-006
+    - SOL-TEST-005
+    traces_to_intent_nodes:
+    - INT-011
+    - INT-012
+    - INT-021
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T005
+    - T018
+    allowed_paths:
+    - packages/contracts/src/execution/**
+    - packages/graph-kernel/src/execution/**
+    - apps/control-plane/src/services/execution/compiler/**
+    - tests/contract/execution/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No fixed universal task sequence or task authorization
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-020
+      statement: every task type/field, dependency DAG, stable order, stale baseline,
+        orphan trace, missing verifier, and unbounded path/retry rejection.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T021
+    contract_id: TC-021
+    type: Implement
+    objective: Implement signed expiring single-task leases, idempotency, cancellation,
+      and stale-result rejection
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-006
+    - SOL-API-002
+    - SOL-TEST-006
+    traces_to_intent_nodes:
+    - INT-013
+    - INT-017
+    - INT-019
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T007
+    - T020
+    allowed_paths:
+    - apps/control-plane/src/services/leases/**
+    - apps/control-plane/src/api/runner/**
+    - tests/contract/runner/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No concurrent lease or implicit authorization
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-021
+      statement: signed lease success and forged, stale, expired, duplicate-conflict,
+        cancelled, wrong-base, wrong-capability, and concurrent rejection.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T022
+    contract_id: TC-022
+    type: Implement
+    objective: Implement Codex CLI capability probe, generated permission profile,
+      implementation invocation, and typed result
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-INTG-001
+    - SOL-SVC-007
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-013
+    - INT-014
+    - INT-015
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T009
+    - T010
+    - T020
+    allowed_paths:
+    - packages/codex-adapter/src/execution/**
+    - packages/codex-adapter/test/execution/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No second provider, inherited secrets, shell string, or fail-open probe
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-022
+      statement: local CLI capability probe, fail-closed missing permission feature,
+        argv construction, environment allowlist, schema result, process timeout.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T023
+    contract_id: TC-023
+    type: Implement
+    objective: Implement repository identity, worktree lifecycle, realpath-safe allowed
+      paths, Git diff, and candidate commits
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-INTG-002
+    - SOL-SVC-007
+    - SOL-TEST-007
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-013
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T009
+    - T010
+    - T020
+    allowed_paths:
+    - apps/runner/src/repository/**
+    - apps/runner/tests/repository/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No primary-checkout write, `.git` mutation, symlink escape, submodule change,
+      or integration
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-023
+      statement: tracked/staged/deleted/renamed/untracked paths, realpath, symlink,
+        case collision, submodule, `.git`, primary checkout, cleanup.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T024
+    contract_id: TC-024
+    type: Implement
+    objective: Implement runner enrollment, lease polling, process cancellation, execution
+      orchestration, and result upload
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-WORK-003
+    - SOL-SVC-007
+    - SOL-API-002
+    - SOL-DEPLOY-001
+    traces_to_intent_nodes:
+    - INT-011
+    - INT-012
+    - INT-013
+    - INT-014
+    - INT-017
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T021
+    - T022
+    - T023
+    allowed_paths:
+    - apps/runner/src/lease/**
+    - apps/runner/src/execution/**
+    - apps/runner/src/index.ts
+    - apps/runner/tests/integration/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No graph-state write or external push
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-024
+      statement: enrollment, poll, ack, heartbeat, cancel process tree, idempotent
+        result/evidence upload, restart and lease recovery.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T025
+    contract_id: TC-025
+    type: Implement
+    objective: Implement Execution projection, dependency queue, exact task authorization,
+      and sequential-dispatch UI
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-004
+    - SOL-FEAT-006
+    - SOL-FEAT-007
+    traces_to_intent_nodes:
+    - INT-011
+    - INT-012
+    - INT-017
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T019
+    - T020
+    - T021
+    - T024
+    allowed_paths:
+    - apps/control-plane/src/web/features/execution/**
+    - apps/control-plane/src/api/execution/**
+    - tests/e2e/us4-execution.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No auto-dispatch or graph/task file editing
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-025
+      statement: dependency projection, one exact authorization, second-task rejection,
+        stale task rejection, no graph/task-file editing.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T026
+    contract_id: TC-026
+    type: Implement
+    objective: Implement evidence ingestion, content hashes, command outcomes, requirement
+      mapping, and retention
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-DATA-007
+    - SOL-FEAT-008
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-015
+    - INT-018
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T009
+    - T024
+    allowed_paths:
+    - apps/control-plane/src/services/evidence/**
+    - apps/control-plane/src/api/evidence/**
+    - tests/integration/evidence/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No raw streams, secrets, or self-acceptance
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-026
+      statement: exact evidence hashes and mappings, duplicate upload, malformed record,
+        retention, redaction, and self-report non-acceptance.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T027
+    contract_id: TC-027
+    type: Implement
+    objective: Implement fresh verifier worktree, deterministic checks, separate semantic
+      verifier, and acceptance decision
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-008
+    - SOL-RULE-005
+    - SOL-TEST-008
+    traces_to_intent_nodes:
+    - INT-014
+    - INT-015
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T022
+    - T023
+    - T026
+    allowed_paths:
+    - apps/runner/src/verification/**
+    - packages/codex-adapter/src/verification/**
+    - tests/integration/verification/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - Verifier cannot edit source, share invocation, or accept without evidence
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-027
+      statement: fresh candidate verifier worktree, deterministic checks, distinct
+        invocation, semantic mapping, verifier-write rejection, accepted integration.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T028
+    contract_id: TC-028
+    type: Implement
+    objective: Implement eight-type drift classification, bounded Repair proposal,
+      owner authorization, and escalation
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-009
+    - SOL-DATA-008
+    - SOL-RULE-006
+    - SOL-TEST-009
+    traces_to_intent_nodes:
+    - INT-015
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T007
+    - T020
+    - T027
+    allowed_paths:
+    - apps/control-plane/src/services/drift/**
+    - apps/control-plane/src/services/repair/**
+    - tests/integration/drift/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No automatic repair, baseline change, or second repair after exhaustion
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-028
+      statement: all eight drift types, complete report, idle Repair proposal, exact
+        owner authorization, one budget, fresh base, exhaustion escalation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T029
+    contract_id: TC-029
+    type: Implement
+    objective: Implement evidence, drift, and repair-decision UI with independent
+      provenance
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-005
+    - SOL-COMP-006
+    - SOL-WORK-004
+    traces_to_intent_nodes:
+    - INT-015
+    - INT-018
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T025
+    - T026
+    - T028
+    allowed_paths:
+    - apps/control-plane/src/web/features/evidence/**
+    - apps/control-plane/src/web/features/drift/**
+    - apps/control-plane/src/api/repairs/**
+    - tests/e2e/us5-verification.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No hidden auto-retry or color-only severity
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-029
+      statement: evidence provenance, drift severity semantics, repair decision, error/empty
+        states, keyboard use, and no hidden retry.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T030
+    contract_id: TC-030
+    type: Implement
+    objective: Implement successor Intent delta, cross-graph impact traversal, classification,
+      pause, and recompilation proposal
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-010
+    - SOL-WORK-005
+    - SOL-TEST-010
+    traces_to_intent_nodes:
+    - INT-016
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T005
+    - T007
+    - T020
+    - T028
+    allowed_paths:
+    - apps/control-plane/src/services/change-management/**
+    - tests/integration/change-management/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No approved-history rewrite or affected-task resume
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-030
+      statement: unaffected/changed/discarded/new classifications, trace evidence,
+        affected pause, unaffected preservation, successor reapproval.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T031
+    contract_id: TC-031
+    type: Implement
+    objective: Implement ordinary-language change review and affected/unaffected/discarded/new
+      projection
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-010
+    - SOL-COMP-002
+    traces_to_intent_nodes:
+    - INT-016
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T029
+    - T030
+    allowed_paths:
+    - apps/control-plane/src/web/features/change-management/**
+    - apps/control-plane/src/api/changes/**
+    - tests/e2e/us6-change.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No manual graph editing or silent successor approval
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-031
+      statement: ordinary-language change projection and approval boundaries with
+        no graph syntax.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T032
+    contract_id: TC-032
+    type: Implement
+    objective: Implement completion gate, trace manifest, PR preview, exact remote/ref/body
+      authorization, and GitHub CLI adapter
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-011
+    - SOL-SVC-009
+    - SOL-INTG-003
+    - SOL-RULE-007
+    - SOL-DEPLOY-002
+    - SOL-TEST-011
+    traces_to_intent_nodes:
+    - INT-017
+    - INT-018
+    - INT-019
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T025
+    - T027
+    - T028
+    - T030
+    allowed_paths:
+    - apps/control-plane/src/services/completion/**
+    - apps/runner/src/repository/pull-request/**
+    - tests/integration/completion/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - Preview may not push; authorization may not merge or deploy
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-032
+      statement: complete gate blockers, trace manifest, no-remote preview, exact
+        authorization hashes, draft-only command, no merge/deploy.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T033
+    contract_id: TC-033
+    type: Implement
+    objective: Implement draft-PR readiness review and no-remote/no-authority owner
+      journey
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-COMP-005
+    - SOL-FEAT-011
+    traces_to_intent_nodes:
+    - INT-018
+    - INT-019
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T029
+    - T031
+    - T032
+    allowed_paths:
+    - apps/control-plane/src/web/features/completion/**
+    - apps/control-plane/src/api/pull-request/**
+    - tests/e2e/us7-completion.spec.ts
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No actual PR without future exact authorization
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-033
+      statement: owner sees every blocker and PR preview; absent remote or authority
+        performs no external mutation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T034
+    contract_id: TC-034
+    type: Verify
+    objective: Complete the threat-model security suite for sessions, leases, paths,
+      commands, secrets, and authority
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-RULE-001
+    - SOL-RULE-002
+    - SOL-RULE-003
+    - SOL-RULE-004
+    - SOL-RULE-005
+    - SOL-RULE-006
+    - SOL-RULE-007
+    traces_to_intent_nodes:
+    - INT-013
+    - INT-019
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T033
+    allowed_paths:
+    - tests/security/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No live secrets or hostile-repository claim
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-034
+      statement: every threat-model row has one rejecting case and one allowed control
+        case.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T035
+    contract_id: TC-035
+    type: Verify
+    objective: Complete fault-injected file, process, lease, and restart recovery
+      acceptance
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-002
+    - SOL-SVC-003
+    traces_to_intent_nodes:
+    - INT-006
+    - INT-009
+    - INT-018
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T033
+    allowed_paths:
+    - tests/integration/recovery/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No deletion or rewriting of approved artifacts
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-035
+      statement: crash before/after every store step, control/runner restart, lease
+        expiry, evidence interruption, and prior-valid-head recovery.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T036
+    contract_id: TC-036
+    type: Verify
+    objective: Complete responsive, keyboard, semantics, focus, axe, console, and
+      failed-request browser acceptance
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-PAGE-001
+    - SOL-TEST-012
+    traces_to_intent_nodes:
+    - INT-008
+    - INT-017
+    - INT-023
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T033
+    allowed_paths:
+    - tests/e2e/**
+    - tests/accessibility/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No hosted Safari claim or visual graph editor
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-036
+      statement: Chromium/Firefox/WebKit at 360/390/768/1440, keyboard, focus, semantics,
+        axe, console, failed requests, refresh, deep links.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T037
+    contract_id: TC-037
+    type: Verify
+    objective: Benchmark graph and UI performance against the fixed acceptance profile
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-SVC-001
+    - SOL-SVC-002
+    - SOL-SVC-003
+    - SOL-SVC-004
+    - SOL-SVC-005
+    traces_to_intent_nodes:
+    - INT-008
+    - INT-017
+    - INT-022
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T033
+    allowed_paths:
+    - tests/performance/**
+    - scripts/benchmark/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No benchmark-specific product behavior
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-037
+      statement: fixed 500/250/2,000 dataset, 10 warmups, 100 runs, p50/p95/max, graph
+        operations under 100 ms p95, UI under 2 seconds.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T038
+    contract_id: TC-038
+    type: Verify
+    objective: Run an explicitly enabled live Codex smoke task in a disposable trusted
+      fixture repository
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-INTG-001
+    - SOL-INTG-002
+    traces_to_intent_nodes:
+    - INT-012
+    - INT-013
+    - INT-014
+    - INT-015
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T034
+    - T035
+    allowed_paths:
+    - tests/live/codex/**
+    - scripts/live-codex-smoke.*
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No default CI model call, external repo, push, PR, or retained raw stream
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-038
+      statement: opt-in live Codex task produces typed result and redacted evidence
+        in disposable repo with zero external Git mutation.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T039
+    contract_id: TC-039
+    type: Document
+    objective: Reconcile documentation, trace matrix, threat model, quickstart, and
+      exact verification commands
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-APP-001
+    - SOL-TEST-001
+    - SOL-TEST-002
+    - SOL-TEST-003
+    - SOL-TEST-004
+    - SOL-TEST-005
+    - SOL-TEST-006
+    - SOL-TEST-007
+    - SOL-TEST-008
+    - SOL-TEST-009
+    - SOL-TEST-010
+    - SOL-TEST-011
+    - SOL-TEST-012
+    traces_to_intent_nodes:
+    - INT-001
+    - INT-002
+    - INT-003
+    - INT-004
+    - INT-005
+    - INT-006
+    - INT-007
+    - INT-008
+    - INT-009
+    - INT-010
+    - INT-011
+    - INT-012
+    - INT-013
+    - INT-014
+    - INT-015
+    - INT-016
+    - INT-017
+    - INT-018
+    - INT-019
+    - INT-020
+    - INT-021
+    - INT-022
+    - INT-023
+    - INT-024
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T034
+    - T035
+    - T036
+    - T037
+    - T038
+    allowed_paths:
+    - README.md
+    - docs/**
+    - specs/001-initial-product-intent/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No baseline edit or deployment instructions presented as executed
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-039
+      statement: every documented command exists, links resolve, trace matrix covers
+        INT→SOL→task→check, immutable baseline hash still matches.
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  - id: T040
+    contract_id: TC-040
+    type: Integrate
+    objective: Run integrated compliance, quality, browser, and convergence review
+      and prepare the exact draft-PR artifact
+    status: blocked
+    satisfies_solution_nodes:
+    - SOL-FEAT-011
+    - SOL-RULE-007
+    traces_to_intent_nodes:
+    - INT-018
+    - INT-019
+    protected_baselines:
+      intent:
+        id: intent-v1
+        sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+      solution:
+        id: solution-v1
+        sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    dependencies:
+    - T039
+    allowed_paths:
+    - specs/001-initial-product-intent/evidence/**
+    - artifacts/pull-request/**
+    forbidden_changes:
+    - modify files outside allowed_paths
+    - change approved Intent or Solution baselines
+    - add unapproved product behavior, actors, storage, integrations, or authority
+    - push, create a pull request, merge, deploy, or change domain or traffic
+    - No push, PR creation, merge, deploy, or domain change without new exact authority
+    required_outputs:
+    - objective_result
+    - focused_tests
+    - redaction_safe_evidence_bundle
+    acceptance_checks:
+    - id: AC-040
+      statement: "`npm run ci`, production build, integrated spec review, code-quality
+        review, browser evidence, zero blocking drift, convergence report."
+    retry_limit: 1
+    completion_evidence:
+    - changed_files_and_hashes
+    - focused_failing_test
+    - focused_passing_test
+    - relevant_regression_result
+    - requirement_mapping
+    - implementer_invocation_id
+    - independent_specification_review
+    - independent_code_quality_review
+    - unresolved_issues
+    implementer_assignment: fresh_implementation_agent
+    verifier_assignment:
+    - fresh_specification_compliance_reviewer
+    - fresh_code_quality_reviewer
+  edges:
+  - id: EXEC-E-001
+    type: DEPENDS_ON
+    from: T002
+    to: T001
+  - id: EXEC-E-002
+    type: DEPENDS_ON
+    from: T003
+    to: T001
+  - id: EXEC-E-003
+    type: DEPENDS_ON
+    from: T004
+    to: T003
+  - id: EXEC-E-004
+    type: DEPENDS_ON
+    from: T005
+    to: T004
+  - id: EXEC-E-005
+    type: DEPENDS_ON
+    from: T006
+    to: T004
+  - id: EXEC-E-006
+    type: DEPENDS_ON
+    from: T007
+    to: T003
+  - id: EXEC-E-007
+    type: DEPENDS_ON
+    from: T007
+    to: T004
+  - id: EXEC-E-008
+    type: DEPENDS_ON
+    from: T008
+    to: T001
+  - id: EXEC-E-009
+    type: DEPENDS_ON
+    from: T008
+    to: T003
+  - id: EXEC-E-010
+    type: DEPENDS_ON
+    from: T009
+    to: T003
+  - id: EXEC-E-011
+    type: DEPENDS_ON
+    from: T010
+    to: T001
+  - id: EXEC-E-012
+    type: DEPENDS_ON
+    from: T010
+    to: T003
+  - id: EXEC-E-013
+    type: DEPENDS_ON
+    from: T011
+    to: T005
+  - id: EXEC-E-014
+    type: DEPENDS_ON
+    from: T011
+    to: T010
+  - id: EXEC-E-015
+    type: DEPENDS_ON
+    from: T012
+    to: T003
+  - id: EXEC-E-016
+    type: DEPENDS_ON
+    from: T012
+    to: T009
+  - id: EXEC-E-017
+    type: DEPENDS_ON
+    from: T012
+    to: T011
+  - id: EXEC-E-018
+    type: DEPENDS_ON
+    from: T013
+    to: T006
+  - id: EXEC-E-019
+    type: DEPENDS_ON
+    from: T013
+    to: T007
+  - id: EXEC-E-020
+    type: DEPENDS_ON
+    from: T013
+    to: T011
+  - id: EXEC-E-021
+    type: DEPENDS_ON
+    from: T013
+    to: T012
+  - id: EXEC-E-022
+    type: DEPENDS_ON
+    from: T014
+    to: T002
+  - id: EXEC-E-023
+    type: DEPENDS_ON
+    from: T014
+    to: T008
+  - id: EXEC-E-024
+    type: DEPENDS_ON
+    from: T014
+    to: T011
+  - id: EXEC-E-025
+    type: DEPENDS_ON
+    from: T015
+    to: T013
+  - id: EXEC-E-026
+    type: DEPENDS_ON
+    from: T015
+    to: T014
+  - id: EXEC-E-027
+    type: DEPENDS_ON
+    from: T016
+    to: T006
+  - id: EXEC-E-028
+    type: DEPENDS_ON
+    from: T016
+    to: T007
+  - id: EXEC-E-029
+    type: DEPENDS_ON
+    from: T016
+    to: T013
+  - id: EXEC-E-030
+    type: DEPENDS_ON
+    from: T017
+    to: T014
+  - id: EXEC-E-031
+    type: DEPENDS_ON
+    from: T017
+    to: T016
+  - id: EXEC-E-032
+    type: DEPENDS_ON
+    from: T018
+    to: T005
+  - id: EXEC-E-033
+    type: DEPENDS_ON
+    from: T018
+    to: T012
+  - id: EXEC-E-034
+    type: DEPENDS_ON
+    from: T018
+    to: T016
+  - id: EXEC-E-035
+    type: DEPENDS_ON
+    from: T019
+    to: T017
+  - id: EXEC-E-036
+    type: DEPENDS_ON
+    from: T019
+    to: T018
+  - id: EXEC-E-037
+    type: DEPENDS_ON
+    from: T020
+    to: T005
+  - id: EXEC-E-038
+    type: DEPENDS_ON
+    from: T020
+    to: T018
+  - id: EXEC-E-039
+    type: DEPENDS_ON
+    from: T021
+    to: T007
+  - id: EXEC-E-040
+    type: DEPENDS_ON
+    from: T021
+    to: T020
+  - id: EXEC-E-041
+    type: DEPENDS_ON
+    from: T022
+    to: T009
+  - id: EXEC-E-042
+    type: DEPENDS_ON
+    from: T022
+    to: T010
+  - id: EXEC-E-043
+    type: DEPENDS_ON
+    from: T022
+    to: T020
+  - id: EXEC-E-044
+    type: DEPENDS_ON
+    from: T023
+    to: T009
+  - id: EXEC-E-045
+    type: DEPENDS_ON
+    from: T023
+    to: T010
+  - id: EXEC-E-046
+    type: DEPENDS_ON
+    from: T023
+    to: T020
+  - id: EXEC-E-047
+    type: DEPENDS_ON
+    from: T024
+    to: T021
+  - id: EXEC-E-048
+    type: DEPENDS_ON
+    from: T024
+    to: T022
+  - id: EXEC-E-049
+    type: DEPENDS_ON
+    from: T024
+    to: T023
+  - id: EXEC-E-050
+    type: DEPENDS_ON
+    from: T025
+    to: T019
+  - id: EXEC-E-051
+    type: DEPENDS_ON
+    from: T025
+    to: T020
+  - id: EXEC-E-052
+    type: DEPENDS_ON
+    from: T025
+    to: T021
+  - id: EXEC-E-053
+    type: DEPENDS_ON
+    from: T025
+    to: T024
+  - id: EXEC-E-054
+    type: DEPENDS_ON
+    from: T026
+    to: T009
+  - id: EXEC-E-055
+    type: DEPENDS_ON
+    from: T026
+    to: T024
+  - id: EXEC-E-056
+    type: DEPENDS_ON
+    from: T027
+    to: T022
+  - id: EXEC-E-057
+    type: DEPENDS_ON
+    from: T027
+    to: T023
+  - id: EXEC-E-058
+    type: DEPENDS_ON
+    from: T027
+    to: T026
+  - id: EXEC-E-059
+    type: DEPENDS_ON
+    from: T028
+    to: T007
+  - id: EXEC-E-060
+    type: DEPENDS_ON
+    from: T028
+    to: T020
+  - id: EXEC-E-061
+    type: DEPENDS_ON
+    from: T028
+    to: T027
+  - id: EXEC-E-062
+    type: DEPENDS_ON
+    from: T029
+    to: T025
+  - id: EXEC-E-063
+    type: DEPENDS_ON
+    from: T029
+    to: T026
+  - id: EXEC-E-064
+    type: DEPENDS_ON
+    from: T029
+    to: T028
+  - id: EXEC-E-065
+    type: DEPENDS_ON
+    from: T030
+    to: T005
+  - id: EXEC-E-066
+    type: DEPENDS_ON
+    from: T030
+    to: T007
+  - id: EXEC-E-067
+    type: DEPENDS_ON
+    from: T030
+    to: T020
+  - id: EXEC-E-068
+    type: DEPENDS_ON
+    from: T030
+    to: T028
+  - id: EXEC-E-069
+    type: DEPENDS_ON
+    from: T031
+    to: T029
+  - id: EXEC-E-070
+    type: DEPENDS_ON
+    from: T031
+    to: T030
+  - id: EXEC-E-071
+    type: DEPENDS_ON
+    from: T032
+    to: T025
+  - id: EXEC-E-072
+    type: DEPENDS_ON
+    from: T032
+    to: T027
+  - id: EXEC-E-073
+    type: DEPENDS_ON
+    from: T032
+    to: T028
+  - id: EXEC-E-074
+    type: DEPENDS_ON
+    from: T032
+    to: T030
+  - id: EXEC-E-075
+    type: DEPENDS_ON
+    from: T033
+    to: T029
+  - id: EXEC-E-076
+    type: DEPENDS_ON
+    from: T033
+    to: T031
+  - id: EXEC-E-077
+    type: DEPENDS_ON
+    from: T033
+    to: T032
+  - id: EXEC-E-078
+    type: DEPENDS_ON
+    from: T034
+    to: T033
+  - id: EXEC-E-079
+    type: DEPENDS_ON
+    from: T035
+    to: T033
+  - id: EXEC-E-080
+    type: DEPENDS_ON
+    from: T036
+    to: T033
+  - id: EXEC-E-081
+    type: DEPENDS_ON
+    from: T037
+    to: T033
+  - id: EXEC-E-082
+    type: DEPENDS_ON
+    from: T038
+    to: T034
+  - id: EXEC-E-083
+    type: DEPENDS_ON
+    from: T038
+    to: T035
+  - id: EXEC-E-084
+    type: DEPENDS_ON
+    from: T039
+    to: T034
+  - id: EXEC-E-085
+    type: DEPENDS_ON
+    from: T039
+    to: T035
+  - id: EXEC-E-086
+    type: DEPENDS_ON
+    from: T039
+    to: T036
+  - id: EXEC-E-087
+    type: DEPENDS_ON
+    from: T039
+    to: T037
+  - id: EXEC-E-088
+    type: DEPENDS_ON
+    from: T039
+    to: T038
+  - id: EXEC-E-089
+    type: DEPENDS_ON
+    from: T040
+    to: T039
+dispatch_policy:
+  max_active_tasks: 1
+  ready_order: stable_topological_then_lexical_id
+  repair_dispatch: requires_separate_owner_authorization
+  stale_baseline_behavior: block_and_recompile
+human_projection: specs/001-initial-product-intent/tasks.md

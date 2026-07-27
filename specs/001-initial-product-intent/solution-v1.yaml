@@ -1,0 +1,498 @@
+schema_version: 1
+baseline_id: solution-v1
+project_id: graphslop
+status: approved
+approved: true
+immutable: true
+approved_at: 2026-07-27T15:45:07-04:00
+approval:
+  actor: authenticated_project_owner
+  message_id: msg-approval-solution-v1-20260727-01
+  quote: Approved
+  displayed_artifact: graphslop_product_preview_and_solution_v1_summary
+  source_proposal: specs/001-initial-product-intent/solution-v1.proposed.yaml
+  source_proposal_sha256: 854b4e5386f350933806adad67ee59ceb47e05ad58fc7e5738acd3f509bcb5f7
+  authority_granted:
+    - freeze_solution_v1
+    - compile_execution_v1
+    - authorize_bounded_local_execution
+  authority_not_granted:
+    - push
+    - create_pull_request
+    - merge
+    - deploy
+    - change_domain_or_traffic
+source_intent_baseline:
+  baseline_id: intent-v1
+  specification_sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+graph:
+  id: solution-graph-v1
+  kind: Solution
+  compiler_contract_version: 1
+  nodes:
+    - id: SOL-APP-001
+      type: Application
+      name: Graphslop local software factory
+      scope: product
+      satisfies: [INT-001, INT-002, INT-017, INT-022, INT-023, INT-024]
+    - id: SOL-PAGE-001
+      type: Page
+      name: Single project workspace
+      description: One responsive workspace moves from caveman conversation through intent, solution, execution, evidence, and drift review without exposing graph authoring.
+      scope: product
+      satisfies: [INT-004, INT-008, INT-017, INT-019, INT-023]
+
+    - id: SOL-FEAT-001
+      type: Feature
+      name: Ordinary-language project intake
+      scope: product
+      satisfies: [INT-002, INT-003, INT-004, INT-023]
+    - id: SOL-FEAT-002
+      type: Feature
+      name: One highest-value question
+      scope: product
+      satisfies: [INT-004, INT-008, INT-021]
+    - id: SOL-FEAT-003
+      type: Feature
+      name: Versioned graph projections
+      scope: product
+      satisfies: [INT-005, INT-006, INT-008, INT-022, INT-023]
+    - id: SOL-FEAT-004
+      type: Feature
+      name: Immutable Intent approval
+      scope: product
+      satisfies: [INT-007, INT-009]
+    - id: SOL-FEAT-005
+      type: Feature
+      name: Traceable Solution generation and approval
+      scope: product
+      satisfies: [INT-010, INT-021, INT-022]
+    - id: SOL-FEAT-006
+      type: Feature
+      name: Dependency-aware Execution compilation
+      scope: product
+      satisfies: [INT-011, INT-012, INT-021, INT-022]
+    - id: SOL-FEAT-007
+      type: Feature
+      name: Sequential owner-authorized task execution
+      scope: product
+      satisfies: [INT-011, INT-012, INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-FEAT-008
+      type: Feature
+      name: Independent verification and evidence
+      scope: product
+      satisfies: [INT-014, INT-015, INT-018]
+    - id: SOL-FEAT-009
+      type: Feature
+      name: Drift report and owner-authorized repair
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-FEAT-010
+      type: Feature
+      name: Trace-based successor-baseline impact review
+      scope: product
+      satisfies: [INT-016, INT-022]
+    - id: SOL-FEAT-011
+      type: Feature
+      name: Draft pull-request readiness
+      scope: product
+      satisfies: [INT-017, INT-018]
+
+    - id: SOL-WORK-001
+      type: Workflow
+      name: Discover and approve Intent
+      scope: product
+      satisfies: [INT-003, INT-004, INT-008, INT-009]
+    - id: SOL-WORK-002
+      type: Workflow
+      name: Generate and approve Solution
+      scope: product
+      satisfies: [INT-010]
+    - id: SOL-WORK-003
+      type: Workflow
+      name: Compile, authorize, execute, and verify work
+      scope: product
+      satisfies: [INT-011, INT-012, INT-013, INT-014, INT-015]
+    - id: SOL-WORK-004
+      type: Workflow
+      name: Review drift and authorize or reject repair
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-WORK-005
+      type: Workflow
+      name: Rebaseline changed intent and assess graph impact
+      scope: product
+      satisfies: [INT-016]
+
+    - id: SOL-COMP-001
+      type: Component
+      name: Conversation composer and timeline
+      scope: product
+      satisfies: [INT-004, INT-023]
+    - id: SOL-COMP-002
+      type: Component
+      name: Compact project understanding
+      scope: product
+      satisfies: [INT-008, INT-023]
+    - id: SOL-COMP-003
+      type: Component
+      name: Version-bound approval card
+      scope: product
+      satisfies: [INT-009, INT-010]
+    - id: SOL-COMP-004
+      type: Component
+      name: Task queue and authorization panel
+      scope: product
+      satisfies: [INT-011, INT-012, INT-017, INT-024]
+    - id: SOL-COMP-005
+      type: Component
+      name: Evidence and trace drawer
+      scope: product
+      satisfies: [INT-012, INT-018, INT-022]
+    - id: SOL-COMP-006
+      type: Component
+      name: Drift and repair decision panel
+      scope: product
+      satisfies: [INT-015, INT-024]
+
+    - id: SOL-SVC-001
+      type: Service
+      name: Immutable typed graph kernel
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-FEAT-005, SOL-FEAT-006, SOL-FEAT-010]
+    - id: SOL-SVC-002
+      type: Service
+      name: Canonical single-writer graph store
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-FEAT-004, SOL-FEAT-008]
+    - id: SOL-SVC-003
+      type: Service
+      name: Deterministic lifecycle and readiness control
+      scope: implementation_support
+      supports: [SOL-FEAT-002, SOL-FEAT-004, SOL-FEAT-007, SOL-FEAT-009]
+    - id: SOL-SVC-004
+      type: Service
+      name: Schema-bound model proposal gateway
+      scope: implementation_support
+      supports: [SOL-FEAT-001, SOL-FEAT-002, SOL-FEAT-005, SOL-FEAT-006]
+    - id: SOL-SVC-005
+      type: Service
+      name: Graph projection engine
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-COMP-002, SOL-COMP-005]
+    - id: SOL-SVC-006
+      type: Service
+      name: Signed sequential task lease coordinator
+      scope: implementation_support
+      supports: [SOL-FEAT-007]
+    - id: SOL-SVC-007
+      type: Service
+      name: Local repository runner
+      scope: implementation_support
+      supports: [SOL-FEAT-007, SOL-FEAT-008]
+    - id: SOL-SVC-008
+      type: Service
+      name: Independent verification coordinator
+      scope: implementation_support
+      supports: [SOL-FEAT-008, SOL-FEAT-009]
+    - id: SOL-SVC-009
+      type: Service
+      name: Draft pull-request composer
+      scope: implementation_support
+      supports: [SOL-FEAT-011]
+
+    - id: SOL-DATA-001
+      type: DataObject
+      name: GraphSnapshot
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-002]
+    - id: SOL-DATA-002
+      type: DataObject
+      name: GraphDelta
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-004]
+    - id: SOL-DATA-003
+      type: DataObject
+      name: Baseline and ApprovalRecord
+      scope: implementation_support
+      supports: [SOL-FEAT-004, SOL-FEAT-005]
+    - id: SOL-DATA-004
+      type: DataObject
+      name: GraphTransformation and Projection
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-FEAT-005, SOL-FEAT-006]
+    - id: SOL-DATA-005
+      type: DataObject
+      name: Decision and ProtectedAssertion
+      scope: implementation_support
+      supports: [SOL-SVC-003, SOL-FEAT-010]
+    - id: SOL-DATA-006
+      type: DataObject
+      name: ExecutionTask and TaskLease
+      scope: implementation_support
+      supports: [SOL-FEAT-006, SOL-FEAT-007]
+    - id: SOL-DATA-007
+      type: DataObject
+      name: EvidenceRecord
+      scope: implementation_support
+      supports: [SOL-FEAT-008, SOL-FEAT-011]
+    - id: SOL-DATA-008
+      type: DataObject
+      name: DriftReport and RepairAuthorization
+      scope: implementation_support
+      supports: [SOL-FEAT-009]
+
+    - id: SOL-RULE-001
+      type: Rule
+      name: Model output is always a proposal
+      scope: product
+      satisfies: [INT-007, INT-013, INT-014]
+    - id: SOL-RULE-002
+      type: Rule
+      name: Both exact baselines precede execution
+      scope: product
+      satisfies: [INT-009, INT-010, INT-011, INT-013]
+    - id: SOL-RULE-003
+      type: Rule
+      name: Every cross-graph product trace is complete
+      scope: product
+      satisfies: [INT-010, INT-011, INT-012, INT-018, INT-022]
+    - id: SOL-RULE-004
+      type: Rule
+      name: One control-plane writer and one active task lease
+      scope: product
+      satisfies: [INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-RULE-005
+      type: Rule
+      name: Verifier is independent from producer
+      scope: product
+      satisfies: [INT-014, INT-015]
+    - id: SOL-RULE-006
+      type: Rule
+      name: Repair never dispatches itself
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-RULE-007
+      type: Rule
+      name: Draft PR grants no merge or deployment authority
+      scope: product
+      satisfies: [INT-017, INT-018, INT-019]
+    - id: SOL-RULE-008
+      type: Rule
+      name: Graph, task, and provider contracts remain implementation-portable
+      scope: product
+      satisfies: [INT-020, INT-024]
+
+    - id: SOL-API-001
+      type: API
+      name: Versioned local control-plane command API
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-003]
+    - id: SOL-API-002
+      type: API
+      name: Signed task lease and result protocol
+      scope: implementation_support
+      supports: [SOL-SVC-006, SOL-SVC-007, SOL-SVC-008]
+
+    - id: SOL-INTG-001
+      type: Integration
+      name: Codex CLI provider adapter
+      scope: implementation_support
+      supports: [SOL-SVC-004, SOL-SVC-007, SOL-SVC-008]
+    - id: SOL-INTG-002
+      type: Integration
+      name: Local Git and worktree boundary
+      scope: implementation_support
+      supports: [SOL-SVC-007, SOL-SVC-008]
+    - id: SOL-INTG-003
+      type: Integration
+      name: GitHub CLI draft-PR boundary
+      scope: implementation_support
+      supports: [SOL-SVC-009]
+
+    - id: SOL-TECH-001
+      type: Technology
+      name: Node.js 24 and TypeScript
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-001, SOL-SVC-007]
+    - id: SOL-TECH-002
+      type: Technology
+      name: React, Vite, and Hono
+      scope: implementation_support
+      supports: [SOL-PAGE-001, SOL-API-001]
+    - id: SOL-TECH-003
+      type: Technology
+      name: Zod and exported JSON Schema
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-004, SOL-API-002]
+    - id: SOL-TECH-004
+      type: Technology
+      name: Canonical file-backed JSON store
+      scope: implementation_support
+      supports: [SOL-SVC-002]
+
+    - id: SOL-DEPLOY-001
+      type: DeploymentTarget
+      name: Owner Linux workstation
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-007]
+    - id: SOL-DEPLOY-002
+      type: DeploymentTarget
+      name: graphslop.com unchanged and deferred
+      scope: implementation_support
+      supports: [SOL-RULE-007]
+
+    - id: SOL-TEST-001
+      type: TestableBehavior
+      name: First request materializes Intent Graph and performs no code work
+      scope: product
+      satisfies: [INT-003, INT-005]
+    - id: SOL-TEST-002
+      type: TestableBehavior
+      name: Ordinary-language correction appends a validated graph delta and supersession
+      scope: product
+      satisfies: [INT-004, INT-006, INT-023]
+    - id: SOL-TEST-003
+      type: TestableBehavior
+      name: Every clarification turn asks exactly one ranked question
+      scope: product
+      satisfies: [INT-004, INT-021]
+    - id: SOL-TEST-004
+      type: TestableBehavior
+      name: Approval freezes exact graph and projection hashes
+      scope: product
+      satisfies: [INT-009, INT-010]
+    - id: SOL-TEST-005
+      type: TestableBehavior
+      name: Every product Solution node and Execution task traces to approved Intent
+      scope: product
+      satisfies: [INT-010, INT-011, INT-012, INT-022]
+    - id: SOL-TEST-006
+      type: TestableBehavior
+      name: Stale, forged, duplicate, or concurrent task leases fail closed
+      scope: product
+      satisfies: [INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-TEST-007
+      type: TestableBehavior
+      name: Out-of-scope repository changes cannot be accepted
+      scope: product
+      satisfies: [INT-012, INT-013]
+    - id: SOL-TEST-008
+      type: TestableBehavior
+      name: A producer report alone can never accept work
+      scope: product
+      satisfies: [INT-014, INT-015]
+    - id: SOL-TEST-009
+      type: TestableBehavior
+      name: Drift creates a complete report and idle proposed Repair node
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-TEST-010
+      type: TestableBehavior
+      name: Successor baseline impact traversal pauses only affected work
+      scope: product
+      satisfies: [INT-016, INT-022]
+    - id: SOL-TEST-011
+      type: TestableBehavior
+      name: Draft PR readiness requires all current evidence and grants no release authority
+      scope: product
+      satisfies: [INT-018, INT-019]
+    - id: SOL-TEST-012
+      type: TestableBehavior
+      name: Owner completes P1 journeys without graph syntax or prompt engineering
+      scope: product
+      satisfies: [INT-008, INT-023]
+
+  edges:
+    - { id: E-001, type: CONTAINS, from: SOL-APP-001, to: SOL-PAGE-001 }
+    - { id: E-002, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-001 }
+    - { id: E-003, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-002 }
+    - { id: E-004, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-003 }
+    - { id: E-005, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-004 }
+    - { id: E-006, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-005 }
+    - { id: E-007, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-006 }
+    - { id: E-008, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-001 }
+    - { id: E-009, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-002 }
+    - { id: E-010, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-003 }
+    - { id: E-011, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-004 }
+    - { id: E-012, type: DEPENDS_ON, from: SOL-WORK-002, to: SOL-WORK-001 }
+    - { id: E-013, type: REALIZES, from: SOL-WORK-002, to: SOL-FEAT-005 }
+    - { id: E-014, type: DEPENDS_ON, from: SOL-WORK-003, to: SOL-WORK-002 }
+    - { id: E-015, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-006 }
+    - { id: E-016, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-007 }
+    - { id: E-017, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-008 }
+    - { id: E-018, type: DEPENDS_ON, from: SOL-WORK-004, to: SOL-WORK-003 }
+    - { id: E-019, type: REALIZES, from: SOL-WORK-004, to: SOL-FEAT-009 }
+    - { id: E-020, type: REALIZES, from: SOL-WORK-005, to: SOL-FEAT-010 }
+    - { id: E-021, type: USES, from: SOL-FEAT-003, to: SOL-SVC-005 }
+    - { id: E-022, type: USES, from: SOL-FEAT-004, to: SOL-SVC-003 }
+    - { id: E-023, type: USES, from: SOL-FEAT-005, to: SOL-SVC-001 }
+    - { id: E-024, type: USES, from: SOL-FEAT-006, to: SOL-SVC-001 }
+    - { id: E-025, type: USES, from: SOL-FEAT-007, to: SOL-SVC-006 }
+    - { id: E-026, type: USES, from: SOL-FEAT-007, to: SOL-SVC-007 }
+    - { id: E-027, type: USES, from: SOL-FEAT-008, to: SOL-SVC-008 }
+    - { id: E-028, type: USES, from: SOL-FEAT-009, to: SOL-SVC-008 }
+    - { id: E-029, type: USES, from: SOL-FEAT-011, to: SOL-SVC-009 }
+    - { id: E-030, type: DEPENDS_ON, from: SOL-SVC-005, to: SOL-SVC-001 }
+    - { id: E-031, type: DEPENDS_ON, from: SOL-SVC-001, to: SOL-SVC-002 }
+    - { id: E-032, type: DEPENDS_ON, from: SOL-SVC-004, to: SOL-SVC-001 }
+    - { id: E-033, type: DEPENDS_ON, from: SOL-SVC-006, to: SOL-SVC-003 }
+    - { id: E-034, type: DEPENDS_ON, from: SOL-SVC-007, to: SOL-SVC-006 }
+    - { id: E-035, type: DEPENDS_ON, from: SOL-SVC-008, to: SOL-SVC-007 }
+    - { id: E-036, type: USES, from: SOL-SVC-001, to: SOL-DATA-001 }
+    - { id: E-037, type: USES, from: SOL-SVC-001, to: SOL-DATA-002 }
+    - { id: E-038, type: USES, from: SOL-SVC-002, to: SOL-TECH-004 }
+    - { id: E-039, type: USES, from: SOL-SVC-004, to: SOL-INTG-001 }
+    - { id: E-040, type: USES, from: SOL-SVC-007, to: SOL-INTG-002 }
+    - { id: E-041, type: USES, from: SOL-SVC-009, to: SOL-INTG-003 }
+    - { id: E-042, type: EXPOSES, from: SOL-APP-001, to: SOL-API-001 }
+    - { id: E-043, type: EXPOSES, from: SOL-SVC-006, to: SOL-API-002 }
+    - { id: E-044, type: DEPLOYED_TO, from: SOL-APP-001, to: SOL-DEPLOY-001 }
+    - { id: E-045, type: PROTECTED_BY, from: SOL-FEAT-007, to: SOL-RULE-002 }
+    - { id: E-046, type: PROTECTED_BY, from: SOL-FEAT-007, to: SOL-RULE-004 }
+    - { id: E-047, type: PROTECTED_BY, from: SOL-FEAT-008, to: SOL-RULE-005 }
+    - { id: E-048, type: PROTECTED_BY, from: SOL-FEAT-009, to: SOL-RULE-006 }
+    - { id: E-049, type: VALIDATED_BY, from: SOL-FEAT-001, to: SOL-TEST-001 }
+    - { id: E-050, type: VALIDATED_BY, from: SOL-FEAT-003, to: SOL-TEST-002 }
+    - { id: E-051, type: VALIDATED_BY, from: SOL-FEAT-002, to: SOL-TEST-003 }
+    - { id: E-052, type: VALIDATED_BY, from: SOL-FEAT-004, to: SOL-TEST-004 }
+    - { id: E-053, type: VALIDATED_BY, from: SOL-FEAT-005, to: SOL-TEST-005 }
+    - { id: E-054, type: VALIDATED_BY, from: SOL-FEAT-006, to: SOL-TEST-005 }
+    - { id: E-055, type: VALIDATED_BY, from: SOL-FEAT-007, to: SOL-TEST-006 }
+    - { id: E-056, type: VALIDATED_BY, from: SOL-FEAT-007, to: SOL-TEST-007 }
+    - { id: E-057, type: VALIDATED_BY, from: SOL-FEAT-008, to: SOL-TEST-008 }
+    - { id: E-058, type: VALIDATED_BY, from: SOL-FEAT-009, to: SOL-TEST-009 }
+    - { id: E-059, type: VALIDATED_BY, from: SOL-FEAT-010, to: SOL-TEST-010 }
+    - { id: E-060, type: VALIDATED_BY, from: SOL-FEAT-011, to: SOL-TEST-011 }
+    - { id: E-061, type: VALIDATED_BY, from: SOL-PAGE-001, to: SOL-TEST-012 }
+    - { id: E-062, type: USES, from: SOL-SVC-003, to: SOL-DATA-003 }
+    - { id: E-063, type: USES, from: SOL-SVC-001, to: SOL-DATA-004 }
+    - { id: E-064, type: USES, from: SOL-SVC-003, to: SOL-DATA-005 }
+    - { id: E-065, type: USES, from: SOL-SVC-006, to: SOL-DATA-006 }
+    - { id: E-066, type: USES, from: SOL-SVC-008, to: SOL-DATA-007 }
+    - { id: E-067, type: USES, from: SOL-SVC-008, to: SOL-DATA-008 }
+    - { id: E-068, type: PROTECTED_BY, from: SOL-FEAT-001, to: SOL-RULE-001 }
+    - { id: E-069, type: PROTECTED_BY, from: SOL-FEAT-005, to: SOL-RULE-003 }
+    - { id: E-070, type: PROTECTED_BY, from: SOL-FEAT-011, to: SOL-RULE-007 }
+    - { id: E-071, type: PROTECTED_BY, from: SOL-APP-001, to: SOL-RULE-008 }
+    - { id: E-072, type: USES, from: SOL-APP-001, to: SOL-TECH-001 }
+    - { id: E-073, type: USES, from: SOL-PAGE-001, to: SOL-TECH-002 }
+    - { id: E-074, type: USES, from: SOL-SVC-001, to: SOL-TECH-003 }
+    - { id: E-075, type: PROTECTED_BY, from: SOL-DEPLOY-002, to: SOL-RULE-007 }
+deferred_solution_nodes:
+  - Hosted Cloudflare control plane
+  - Outbound remote runner enrollment
+  - Additional execution-provider adapters
+  - Parallel task dispatch
+  - Automatic repair dispatch
+  - Public developer API
+  - Graph database
+  - graphslop.com route or traffic cutover
+protected_assertions:
+  - Intent and Solution baselines are immutable and authoritative.
+  - Models propose; deterministic code validates and advances state.
+  - Every Execution task must trace to Solution and transitively to Intent.
+  - Only one bounded task may be active at a time.
+  - Implementation and verification must use separate invocations.
+  - Repair remains idle until owner-authorized.
+  - No push, pull request, merge, deployment, domain, or traffic action is authorized.
