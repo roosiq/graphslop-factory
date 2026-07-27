@@ -141,7 +141,12 @@ Every `TC-*` row inherits these exact fields:
 
 `T002` failed independent quality verification after its one revision. Its candidate commits were
 reverted, `drift-001` is blocking for T002-dependent work, and `repair-t002-001` remains
-non-dispatchable until explicit owner authorization. T003 and its descendants are unaffected.
+non-dispatchable until explicit owner authorization.
+
+`T003` also failed independent quality verification after its one revision. Its candidate commits
+were reverted, `drift-002` is blocking for the graph-kernel branch, and `repair-t003-001` remains
+non-dispatchable until explicit owner authorization. No unaffected Execution task is currently
+ready.
 
 **Checkpoint**: Fresh `npm ci`, type check, empty suite, and production skeleton build pass.
 

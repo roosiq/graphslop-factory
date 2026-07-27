@@ -1,0 +1,100 @@
+schema_version: 1
+drift_id: drift-002
+project_id: graphslop
+task_id: T003
+status: blocking
+severity: blocking
+type: acceptance_drift
+detected_at: 2026-07-27T16:32:58-04:00
+detected_by: /root/t003_quality_review
+protected_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+expected:
+  statement: Common references and schema registries must remain version-exact, structurally expressive, immutable, and repeatably testable from a clean checkout.
+  source_solution_nodes:
+    - SOL-TECH-003
+    - SOL-API-001
+    - SOL-API-002
+    - SOL-RULE-008
+  source_task_check: AC-003
+observed:
+  statement: The candidate became spec-compliant after one revision but still omitted the snapshot content hash, restricted validation paths, exposed mutable registry children, and lacked a clean-checkout contract-test command.
+  candidate_commits:
+    - 3246bb02391030afbeaafd981da014af104531c0
+    - d75403b1bc5a3d53861e6cdb07682973c83d7a48
+  files:
+    - packages/contracts/src/schemas.ts
+    - packages/contracts/src/index.ts
+    - packages/contracts/package.json
+    - tests/contract/common-contracts.test.mjs
+  findings:
+    - NodeRef did not include a required snapshotContentHash.
+    - ValidationIssue paths could not represent array indexes.
+    - The exported registry was shallow-frozen and nested JSON Schema objects remained mutable.
+    - No documented package command built contracts and ran the native contract suite from a clean checkout.
+    - ValidationReport allowed contradictory valid/issues combinations.
+verification_history:
+  specification_review:
+    outcome: pass
+    cycles: 2
+  quality_review:
+    outcome: request_changes
+    revision_budget_consumed: 1
+    open_critical_issues: 0
+    open_important_issues: 4
+    open_minor_issues: 2
+integration_disposition:
+  candidate_integrated: false
+  revert_commits:
+    - 94d3c80
+    - ec9b4b0
+impact:
+  blocked_tasks:
+    - T003
+    - T004
+    - T005
+    - T006
+    - T007
+    - T008
+    - T009
+    - T010
+    - T011
+    - T012
+    - T013
+    - T014
+    - T015
+    - T016
+    - T017
+    - T018
+    - T019
+    - T020
+    - T021
+    - T022
+    - T023
+    - T024
+    - T025
+    - T026
+    - T027
+    - T028
+    - T029
+    - T030
+    - T031
+    - T032
+    - T033
+    - T034
+    - T035
+    - T036
+    - T037
+    - T038
+    - T039
+    - T040
+  unaffected_ready_tasks: []
+recommended_action:
+  type: repair
+  repair_task_id: repair-t003-001
+  instruction: Recreate T003 from the current accepted base with snapshot-hash exactness, expressive validation paths, an immutable registry, invariant checks, and a clean-checkout package test command.

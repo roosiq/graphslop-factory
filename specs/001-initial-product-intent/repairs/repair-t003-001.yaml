@@ -1,0 +1,66 @@
+schema_version: 1
+task_id: repair-t003-001
+type: Repair
+status: proposed
+dispatchable: false
+authorization_required:
+  actor: authenticated_project_owner
+  exact_task_id: repair-t003-001
+  protected_baselines: [intent-v1, solution-v1]
+objective: Recreate the portable common contracts with exact immutable references and a clean-checkout verification command.
+repairs_drift: drift-002
+satisfies_solution_nodes:
+  - SOL-TECH-003
+  - SOL-API-001
+  - SOL-API-002
+  - SOL-RULE-008
+protected_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+expected_base_commit: ec9b4b09f8daf2be112b24438520c07544a3ce50
+dependencies:
+  - T001
+  - drift-002
+allowed_paths:
+  - packages/contracts/**
+  - tests/contract/common-*
+  - package-lock.json
+forbidden_changes:
+  - change approved Intent or Solution baselines
+  - add graph lifecycle behavior or provider/runtime authority
+  - add a second schema library
+  - modify root tooling or unrelated packages
+  - push, create a pull request, merge, deploy, or change domain or traffic
+required_outputs:
+  - exact strict common Zod schemas
+  - deeply immutable versioned JSON Schema 2020-12 registry
+  - clean-checkout package build-and-contract-test command
+  - valid, invalid, missing-field, mutation, and invariant fixtures
+  - redaction-safe evidence bundle
+acceptance_checks:
+  - id: REPAIR-AC-005
+    statement: NodeRef requires graphKind, graphId, nodeId, positive-safe-integer nodeVersion, snapshotId, and snapshotContentHash.
+  - id: REPAIR-AC-006
+    statement: ValidationIssue paths accept string property segments and nonnegative safe-integer array indexes while rejecting invalid segments.
+  - id: REPAIR-AC-007
+    statement: Every nested registry value is immutable, mutation attempts fail, and JSON serialization round-trips without provider/runtime authority.
+  - id: REPAIR-AC-008
+    statement: A documented @graphslop/contracts package command builds from a clean checkout and runs all common contract tests.
+  - id: REPAIR-AC-009
+    statement: ValidationReport enforces consistency between valid and issues, and fixtures cover required fields and key exported JSON Schema constraints.
+retry_limit: 1
+required_evidence:
+  - changed files and hashes
+  - focused failing and passing tests
+  - npm ci, package build/typecheck/test, and root typecheck outcomes
+  - independent specification review
+  - independent code-quality review
+  - drift closure mapping
+implementer_assignment: fresh_implementation_agent
+verifier_assignment:
+  - fresh_specification_compliance_reviewer
+  - fresh_code_quality_reviewer

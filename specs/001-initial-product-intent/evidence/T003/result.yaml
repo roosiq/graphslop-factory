@@ -1,0 +1,28 @@
+schema_version: 1
+task_id: T003
+contract_id: TC-003
+status: verification_failed
+recorded_at: 2026-07-27T16:32:58-04:00
+base_commit: b963bec
+candidate_commits:
+  - 3246bb02391030afbeaafd981da014af104531c0
+  - d75403b1bc5a3d53861e6cdb07682973c83d7a48
+candidate_integrated: false
+revert_commits:
+  - 94d3c80
+  - ec9b4b0
+agents:
+  implementer: /root/t003_implement
+  specification_reviewer: /root/t003_spec_review
+  quality_reviewer: /root/t003_quality_review
+checks:
+  original_ac_003: pass
+  specification_compliance: pass
+  code_quality: request_changes
+drift_ref: specs/001-initial-product-intent/drift/drift-002.yaml
+repair_proposal_ref: specs/001-initial-product-intent/repairs/repair-t003-001.yaml
+unresolved_issues:
+  - NodeRef lacks snapshot content hash.
+  - Validation paths cannot represent array indexes.
+  - JSON Schema registry is shallow-mutable.
+  - Clean-checkout contract test command is absent.
