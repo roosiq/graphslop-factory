@@ -1,8 +1,10 @@
 schema_version: 1
 proposal_id: solution-v2
 project_id: graphslop
-status: proposed
+status: withdrawn_after_owner_correction
 approved: false
+approval_blocked: true
+superseded_by_intent_proposal: intent-v3
 generated_at: '2026-07-27T18:12:19-04:00'
 source_intent_baseline:
   baseline_id: intent-v2
@@ -856,7 +858,6 @@ deferred_solution_nodes:
   - Public developer API
   - Graph database
   - graphslop.com route or traffic cutover
-approval_required:
-  artifact: solution-v2
-  effect: freezes the generated Role and Persona team plan and authorizes recompilation of affected Execution work
-  does_not_authorize: [push, draft_pull_request_creation, merge, deploy, domain_cutover, traffic_cutover]
+withdrawal:
+  reason: The team proposal is overcooked and its worker instructions are not plain caveman language.
+  replacement_gate: Approve intent-v3 before generating a smaller solution-v3 proposal.

@@ -1,0 +1,64 @@
+schema_version: 1
+impact_id: impact-intent-v3-proposed
+project_id: graphslop
+status: awaiting_intent_v3_approval
+created_at: '2026-07-27T18:35:38-04:00'
+change:
+  current_baseline:
+    id: intent-v2
+    artifact: specs/001-initial-product-intent/intent-v2.yaml
+    sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+  proposed_successor:
+    id: intent-v3
+    artifact: specs/001-initial-product-intent/intent-v3.proposed.yaml
+    status: awaiting_owner_approval
+  changed_intent_nodes: [INT-025, INT-026, INT-027, INT-029]
+  new_intent_nodes: [INT-030]
+  changed_exclusions: [EXC-007]
+  proposed_decisions: [DEC-004]
+solution_impact:
+  current_approved_solution:
+    id: solution-v1
+    status: approved
+    disposition: unchanged_until_successor_approval
+  overcooked_proposal:
+    id: solution-v2
+    artifact: specs/001-initial-product-intent/solution-v2.proposed.yaml
+    node_count: 100
+    edge_count: 137
+    added_capabilities: 4
+    added_personas: 4
+    added_roles: 9
+    disposition: do_not_approve
+    reason: It exposes repeated machine policy as a large team model and conflicts with the proposed plain-language constraint.
+  successor_solution:
+    id: solution-v3
+    status: not_generated
+    generation_gate: intent-v3 must be explicitly approved
+    required_simplifications:
+      - Remove separate Capability nodes; capability remains a machine enum.
+      - Merge Roles that do not have distinct authority, handoff, or independence boundaries.
+      - Render Roles as JOB, USE, TOUCH, DON'T, and DONE.
+      - Make Personas optional CARE and WATCH notes.
+      - Reuse existing task contracts and enforcement instead of adding duplicate team machinery.
+execution_impact:
+  current_execution:
+    id: execution-v1
+    status: paused_for_successor_solution
+    dispatchable_tasks: []
+  accepted_unaffected: [T001]
+  failed_history_retained: [T002, T003]
+  blocked_tasks:
+    disposition: remain_blocked
+    reason: No current Solution Baseline authorizes successor execution.
+  prior_successor_tasks:
+    tasks: [T041, T042, T043, T044, T045]
+    disposition: do_not_compile
+    reason: They were derived from the overcooked solution-v2 proposal.
+gates:
+  intent_v3_approved: false
+  solution_v3_generation_allowed: false
+  solution_v3_approved: false
+  execution_recompile_allowed: false
+  task_dispatch_allowed: false
+  next_required_action: Display the compact intent-v3 correction and obtain explicit owner approval.

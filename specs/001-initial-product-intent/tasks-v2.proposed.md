@@ -2,7 +2,7 @@
 
 **Intent**: approved `intent-v2`
 **Solution**: proposed `solution-v2`
-**Status**: Gate 2 proposal; not dispatchable
+**Status**: Withdrawn after owner correction; not dispatchable
 **Complete prior task set**: [tasks.md](tasks.md)
 **Existing-task classification**: [impact-intent-v2.yaml](impact-intent-v2.yaml)
 

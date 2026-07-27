@@ -1,7 +1,7 @@
 schema_version: 1
 impact_id: impact-intent-v2
 project_id: graphslop
-status: awaiting_solution_v2_approval
+status: superseded_by_intent_v3_proposal
 created_at: '2026-07-27T18:12:19-04:00'
 change:
   source_baseline:
@@ -13,7 +13,7 @@ change:
   proposed_solution:
     id: solution-v2
     artifact: specs/001-initial-product-intent/solution-v2.proposed.yaml
-    sha256: 594fcc4415335a0f68090ba5ae4248ed68c4c7d8586450b4c1630c9321ceae75
+    sha256: cc3dc417dbd8e65873b6676c2141069e8d02ba5faec854df92e2f76361e47952
   changed_intent_nodes:
     - { id: INT-014, from_version: 1, to_version: 2, classification: modified }
     - { id: INT-017, from_version: 2, to_version: 3, classification: modified }
@@ -160,4 +160,6 @@ gates:
   execution_v2_compilable: false
   repair_reissue_allowed: false
   task_dispatch_allowed: false
-  next_required_action: Display the proposed solution-v2 team and architecture summary and obtain explicit owner approval.
+  solution_v2_approval_blocked: true
+  superseded_by: specs/001-initial-product-intent/intent-v3.proposed.yaml
+  next_required_action: Display the compact intent-v3 correction and obtain explicit owner approval.

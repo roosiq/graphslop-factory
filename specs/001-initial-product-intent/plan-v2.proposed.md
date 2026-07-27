@@ -1,11 +1,14 @@
 # Successor Implementation Plan: Generated Team Contracts
 
+**Status**: Withdrawn after the owner said the team model was overcooked. Do not implement this
+plan. The proposed `intent-v3` keeps machine safety but requires caveman-simple worker briefs.
+
 **Branch**: `001-initial-product-intent`
 **Date**: 2026-07-27
 **Intent**: approved [intent-v2.yaml](intent-v2.yaml)
 **Solution**: proposed [solution-v2.proposed.yaml](solution-v2.proposed.yaml)
 **Impact**: [impact-intent-v2.yaml](impact-intent-v2.yaml)
-**Status**: Gate 2 proposal; no implementation or task dispatch authorized
+**Prior status**: Gate 2 proposal; no implementation or task dispatch was authorized
 
 ## Summary
 

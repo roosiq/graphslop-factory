@@ -1,0 +1,138 @@
+schema_version: 1
+proposal_id: intent-v3
+project_id: graphslop
+status: awaiting_owner_approval
+immutable: false
+created_at: '2026-07-27T18:35:38-04:00'
+would_supersede:
+  id: intent-v2
+  artifact: specs/001-initial-product-intent/intent-v2.yaml
+  sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+source:
+  owner_message_id: msg-caveman-role-correction-20260727-01
+  quote: Ensure we have not overcooked this. Instructions for agents or “roles” should be in plain caveman language.
+  proposed_specification: specs/001-initial-product-intent/intent-v3-proposed.md
+  proposed_specification_sha256: abb3c850f45a589d4a3518f4419f927e17978f50fb65ccf30eabed7fa021d9c9
+classification:
+  - correction
+  - constraint
+  - exclusion
+  - new_requirement
+normalized_change: Keep strict machine policy, but generate the smallest useful team and render all worker instructions as compact ordinary-language briefs rather than long role contracts or fictional personas.
+proposed_intent_node_versions:
+  INT-001: 2
+  INT-002: 1
+  INT-003: 1
+  INT-004: 1
+  INT-005: 1
+  INT-006: 1
+  INT-007: 1
+  INT-008: 1
+  INT-009: 1
+  INT-010: 1
+  INT-011: 1
+  INT-012: 1
+  INT-013: 1
+  INT-014: 2
+  INT-015: 2
+  INT-016: 1
+  INT-017: 3
+  INT-018: 1
+  INT-019: 2
+  INT-020: 1
+  INT-021: 2
+  INT-022: 1
+  INT-023: 1
+  INT-024: 1
+  INT-025: 2
+  INT-026: 2
+  INT-027: 2
+  INT-028: 1
+  INT-029: 2
+  INT-030: 1
+proposed_exclusion_versions:
+  EXC-001: 1
+  EXC-002: 1
+  EXC-003: 1
+  EXC-004: 1
+  EXC-005: 1
+  EXC-006: 1
+  EXC-007: 3
+  EXC-008: 1
+  EXC-009: 1
+  EXC-010: 1
+  EXC-011: 1
+  EXC-012: 1
+  EXC-013: 1
+  EXC-014: 1
+proposed_decision_versions:
+  UNR-001: 2
+  DEC-002: 1
+  DEC-003: 1
+  DEC-004: 1
+changed_nodes:
+  - id: INT-025
+    from_version: 1
+    to_version: 2
+    statement: Generate only the smallest useful team; merge overlapping Roles and reject unjustified Roles.
+  - id: INT-026
+    from_version: 1
+    to_version: 2
+    statement: Show each Role as JOB, USE, TOUCH, DON'T, and DONE while enforcing exact policy structurally.
+  - id: INT-027
+    from_version: 1
+    to_version: 2
+    statement: Make Personas optional CARE and WATCH notes with no biography, character, or authority.
+  - id: INT-029
+    from_version: 1
+    to_version: 2
+    statement: Show team trace and authority in one compact ordinary-language view.
+new_nodes:
+  - id: INT-030
+    version: 1
+    type: Constraint
+    statement: All generated agent and Role instructions use short, direct, ordinary language.
+changed_exclusions:
+  - id: EXC-007
+    from_version: 2
+    to_version: 3
+    statement: Exclude fake org charts, biographies, role-play, decorative Personas, duplicate Roles, personality authority, and long prompts that restate machine policy.
+proposed_decision:
+  id: DEC-004
+  version: 1
+  statement: Keep rich machine validation and expose only the smallest caveman brief needed to act and review safely.
+proposed_protected_assertions:
+  - id: lean-project-team
+    statement: A Role must have a distinct job, permission boundary, handoff, or independence reason; overlapping Roles are merged.
+    source_intent_nodes: [INT-025]
+  - id: caveman-worker-brief
+    statement: Worker-facing Role instructions use JOB, USE, TOUCH, DON'T, and DONE in short ordinary language.
+    source_intent_nodes: [INT-026, INT-030]
+  - id: structured-policy-is-authority
+    statement: Exact machine-readable task policy is authoritative, cannot be broadened by prose, and stops dispatch on disagreement.
+    source_intent_nodes: [INT-012, INT-013, INT-026, INT-028, INT-030]
+  - id: persona-is-tiny-and-optional
+    statement: Persona context is optional CARE and WATCH advice and never creates permission or authority.
+    source_intent_nodes: [INT-014, INT-027, INT-028]
+  - id: independent-role-and-worker
+    statement: A producer cannot verify or accept its own result.
+    source_intent_nodes: [INT-014, INT-015, INT-028]
+blocking_questions:
+  - id: approve-intent-v3
+    question: Approve this simplified intent-v3 baseline?
+    resolves: [INT-025, INT-026, INT-027, INT-029, INT-030, EXC-007, DEC-004]
+approval:
+  required: true
+  effect:
+    - freeze immutable intent-v3
+    - withdraw the overcooked solution-v2 proposal
+    - permit generation of a smaller solution-v3 proposal
+  does_not_authorize:
+    - approve_solution_v3
+    - modify_application_code
+    - dispatch_execution_or_repair_tasks
+    - push
+    - create_pull_request
+    - merge
+    - deploy
+    - change_domain_or_traffic
