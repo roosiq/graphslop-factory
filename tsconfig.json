@@ -7,7 +7,14 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "files": [
-    "./node_modules/typescript/lib/lib.es2024.d.ts"
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**"
   ]
 }

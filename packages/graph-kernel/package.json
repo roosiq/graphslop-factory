@@ -2,9 +2,5 @@
   "name": "@graphslop/graph-kernel",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "npm run typecheck",
-    "typecheck": "tsc --project ../../tsconfig.json"
-  }
+  "type": "module"
 }

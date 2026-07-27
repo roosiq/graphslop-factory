@@ -25,8 +25,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "build": "npm run typecheck",
+    "typecheck": "if find apps packages -type f \\( -name '*.ts' -o -name '*.tsx' \\) -not -path '*/node_modules/*' -not -path '*/dist/*' -print -quit | grep -q .; then tsc --project tsconfig.json; else echo 'No TypeScript workspace sources to check.'; fi"
   },
   "devDependencies": {
     "typescript": "5.9.3"
