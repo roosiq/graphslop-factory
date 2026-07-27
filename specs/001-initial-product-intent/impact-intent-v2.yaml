@@ -1,0 +1,163 @@
+schema_version: 1
+impact_id: impact-intent-v2
+project_id: graphslop
+status: awaiting_solution_v2_approval
+created_at: '2026-07-27T18:12:19-04:00'
+change:
+  source_baseline:
+    id: intent-v1
+    sha256: 365666168670859ffb5ee3fb2c72bb74996eb3a4630e27f7500622e2338371a9
+  successor_baseline:
+    id: intent-v2
+    sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+  proposed_solution:
+    id: solution-v2
+    artifact: specs/001-initial-product-intent/solution-v2.proposed.yaml
+    sha256: 594fcc4415335a0f68090ba5ae4248ed68c4c7d8586450b4c1630c9321ceae75
+  changed_intent_nodes:
+    - { id: INT-014, from_version: 1, to_version: 2, classification: modified }
+    - { id: INT-017, from_version: 2, to_version: 3, classification: modified }
+  new_intent_nodes:
+    - INT-025
+    - INT-026
+    - INT-027
+    - INT-028
+    - INT-029
+  changed_exclusions:
+    - { id: EXC-007, from_version: 1, to_version: 2, classification: narrowed }
+  new_decisions:
+    - DEC-003
+
+solution_impact:
+  prior_solution:
+    id: solution-v1
+    node_count: 72
+    edge_count: 75
+  proposed_solution:
+    id: solution-v2
+    node_count: 100
+    edge_count: 137
+  retained_node_count: 72
+  added_node_count: 28
+  added_edge_count: 62
+  added_node_types:
+    - Persona
+    - Role
+    - Capability
+  added_product_structure:
+    features: [SOL-FEAT-012, SOL-FEAT-013]
+    workflows: [SOL-WORK-006]
+    components: [SOL-COMP-007]
+    services: [SOL-SVC-010]
+    data_objects: [SOL-DATA-009, SOL-DATA-010]
+    rules: [SOL-RULE-009, SOL-RULE-010]
+    testable_behaviors: [SOL-TEST-013, SOL-TEST-014]
+    capabilities: [SOL-CAP-001, SOL-CAP-002, SOL-CAP-003, SOL-CAP-004]
+    personas: [SOL-PERSONA-001, SOL-PERSONA-002, SOL-PERSONA-003, SOL-PERSONA-004]
+    roles:
+      - SOL-ROLE-001
+      - SOL-ROLE-002
+      - SOL-ROLE-003
+      - SOL-ROLE-004
+      - SOL-ROLE-005
+      - SOL-ROLE-006
+      - SOL-ROLE-007
+      - SOL-ROLE-008
+      - SOL-ROLE-009
+  architectural_decision:
+    statement: Keep Intent, Solution, and Execution as the three authoritative graph kinds. Store Personas, Roles, and Capabilities as Solution nodes; store task and worker bindings as Execution data; expose the combined team as a derived projection.
+    status: proposed_solution_default
+    reason: This adds the requested graph-native team without creating a fourth authority or invalidating the generic graph reference contract.
+
+execution_impact:
+  prior_execution: execution-v1
+  disposition: paused_until_solution_v2_approval_and_execution_recompile
+  accepted_unaffected:
+    - task_id: T001
+      reason: Workspace skeleton does not encode team behavior.
+      evidence_reusable: true
+  failed_history_retained:
+    - task_id: T002
+      drift: drift-001
+      reason: Failed quality-tooling candidate remains historical and reverted.
+    - task_id: T003
+      drift: drift-002
+      reason: Failed common-contract candidate remains historical and reverted.
+  blocked_unaffected_but_rebind_required:
+    tasks: [T004, T005, T006, T007, T008, T009, T011, T012, T013, T014, T015, T016, T017, T023]
+    reason: Objectives remain valid, but no task may dispatch with stale protected baseline references.
+  tasks_requiring_modification:
+    - { task_id: T010, reason: Conformance fixtures must cover Role, Persona, Capability, assignment, and authority failures. }
+    - { task_id: T018, reason: Solution schema and compiler must support generated team node types and trace validation. }
+    - { task_id: T019, reason: Solution review must present the generated team and advisory-versus-authority boundary. }
+    - { task_id: T020, reason: Execution task schema and compiler must add approved Role references and optional Persona context. }
+    - { task_id: T021, reason: Task leases must bind exact Role, worker invocation, task, and baseline hashes. }
+    - { task_id: T022, reason: Provider invocation must receive the bounded Role contract and optional advisory Persona context. }
+    - { task_id: T024, reason: Runner orchestration must validate Role and worker binding without deriving permissions from Persona. }
+    - { task_id: T025, reason: Execution projection and authorization UI must expose Role and assignment state. }
+    - { task_id: T026, reason: Evidence must record producer and verifier Role assignments and worker invocations. }
+    - { task_id: T027, reason: Verification must enforce independent Role assignments and worker invocations. }
+    - { task_id: T028, reason: Drift checks must reject persona authority, unjustified roles, and over-privileged assignment. }
+    - { task_id: T029, reason: Evidence and drift review must display team provenance and assignment violations. }
+    - { task_id: T030, reason: Impact traversal must classify Role, Persona, Capability, and assignment changes. }
+    - { task_id: T031, reason: Change review must explain affected team and task assignments in ordinary language. }
+    - { task_id: T032, reason: Completion trace manifest must include team and assignment evidence. }
+    - { task_id: T033, reason: Draft-PR readiness must show unresolved assignment or independence failures. }
+    - { task_id: T034, reason: Threat model must cover persona authority, stale roles, role escalation, and self-verification. }
+    - { task_id: T035, reason: Recovery must preserve or invalidate active Role and worker bindings correctly. }
+    - { task_id: T036, reason: Browser acceptance must cover the team projection and role-review interaction. }
+    - { task_id: T037, reason: Performance fixtures must include the larger Solution graph and team projection. }
+    - { task_id: T038, reason: Live smoke execution must prove a bounded Role assignment and independent verifier binding. }
+    - { task_id: T039, reason: Documentation and trace matrix must include generated team contracts. }
+    - { task_id: T040, reason: Integrated convergence must verify every new team requirement and exclusion. }
+  discarded_tasks: []
+  proposed_new_tasks:
+    - id: T041
+      objective: Implement strict Persona, Role, Capability, and team-plan compilation contracts with complete trace validation.
+      dependencies: [T018]
+      likely_paths: [packages/contracts/**, packages/graph-kernel/**, tests/contract/team/**]
+    - id: T042
+      objective: Implement the ordinary-language team projection and Solution-review interface.
+      dependencies: [T019, T041]
+      likely_paths: [apps/control-plane/src/web/features/team/**, tests/e2e/team-review.spec.ts]
+    - id: T043
+      objective: Implement Role-bound task assignment, permission intersection, and signed lease binding in the control plane.
+      dependencies: [T020, T021, T041]
+      likely_paths: [packages/control-state/src/assignments/**, apps/control-plane/src/services/execution/assignments/**, tests/integration/assignments/control-plane/**]
+    - id: T044
+      objective: Enforce the signed Role and worker binding at the provider and local runner boundaries.
+      dependencies: [T022, T024, T043]
+      likely_paths: [apps/runner/src/execution/assignment.ts, packages/codex-adapter/**, tests/integration/assignments/runner/**]
+    - id: T045
+      objective: Verify team traceability, persona non-authority, least-privilege assignment, and producer-verifier independence end to end.
+      dependencies: [T026, T027, T028, T042, T044]
+      likely_paths: [tests/contract/team/**, tests/integration/assignments/**, tests/e2e/team-review.spec.ts, tests/fixtures/team/**]
+
+repair_impact:
+  - existing_repair: repair-t002-001
+    disposition: retain_as_historical_non_dispatchable
+    implementation_scope_change: none
+    successor_action: Reissue only after solution-v2 approval with current baseline hashes and the same fail-closed tooling objective.
+  - existing_repair: repair-t003-001
+    disposition: retain_as_historical_non_dispatchable
+    implementation_scope_change: none
+    successor_action: Reissue only after solution-v2 approval with current baseline hashes and the same portable common-contract objective.
+
+tests_requiring_revision:
+  - Solution schema and trace fixtures
+  - Solution review browser journey
+  - Execution task and lease contract fixtures
+  - Provider and runner assignment fixtures
+  - Evidence and independent-verification fixtures
+  - Drift and successor-impact fixtures
+  - Security threat-model suite
+  - Responsive and accessible team-review journey
+  - Performance profile and integrated convergence suite
+
+gates:
+  intent_v2_approved: true
+  solution_v2_approved: false
+  execution_v2_compilable: false
+  repair_reissue_allowed: false
+  task_dispatch_allowed: false
+  next_required_action: Display the proposed solution-v2 team and architecture summary and obtain explicit owner approval.

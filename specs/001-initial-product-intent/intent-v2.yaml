@@ -1,0 +1,136 @@
+schema_version: 1
+baseline_id: intent-v2
+project_id: graphslop
+status: approved
+immutable: true
+supersedes_baseline:
+  id: intent-v1
+  artifact: specs/001-initial-product-intent/intent-v1.yaml
+  sha256: 365666168670859ffb5ee3fb2c72bb74996eb3a4630e27f7500622e2338371a9
+approved_at: '2026-07-27T18:12:19-04:00'
+approval:
+  actor: authenticated_project_owner
+  message_id: msg-freeze-intent-v2-20260727-01
+  quote: Freeze and continue.
+  displayed_artifact: recommended_role_persona_interpretation_and_project_status
+  normalized_decision: Personas are advisory project-specific perspectives; Roles carry bounded responsibility and delegated authority; replaceable workers bind to Roles; personality never grants permission.
+  authority_granted:
+    - freeze_intent_v2
+    - generate_proposed_solution_v2
+    - create_successor_impact_analysis
+  authority_not_granted:
+    - approve_solution_v2
+    - modify_application_code
+    - dispatch_execution_or_repair_tasks
+    - push
+    - create_pull_request
+    - merge
+    - deploy
+    - change_domain_or_traffic
+source:
+  predecessor_specification: specs/001-initial-product-intent/spec.md
+  predecessor_specification_sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  successor_specification: specs/001-initial-product-intent/intent-v2-spec.md
+  successor_specification_sha256: 15f5f0337b9bb8e1f4ec6601c0006fa7b8a71039589d043ff334b665bbbed5b5
+  constitution: .specify/memory/constitution.md
+  constitution_version: 1.1.0
+  constitution_sha256: fd053f3743192283045a165c0675ae69b8057c8b2284c7984ef4c34124faeea2
+intent_node_versions:
+  INT-001: 2
+  INT-002: 1
+  INT-003: 1
+  INT-004: 1
+  INT-005: 1
+  INT-006: 1
+  INT-007: 1
+  INT-008: 1
+  INT-009: 1
+  INT-010: 1
+  INT-011: 1
+  INT-012: 1
+  INT-013: 1
+  INT-014: 2
+  INT-015: 2
+  INT-016: 1
+  INT-017: 3
+  INT-018: 1
+  INT-019: 2
+  INT-020: 1
+  INT-021: 2
+  INT-022: 1
+  INT-023: 1
+  INT-024: 1
+  INT-025: 1
+  INT-026: 1
+  INT-027: 1
+  INT-028: 1
+  INT-029: 1
+exclusion_versions:
+  EXC-001: 1
+  EXC-002: 1
+  EXC-003: 1
+  EXC-004: 1
+  EXC-005: 1
+  EXC-006: 1
+  EXC-007: 2
+  EXC-008: 1
+  EXC-009: 1
+  EXC-010: 1
+  EXC-011: 1
+  EXC-012: 1
+  EXC-013: 1
+  EXC-014: 1
+decision_versions:
+  UNR-001: 2
+  DEC-002: 1
+  DEC-003: 1
+unresolved_blocking_questions: []
+protected_assertions:
+  - id: no-premature-code
+    statement: No application code or repository execution may begin before both current Intent and Solution Baselines are approved.
+    source_intent_nodes: [INT-003, INT-009, INT-010, INT-011]
+  - id: three-authoritative-graphs
+    statement: Intent, Solution, and Execution remain persistent typed authoritative graphs; any team view is a traceable projection unless a future baseline explicitly adds another authoritative graph.
+    source_intent_nodes: [INT-005, INT-010, INT-011, INT-021, INT-022, INT-029]
+  - id: caveman-control-surface
+    statement: The owner controls and corrects the factory in ordinary language without authoring graph syntax, role contracts, task files, or prompts.
+    source_intent_nodes: [INT-004, INT-023, INT-025, INT-029]
+  - id: complete-traceability
+    statement: Execution traces to Solution, Solution traces to approved Intent, and every Role and Persona cites the Solution needs that justify it.
+    source_intent_nodes: [INT-010, INT-011, INT-012, INT-018, INT-025, INT-026, INT-027, INT-029]
+  - id: immutable-baselines
+    statement: Approved baseline versions are never silently overwritten.
+    source_intent_nodes: [INT-006, INT-009, INT-016]
+  - id: role-bounded-authority
+    statement: A worker receives only the intersection of Role, task, current baselines, and owner-authorized lease permissions; the narrowest bound wins.
+    source_intent_nodes: [INT-012, INT-013, INT-014, INT-026, INT-028]
+  - id: persona-is-advisory
+    statement: Persona content may influence perspective or communication but can never create or expand permissions, authority, readiness, approval, or verification independence.
+    source_intent_nodes: [INT-014, INT-027, INT-028]
+  - id: independent-role-and-worker
+    statement: A producer cannot verify or accept its own result; verification requires a different Role assignment and worker invocation.
+    source_intent_nodes: [INT-014, INT-015, INT-028]
+  - id: project-specific-team
+    statement: Roles and Personas are generated from approved project needs rather than a fixed fictional cast or universal agent sequence.
+    source_intent_nodes: [INT-025, INT-026, INT-027]
+  - id: owner-only-private-workspace
+    statement: Only the one authenticated project owner may access project state, connect the repository, approve baselines, or authorize execution.
+    source_intent_nodes: [INT-019]
+  - id: single-project-repository
+    statement: The first release supports one active project and one connected repository.
+    source_intent_nodes: [INT-017, INT-019, INT-024]
+  - id: sequential-single-adapter
+    statement: The first release implements one execution-provider adapter and dispatches at most one task at a time.
+    source_intent_nodes: [INT-017, INT-024]
+  - id: owner-authorized-repair
+    statement: Repair tasks are typed graph work but cannot dispatch without explicit owner authorization.
+    source_intent_nodes: [INT-015, INT-024]
+  - id: no-public-api-requirement
+    statement: A public developer API is not required for the first release.
+    source_intent_nodes: [INT-024]
+  - id: no-hosted-execution-requirement
+    statement: The first release does not require repository code to execute inside the hosted web runtime.
+    source_intent_nodes: [INT-024]
+  - id: no-autonomous-release
+    statement: Draft pull request readiness grants no push, merge, deployment, domain, or traffic authority.
+    source_intent_nodes: [INT-017, INT-018, INT-019]

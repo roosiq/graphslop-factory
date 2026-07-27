@@ -148,6 +148,13 @@ were reverted, `drift-002` is blocking for the graph-kernel branch, and `repair-
 non-dispatchable until explicit owner authorization. No unaffected Execution task is currently
 ready.
 
+The owner subsequently approved `intent-v2`, adding generated project-specific Roles and advisory
+Personas. `execution-v1` is paused because it protects `intent-v1` and `solution-v1`. The
+trace-based classification in `impact-intent-v2.yaml` retains T001 evidence, preserves the T002 and
+T003 failures as history, identifies 14 blocked tasks whose objectives remain valid, identifies 23
+tasks requiring modification, and proposes T041–T045. No task or repair may dispatch until
+`solution-v2` is explicitly approved and the affected graph is recompiled.
+
 **Checkpoint**: Fresh `npm ci`, type check, empty suite, and production skeleton build pass.
 
 ## Phase 2: Foundational Graph and Control Boundaries

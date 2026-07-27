@@ -1,10 +1,25 @@
 schema_version: 1
 execution_id: execution-v1
-revision: 4
+revision: 5
 project_id: graphslop
-status: authorized
+status: paused_for_successor_solution
 compiled_at: '2026-07-27T15:45:07-04:00'
 authorized_at: '2026-07-27T15:45:07-04:00'
+paused_at: '2026-07-27T18:12:19-04:00'
+pause:
+  reason: intent-v2 supersedes the protected Intent baseline used to compile execution-v1
+  successor_intent:
+    id: intent-v2
+    artifact: specs/001-initial-product-intent/intent-v2.yaml
+    sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+  impact_analysis:
+    id: impact-intent-v2
+    artifact: specs/001-initial-product-intent/impact-intent-v2.yaml
+  dispatchable_tasks: []
+  resume_conditions:
+    - explicit approval of solution-v2
+    - compilation and validation of execution-v2 against intent-v2 and solution-v2
+    - exact owner authorization of any reissued repair task
 amendments:
 - id: execution-amendment-001
   artifact: specs/001-initial-product-intent/execution-amendment-001.yaml

@@ -1,0 +1,862 @@
+schema_version: 1
+proposal_id: solution-v2
+project_id: graphslop
+status: proposed
+approved: false
+generated_at: '2026-07-27T18:12:19-04:00'
+source_intent_baseline:
+  baseline_id: intent-v2
+  artifact: specs/001-initial-product-intent/intent-v2.yaml
+  baseline_sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+  specification_sha256: 15f5f0337b9bb8e1f4ec6601c0006fa7b8a71039589d043ff334b665bbbed5b5
+graph:
+  id: solution-graph-v2
+  kind: Solution
+  compiler_contract_version: 2
+  nodes:
+    - id: SOL-APP-001
+      type: Application
+      name: Graphslop local software factory
+      scope: product
+      satisfies: [INT-001, INT-002, INT-017, INT-022, INT-023, INT-024]
+    - id: SOL-PAGE-001
+      type: Page
+      name: Single project workspace
+      description: One responsive workspace moves from caveman conversation through intent, solution, execution, evidence, and drift review without exposing graph authoring.
+      scope: product
+      satisfies: [INT-004, INT-008, INT-017, INT-019, INT-023]
+
+    - id: SOL-FEAT-001
+      type: Feature
+      name: Ordinary-language project intake
+      scope: product
+      satisfies: [INT-002, INT-003, INT-004, INT-023]
+    - id: SOL-FEAT-002
+      type: Feature
+      name: One highest-value question
+      scope: product
+      satisfies: [INT-004, INT-008, INT-021]
+    - id: SOL-FEAT-003
+      type: Feature
+      name: Versioned graph projections
+      scope: product
+      satisfies: [INT-005, INT-006, INT-008, INT-022, INT-023]
+    - id: SOL-FEAT-004
+      type: Feature
+      name: Immutable Intent approval
+      scope: product
+      satisfies: [INT-007, INT-009]
+    - id: SOL-FEAT-005
+      type: Feature
+      name: Traceable Solution generation and approval
+      scope: product
+      satisfies: [INT-010, INT-021, INT-022]
+    - id: SOL-FEAT-006
+      type: Feature
+      name: Dependency-aware Execution compilation
+      scope: product
+      satisfies: [INT-011, INT-012, INT-021, INT-022]
+    - id: SOL-FEAT-007
+      type: Feature
+      name: Sequential owner-authorized task execution
+      scope: product
+      satisfies: [INT-011, INT-012, INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-FEAT-008
+      type: Feature
+      name: Independent verification and evidence
+      scope: product
+      satisfies: [INT-014, INT-015, INT-018]
+    - id: SOL-FEAT-009
+      type: Feature
+      name: Drift report and owner-authorized repair
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-FEAT-010
+      type: Feature
+      name: Trace-based successor-baseline impact review
+      scope: product
+      satisfies: [INT-016, INT-022]
+    - id: SOL-FEAT-011
+      type: Feature
+      name: Draft pull-request readiness
+      scope: product
+      satisfies: [INT-017, INT-018]
+
+    - id: SOL-WORK-001
+      type: Workflow
+      name: Discover and approve Intent
+      scope: product
+      satisfies: [INT-003, INT-004, INT-008, INT-009]
+    - id: SOL-WORK-002
+      type: Workflow
+      name: Generate and approve Solution
+      scope: product
+      satisfies: [INT-010]
+    - id: SOL-WORK-003
+      type: Workflow
+      name: Compile, authorize, execute, and verify work
+      scope: product
+      satisfies: [INT-011, INT-012, INT-013, INT-014, INT-015]
+    - id: SOL-WORK-004
+      type: Workflow
+      name: Review drift and authorize or reject repair
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-WORK-005
+      type: Workflow
+      name: Rebaseline changed intent and assess graph impact
+      scope: product
+      satisfies: [INT-016]
+
+    - id: SOL-COMP-001
+      type: Component
+      name: Conversation composer and timeline
+      scope: product
+      satisfies: [INT-004, INT-023]
+    - id: SOL-COMP-002
+      type: Component
+      name: Compact project understanding
+      scope: product
+      satisfies: [INT-008, INT-023]
+    - id: SOL-COMP-003
+      type: Component
+      name: Version-bound approval card
+      scope: product
+      satisfies: [INT-009, INT-010]
+    - id: SOL-COMP-004
+      type: Component
+      name: Task queue and authorization panel
+      scope: product
+      satisfies: [INT-011, INT-012, INT-017, INT-024]
+    - id: SOL-COMP-005
+      type: Component
+      name: Evidence and trace drawer
+      scope: product
+      satisfies: [INT-012, INT-018, INT-022]
+    - id: SOL-COMP-006
+      type: Component
+      name: Drift and repair decision panel
+      scope: product
+      satisfies: [INT-015, INT-024]
+
+    - id: SOL-SVC-001
+      type: Service
+      name: Immutable typed graph kernel
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-FEAT-005, SOL-FEAT-006, SOL-FEAT-010]
+    - id: SOL-SVC-002
+      type: Service
+      name: Canonical single-writer graph store
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-FEAT-004, SOL-FEAT-008]
+    - id: SOL-SVC-003
+      type: Service
+      name: Deterministic lifecycle and readiness control
+      scope: implementation_support
+      supports: [SOL-FEAT-002, SOL-FEAT-004, SOL-FEAT-007, SOL-FEAT-009]
+    - id: SOL-SVC-004
+      type: Service
+      name: Schema-bound model proposal gateway
+      scope: implementation_support
+      supports: [SOL-FEAT-001, SOL-FEAT-002, SOL-FEAT-005, SOL-FEAT-006]
+    - id: SOL-SVC-005
+      type: Service
+      name: Graph projection engine
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-COMP-002, SOL-COMP-005]
+    - id: SOL-SVC-006
+      type: Service
+      name: Signed sequential task lease coordinator
+      scope: implementation_support
+      supports: [SOL-FEAT-007]
+    - id: SOL-SVC-007
+      type: Service
+      name: Local repository runner
+      scope: implementation_support
+      supports: [SOL-FEAT-007, SOL-FEAT-008]
+    - id: SOL-SVC-008
+      type: Service
+      name: Independent verification coordinator
+      scope: implementation_support
+      supports: [SOL-FEAT-008, SOL-FEAT-009]
+    - id: SOL-SVC-009
+      type: Service
+      name: Draft pull-request composer
+      scope: implementation_support
+      supports: [SOL-FEAT-011]
+
+    - id: SOL-DATA-001
+      type: DataObject
+      name: GraphSnapshot
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-002]
+    - id: SOL-DATA-002
+      type: DataObject
+      name: GraphDelta
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-004]
+    - id: SOL-DATA-003
+      type: DataObject
+      name: Baseline and ApprovalRecord
+      scope: implementation_support
+      supports: [SOL-FEAT-004, SOL-FEAT-005]
+    - id: SOL-DATA-004
+      type: DataObject
+      name: GraphTransformation and Projection
+      scope: implementation_support
+      supports: [SOL-FEAT-003, SOL-FEAT-005, SOL-FEAT-006]
+    - id: SOL-DATA-005
+      type: DataObject
+      name: Decision and ProtectedAssertion
+      scope: implementation_support
+      supports: [SOL-SVC-003, SOL-FEAT-010]
+    - id: SOL-DATA-006
+      type: DataObject
+      name: ExecutionTask and TaskLease
+      scope: implementation_support
+      supports: [SOL-FEAT-006, SOL-FEAT-007]
+    - id: SOL-DATA-007
+      type: DataObject
+      name: EvidenceRecord
+      scope: implementation_support
+      supports: [SOL-FEAT-008, SOL-FEAT-011]
+    - id: SOL-DATA-008
+      type: DataObject
+      name: DriftReport and RepairAuthorization
+      scope: implementation_support
+      supports: [SOL-FEAT-009]
+
+    - id: SOL-RULE-001
+      type: Rule
+      name: Model output is always a proposal
+      scope: product
+      satisfies: [INT-007, INT-013, INT-014]
+    - id: SOL-RULE-002
+      type: Rule
+      name: Both exact baselines precede execution
+      scope: product
+      satisfies: [INT-009, INT-010, INT-011, INT-013]
+    - id: SOL-RULE-003
+      type: Rule
+      name: Every cross-graph product trace is complete
+      scope: product
+      satisfies: [INT-010, INT-011, INT-012, INT-018, INT-022]
+    - id: SOL-RULE-004
+      type: Rule
+      name: One control-plane writer and one active task lease
+      scope: product
+      satisfies: [INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-RULE-005
+      type: Rule
+      name: Verifier is independent from producer
+      scope: product
+      satisfies: [INT-014, INT-015]
+    - id: SOL-RULE-006
+      type: Rule
+      name: Repair never dispatches itself
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-RULE-007
+      type: Rule
+      name: Draft PR grants no merge or deployment authority
+      scope: product
+      satisfies: [INT-017, INT-018, INT-019]
+    - id: SOL-RULE-008
+      type: Rule
+      name: Graph, task, and provider contracts remain implementation-portable
+      scope: product
+      satisfies: [INT-020, INT-024]
+
+    - id: SOL-API-001
+      type: API
+      name: Versioned local control-plane command API
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-003]
+    - id: SOL-API-002
+      type: API
+      name: Signed task lease and result protocol
+      scope: implementation_support
+      supports: [SOL-SVC-006, SOL-SVC-007, SOL-SVC-008]
+
+    - id: SOL-INTG-001
+      type: Integration
+      name: Codex CLI provider adapter
+      scope: implementation_support
+      supports: [SOL-SVC-004, SOL-SVC-007, SOL-SVC-008]
+    - id: SOL-INTG-002
+      type: Integration
+      name: Local Git and worktree boundary
+      scope: implementation_support
+      supports: [SOL-SVC-007, SOL-SVC-008]
+    - id: SOL-INTG-003
+      type: Integration
+      name: GitHub CLI draft-PR boundary
+      scope: implementation_support
+      supports: [SOL-SVC-009]
+
+    - id: SOL-TECH-001
+      type: Technology
+      name: Node.js 24 and TypeScript
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-001, SOL-SVC-007]
+    - id: SOL-TECH-002
+      type: Technology
+      name: React, Vite, and Hono
+      scope: implementation_support
+      supports: [SOL-PAGE-001, SOL-API-001]
+    - id: SOL-TECH-003
+      type: Technology
+      name: Zod and exported JSON Schema
+      scope: implementation_support
+      supports: [SOL-SVC-001, SOL-SVC-004, SOL-API-002]
+    - id: SOL-TECH-004
+      type: Technology
+      name: Canonical file-backed JSON store
+      scope: implementation_support
+      supports: [SOL-SVC-002]
+
+    - id: SOL-DEPLOY-001
+      type: DeploymentTarget
+      name: Owner Linux workstation
+      scope: implementation_support
+      supports: [SOL-APP-001, SOL-SVC-007]
+    - id: SOL-DEPLOY-002
+      type: DeploymentTarget
+      name: graphslop.com unchanged and deferred
+      scope: implementation_support
+      supports: [SOL-RULE-007]
+
+    - id: SOL-TEST-001
+      type: TestableBehavior
+      name: First request materializes Intent Graph and performs no code work
+      scope: product
+      satisfies: [INT-003, INT-005]
+    - id: SOL-TEST-002
+      type: TestableBehavior
+      name: Ordinary-language correction appends a validated graph delta and supersession
+      scope: product
+      satisfies: [INT-004, INT-006, INT-023]
+    - id: SOL-TEST-003
+      type: TestableBehavior
+      name: Every clarification turn asks exactly one ranked question
+      scope: product
+      satisfies: [INT-004, INT-021]
+    - id: SOL-TEST-004
+      type: TestableBehavior
+      name: Approval freezes exact graph and projection hashes
+      scope: product
+      satisfies: [INT-009, INT-010]
+    - id: SOL-TEST-005
+      type: TestableBehavior
+      name: Every product Solution node and Execution task traces to approved Intent
+      scope: product
+      satisfies: [INT-010, INT-011, INT-012, INT-022]
+    - id: SOL-TEST-006
+      type: TestableBehavior
+      name: Stale, forged, duplicate, or concurrent task leases fail closed
+      scope: product
+      satisfies: [INT-013, INT-017, INT-019, INT-024]
+    - id: SOL-TEST-007
+      type: TestableBehavior
+      name: Out-of-scope repository changes cannot be accepted
+      scope: product
+      satisfies: [INT-012, INT-013]
+    - id: SOL-TEST-008
+      type: TestableBehavior
+      name: A producer report alone can never accept work
+      scope: product
+      satisfies: [INT-014, INT-015]
+    - id: SOL-TEST-009
+      type: TestableBehavior
+      name: Drift creates a complete report and idle proposed Repair node
+      scope: product
+      satisfies: [INT-015, INT-024]
+    - id: SOL-TEST-010
+      type: TestableBehavior
+      name: Successor baseline impact traversal pauses only affected work
+      scope: product
+      satisfies: [INT-016, INT-022]
+    - id: SOL-TEST-011
+      type: TestableBehavior
+      name: Draft PR readiness requires all current evidence and grants no release authority
+      scope: product
+      satisfies: [INT-018, INT-019]
+    - id: SOL-TEST-012
+      type: TestableBehavior
+      name: Owner completes P1 journeys without graph syntax or prompt engineering
+      scope: product
+      satisfies: [INT-008, INT-023]
+
+    - id: SOL-FEAT-012
+      type: Feature
+      name: Project-specific Role and Persona generation
+      scope: product
+      satisfies: [INT-014, INT-017, INT-025, INT-026, INT-027, INT-029]
+    - id: SOL-FEAT-013
+      type: Feature
+      name: Role-bound task assignment
+      scope: product
+      satisfies: [INT-012, INT-013, INT-014, INT-026, INT-028]
+    - id: SOL-WORK-006
+      type: Workflow
+      name: Generate and review the project team
+      scope: product
+      satisfies: [INT-025, INT-026, INT-027, INT-029]
+    - id: SOL-COMP-007
+      type: Component
+      name: Team projection and role review
+      scope: product
+      satisfies: [INT-023, INT-025, INT-029]
+    - id: SOL-SVC-010
+      type: Service
+      name: Deterministic team-plan compiler
+      scope: implementation_support
+      supports: [SOL-FEAT-012, SOL-FEAT-013]
+    - id: SOL-DATA-009
+      type: DataObject
+      name: PersonaProfile and RoleContract
+      scope: product
+      satisfies: [INT-026, INT-027, INT-029]
+    - id: SOL-DATA-010
+      type: DataObject
+      name: TaskAssignment
+      scope: product
+      satisfies: [INT-026, INT-028, INT-029]
+    - id: SOL-RULE-009
+      type: Rule
+      name: Persona content is advisory and never grants authority
+      scope: product
+      satisfies: [INT-014, INT-027, INT-028]
+    - id: SOL-RULE-010
+      type: Rule
+      name: Worker authority is the narrowest Role, task, baseline, and owner-lease intersection
+      scope: product
+      satisfies: [INT-012, INT-013, INT-014, INT-026, INT-028]
+    - id: SOL-TEST-013
+      type: TestableBehavior
+      name: Generated team nodes are project-specific, minimal, reviewable, and completely traced
+      scope: product
+      satisfies: [INT-025, INT-026, INT-027, INT-029]
+    - id: SOL-TEST-014
+      type: TestableBehavior
+      name: Persona authority, over-privileged assignment, and producer self-verification fail closed
+      scope: product
+      satisfies: [INT-013, INT-014, INT-027, INT-028]
+
+    - id: SOL-CAP-001
+      type: Capability
+      name: Intent capability
+      authority_mode: intent
+      allowed_proposal_kinds: [IntentGraphDelta, QuestionSelection, ReadinessAssessment, IntentProjection]
+      forbidden_actions: [approve baseline, generate Solution, modify repository, dispatch task]
+      contract_version: 2
+      source_intent_refs: [INT-003, INT-004, INT-014]
+      scope: product
+      satisfies: [INT-003, INT-004, INT-014]
+    - id: SOL-CAP-002
+      type: Capability
+      name: Solution capability
+      authority_mode: solution
+      allowed_proposal_kinds: [SolutionGraphDelta, TeamPlan, TechnicalDefault, TestableBehavior]
+      forbidden_actions: [change Intent, approve baseline, modify repository, authorize execution]
+      contract_version: 2
+      source_intent_refs: [INT-010, INT-014, INT-025]
+      scope: product
+      satisfies: [INT-010, INT-014, INT-025]
+    - id: SOL-CAP-003
+      type: Capability
+      name: Execution capability
+      authority_mode: execution
+      allowed_proposal_kinds: [TaskResult, EvidenceRecord, Blocker, OptionalSuggestion]
+      forbidden_actions: [change Intent, change Solution, broaden task, approve own result, release]
+      contract_version: 2
+      source_intent_refs: [INT-011, INT-012, INT-014, INT-028]
+      scope: product
+      satisfies: [INT-011, INT-012, INT-014, INT-028]
+    - id: SOL-CAP-004
+      type: Capability
+      name: Verification capability
+      authority_mode: verification
+      allowed_proposal_kinds: [VerificationResult, DriftReport, RepairProposal, IntegrationDisposition]
+      forbidden_actions: [implement reviewed result, approve own result, authorize repair, release]
+      contract_version: 2
+      source_intent_refs: [INT-014, INT-015, INT-028]
+      scope: product
+      satisfies: [INT-014, INT-015, INT-028]
+
+    - id: SOL-PERSONA-001
+      type: Persona
+      name: Caveman owner advocate
+      description: Protects ordinary-language simplicity and exposes confusing graph or agent machinery; may underweight implementation complexity.
+      perspective: Judge every owner-facing decision from the viewpoint of a capable person who refuses graph syntax and agent prompt engineering.
+      expertise: [plain-language product framing, progressive disclosure, workflow comprehension]
+      priorities: [faithful interpretation, one clear next action, visible authority state]
+      communication_guidance: Use ordinary concrete language and expose internal graph detail only when it helps a decision.
+      blind_spots: [may underweight implementation complexity, may prefer simplicity over advanced operator controls]
+      informs_roles: [SOL-ROLE-001, SOL-ROLE-002, SOL-ROLE-005]
+      selection_rationale: INT-023 makes caveman-simple control a protected product requirement.
+      scope: product
+      satisfies: [INT-002, INT-023, INT-027, INT-029]
+    - id: SOL-PERSONA-002
+      type: Persona
+      name: Graph systems architect
+      description: Protects typed graph integrity, compilation, traceability, and immutable baselines; may over-engineer low-impact paths.
+      perspective: Treat graph state, versioned transformations, and trace closure as the persistent authority rather than explanatory diagrams.
+      expertise: [typed graph schemas, immutable data, graph traversal, compiler pipelines]
+      priorities: [valid edges, deterministic transforms, exact hashes, complete traces]
+      communication_guidance: State invariants, inputs, outputs, and failure conditions before implementation details.
+      blind_spots: [may over-engineer low-impact paths, may optimize graph purity over owner comprehension]
+      informs_roles: [SOL-ROLE-002, SOL-ROLE-003, SOL-ROLE-004]
+      selection_rationale: INT-021 and INT-022 make graph engineering the product kernel.
+      scope: product
+      satisfies: [INT-021, INT-022, INT-027]
+    - id: SOL-PERSONA-003
+      type: Persona
+      name: Adversarial authority reviewer
+      description: Searches for permission escalation, self-approval, drift, and false-green evidence; may increase workflow friction.
+      perspective: Assume every ambiguous authority edge, stale reference, and self-reported success can fail unsafe.
+      expertise: [least privilege, trust boundaries, drift analysis, adversarial verification]
+      priorities: [fail-closed authorization, independent evidence, bounded retries, escalation]
+      communication_guidance: Identify the exact protected assertion, observed violation, evidence, and smallest safe disposition.
+      blind_spots: [may increase workflow friction, may reject useful convenience without sufficient risk calibration]
+      informs_roles: [SOL-ROLE-006, SOL-ROLE-007, SOL-ROLE-008, SOL-ROLE-009]
+      selection_rationale: INT-013, INT-015, and INT-028 require independent enforcement against drift and authority escalation.
+      scope: product
+      satisfies: [INT-013, INT-015, INT-027, INT-028]
+    - id: SOL-PERSONA-004
+      type: Persona
+      name: Repository maintainer
+      description: Protects maintainability, bounded diffs, tests, and clean handoff; may underweight product-discovery nuance.
+      perspective: Treat every task as a bounded repository change another engineer must inspect, test, and maintain.
+      expertise: [repository conventions, incremental delivery, test design, code review]
+      priorities: [small diffs, clean contracts, reproducible checks, understandable evidence]
+      communication_guidance: Report changed files, verification commands, unresolved issues, and maintenance consequences directly.
+      blind_spots: [may underweight product-discovery nuance, may resist necessary architectural change]
+      informs_roles: [SOL-ROLE-003, SOL-ROLE-004, SOL-ROLE-005, SOL-ROLE-006]
+      selection_rationale: INT-012 and INT-018 require bounded implementation with reviewable evidence.
+      scope: product
+      satisfies: [INT-012, INT-018, INT-027]
+
+    - id: SOL-ROLE-001
+      type: Role
+      name: Intent steward
+      description: Maintains faithful project understanding and questions without designing or coding.
+      contract:
+        objective: Convert owner language into reviewable Intent state without beginning design or implementation.
+        responsibilities: [classify answers, preserve provenance, detect contradictions, rank one question, prepare approval projection]
+        required_inputs: [owner messages, current Intent snapshot, settled decisions]
+        required_outputs: [validated Intent delta proposal, readiness assessment, one next question, baseline review]
+        required_capability: SOL-CAP-001
+        independence_class: producer
+        dependencies: []
+        permission_ceiling: [propose Intent deltas, read project conversation and Intent state]
+        forbidden_actions: [approve Intent, design Solution, modify repository, dispatch work]
+        review_obligations: [surface inference as inference, retain correction history]
+        acceptance_responsibilities: [faithful source trace, one-question rule, no premature code]
+        selection_rationale: Graphslop cannot safely compile software until rough owner language becomes stable approved intent.
+      scope: product
+      satisfies: [INT-003, INT-004, INT-014, INT-026]
+    - id: SOL-ROLE-002
+      type: Role
+      name: Product and solution designer
+      description: Compiles approved Intent into product structure, team needs, technical defaults, and testable behavior without changing Intent.
+      contract:
+        objective: Produce the smallest traceable product, architecture, and team proposal that satisfies approved Intent.
+        responsibilities: [compile Solution nodes, separate product from technical defaults, generate justified Roles and Personas, define testable behavior]
+        required_inputs: [approved Intent Baseline, repository constraints, technical evidence]
+        required_outputs: [Solution proposal, team proposal, trace map, risks and defaults]
+        required_capability: SOL-CAP-002
+        independence_class: producer
+        dependencies: [SOL-ROLE-001]
+        permission_ceiling: [propose Solution and team nodes, read approved Intent and repository metadata]
+        forbidden_actions: [change approved Intent, approve Solution, modify repository, authorize execution]
+        review_obligations: [reject orphan product nodes, label implementation support]
+        acceptance_responsibilities: [complete Intent trace, justified minimal team, reviewable defaults]
+        selection_rationale: Solution and team generation require product and technical synthesis without authority to reinterpret Intent.
+      scope: product
+      satisfies: [INT-010, INT-014, INT-025, INT-026]
+    - id: SOL-ROLE-003
+      type: Role
+      name: Graph kernel engineer
+      description: Implements immutable graph schemas, hashing, traversal, transformations, and persistence within bounded tasks.
+      contract:
+        objective: Implement deterministic graph primitives and contracts assigned by the Execution Graph.
+        responsibilities: [schema implementation, immutable transforms, canonical hashing, traversal, persistence tests]
+        required_inputs: [approved graph contracts, bounded task, repository context]
+        required_outputs: [implementation, focused tests, changed-file evidence, unresolved issues]
+        required_capability: SOL-CAP-003
+        independence_class: producer
+        dependencies: [SOL-ROLE-002]
+        permission_ceiling: [task allowed paths, approved local test commands]
+        forbidden_actions: [change product meaning, broaden graph types, approve own work, external side effects]
+        review_obligations: [prove deterministic behavior and exact reference handling]
+        acceptance_responsibilities: [task checks, regression checks, trace evidence]
+        selection_rationale: The immutable typed graph kernel is an independent architectural boundary.
+      scope: product
+      satisfies: [INT-011, INT-012, INT-022, INT-026]
+    - id: SOL-ROLE-004
+      type: Role
+      name: Control-plane engineer
+      description: Implements lifecycle, proposal orchestration, approvals, projections, and trace compilation within bounded tasks.
+      contract:
+        objective: Implement deterministic state transitions and graph compilation around model proposals.
+        responsibilities: [lifecycle gates, readiness, approvals, proposal validation, projections, impact traversal]
+        required_inputs: [approved control-plane contracts, bounded task, graph-kernel API]
+        required_outputs: [implementation, focused tests, state-transition evidence, unresolved issues]
+        required_capability: SOL-CAP-003
+        independence_class: producer
+        dependencies: [SOL-ROLE-002, SOL-ROLE-003]
+        permission_ceiling: [task allowed paths, approved local test commands]
+        forbidden_actions: [grant owner authority, bypass validation, mutate baselines, approve own work]
+        review_obligations: [demonstrate illegal transitions fail closed]
+        acceptance_responsibilities: [state-machine checks, trace closure, atomic failure behavior]
+        selection_rationale: Model proposals need a separate deterministic authority boundary.
+      scope: product
+      satisfies: [INT-011, INT-012, INT-013, INT-026]
+    - id: SOL-ROLE-005
+      type: Role
+      name: Owner-experience engineer
+      description: Implements accessible caveman-simple intake, graph projections, approvals, evidence, and change review.
+      contract:
+        objective: Make authoritative graph state understandable and operable through an accessible ordinary-language workspace.
+        responsibilities: [conversation UI, compact projections, approval views, team view, task and drift review, responsive accessibility]
+        required_inputs: [approved owner journeys, projection contracts, bounded task]
+        required_outputs: [interface implementation, browser tests, accessibility evidence]
+        required_capability: SOL-CAP-003
+        independence_class: producer
+        dependencies: [SOL-ROLE-002, SOL-ROLE-004]
+        permission_ceiling: [task UI paths, approved local browser and test commands]
+        forbidden_actions: [invent product behavior, hide authority state, approve own work, deploy]
+        review_obligations: [keyboard, semantics, responsive, empty, error, and blocked states]
+        acceptance_responsibilities: [ordinary-language comprehension, accessible P1 journeys]
+        selection_rationale: The caveman control surface is a distinct product boundary with independent acceptance needs.
+      scope: product
+      satisfies: [INT-008, INT-012, INT-023, INT-026]
+    - id: SOL-ROLE-006
+      type: Role
+      name: Runner and security engineer
+      description: Implements leases, repository isolation, permissions, cancellation, evidence boundaries, and provider integration.
+      contract:
+        objective: Execute one authorized task inside enforceable repository and process boundaries.
+        responsibilities: [leases, worker binding, permission profiles, worktrees, cancellation, evidence transport, secret boundaries]
+        required_inputs: [approved task and Role, owner-authorized lease, repository identity, provider capability report]
+        required_outputs: [bounded execution path, security tests, process and repository evidence]
+        required_capability: SOL-CAP-003
+        independence_class: producer
+        dependencies: [SOL-ROLE-003, SOL-ROLE-004]
+        permission_ceiling: [exact task paths, exact lease actions, approved provider and network destinations]
+        forbidden_actions: [broaden task scope, derive permission from Persona, self-verify, push, merge, deploy]
+        review_obligations: [exercise stale, forged, traversal, cancellation, and escalation failures]
+        acceptance_responsibilities: [least privilege, fail-closed execution, redaction-safe evidence]
+        selection_rationale: Repository execution and credentials form a separate high-risk trust boundary.
+      scope: product
+      satisfies: [INT-012, INT-013, INT-019, INT-026, INT-028]
+    - id: SOL-ROLE-007
+      type: Role
+      name: Specification verifier
+      description: Independently verifies task and implementation conformance to Solution and Intent; never implements the result it reviews.
+      contract:
+        objective: Determine whether delivered behavior exactly satisfies the task, Solution, Intent, and exclusions.
+        responsibilities: [trace review, acceptance evaluation, missing-scope detection, unapproved-scope detection, drift reporting]
+        required_inputs: [fresh repository view, task contract, current baselines, evidence]
+        required_outputs: [independent pass or failure report, requirement mapping, drift recommendation]
+        required_capability: SOL-CAP-004
+        independence_class: specification_verifier
+        dependencies: []
+        permission_ceiling: [read task artifacts and repository, run approved verification commands]
+        forbidden_actions: [implement reviewed result, accept self-report, modify baselines, authorize repair]
+        review_obligations: [inspect every applicable requirement and explicit exclusion]
+        acceptance_responsibilities: [specification compliance and drift classification]
+        selection_rationale: Independent intent and solution conformance cannot be delegated to the producer.
+      scope: product
+      satisfies: [INT-014, INT-015, INT-026, INT-028]
+    - id: SOL-ROLE-008
+      type: Role
+      name: Code-quality verifier
+      description: Independently reviews correctness, maintainability, security, accessibility, performance, and test quality.
+      contract:
+        objective: Determine whether a spec-compliant result is safe, maintainable, and honestly verified.
+        responsibilities: [correctness review, maintainability review, security review, test-quality review, false-green detection]
+        required_inputs: [fresh repository view, implementation diff, test output, applicable technical plan]
+        required_outputs: [independent quality disposition, severity-ranked findings, repair guidance]
+        required_capability: SOL-CAP-004
+        independence_class: quality_verifier
+        dependencies: [SOL-ROLE-007]
+        permission_ceiling: [read task artifacts and repository, run approved verification commands]
+        forbidden_actions: [implement reviewed result, waive important findings without evidence, authorize execution or release]
+        review_obligations: [separate critical, important, and minor findings]
+        acceptance_responsibilities: [quality gate and false-green rejection]
+        selection_rationale: Passing a specification review does not prove implementation quality or trustworthy tests.
+      scope: product
+      satisfies: [INT-014, INT-015, INT-018, INT-026, INT-028]
+    - id: SOL-ROLE-009
+      type: Role
+      name: Integration and release-readiness reviewer
+      description: Verifies the integrated system, trace manifest, browser acceptance, and draft-PR boundary without merge or deployment authority.
+      contract:
+        objective: Verify the complete application against current baselines and prepare a reviewable draft-PR artifact.
+        responsibilities: [integrated checks, browser acceptance, security and recovery review, trace manifest, convergence]
+        required_inputs: [all accepted tasks, current baselines, complete diff, system evidence]
+        required_outputs: [integration disposition, remaining gaps, draft-PR preview]
+        required_capability: SOL-CAP-004
+        independence_class: integration_verifier
+        dependencies: [SOL-ROLE-007, SOL-ROLE-008]
+        permission_ceiling: [read integrated repository, run approved system and browser checks, compose draft preview]
+        forbidden_actions: [implement unapproved scope, accept own task result, create PR without authorization, merge, deploy, alter traffic]
+        review_obligations: [verify every success criterion and unresolved drift item]
+        acceptance_responsibilities: [system convergence and release-boundary integrity]
+        selection_rationale: Completion requires independent whole-system evidence rather than accumulation of task claims.
+      scope: product
+      satisfies: [INT-014, INT-018, INT-026, INT-028]
+
+  edges:
+    - { id: E-001, type: CONTAINS, from: SOL-APP-001, to: SOL-PAGE-001 }
+    - { id: E-002, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-001 }
+    - { id: E-003, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-002 }
+    - { id: E-004, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-003 }
+    - { id: E-005, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-004 }
+    - { id: E-006, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-005 }
+    - { id: E-007, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-006 }
+    - { id: E-008, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-001 }
+    - { id: E-009, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-002 }
+    - { id: E-010, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-003 }
+    - { id: E-011, type: REALIZES, from: SOL-WORK-001, to: SOL-FEAT-004 }
+    - { id: E-012, type: DEPENDS_ON, from: SOL-WORK-002, to: SOL-WORK-001 }
+    - { id: E-013, type: REALIZES, from: SOL-WORK-002, to: SOL-FEAT-005 }
+    - { id: E-014, type: DEPENDS_ON, from: SOL-WORK-003, to: SOL-WORK-002 }
+    - { id: E-015, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-006 }
+    - { id: E-016, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-007 }
+    - { id: E-017, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-008 }
+    - { id: E-018, type: DEPENDS_ON, from: SOL-WORK-004, to: SOL-WORK-003 }
+    - { id: E-019, type: REALIZES, from: SOL-WORK-004, to: SOL-FEAT-009 }
+    - { id: E-020, type: REALIZES, from: SOL-WORK-005, to: SOL-FEAT-010 }
+    - { id: E-021, type: USES, from: SOL-FEAT-003, to: SOL-SVC-005 }
+    - { id: E-022, type: USES, from: SOL-FEAT-004, to: SOL-SVC-003 }
+    - { id: E-023, type: USES, from: SOL-FEAT-005, to: SOL-SVC-001 }
+    - { id: E-024, type: USES, from: SOL-FEAT-006, to: SOL-SVC-001 }
+    - { id: E-025, type: USES, from: SOL-FEAT-007, to: SOL-SVC-006 }
+    - { id: E-026, type: USES, from: SOL-FEAT-007, to: SOL-SVC-007 }
+    - { id: E-027, type: USES, from: SOL-FEAT-008, to: SOL-SVC-008 }
+    - { id: E-028, type: USES, from: SOL-FEAT-009, to: SOL-SVC-008 }
+    - { id: E-029, type: USES, from: SOL-FEAT-011, to: SOL-SVC-009 }
+    - { id: E-030, type: DEPENDS_ON, from: SOL-SVC-005, to: SOL-SVC-001 }
+    - { id: E-031, type: DEPENDS_ON, from: SOL-SVC-001, to: SOL-SVC-002 }
+    - { id: E-032, type: DEPENDS_ON, from: SOL-SVC-004, to: SOL-SVC-001 }
+    - { id: E-033, type: DEPENDS_ON, from: SOL-SVC-006, to: SOL-SVC-003 }
+    - { id: E-034, type: DEPENDS_ON, from: SOL-SVC-007, to: SOL-SVC-006 }
+    - { id: E-035, type: DEPENDS_ON, from: SOL-SVC-008, to: SOL-SVC-007 }
+    - { id: E-036, type: USES, from: SOL-SVC-001, to: SOL-DATA-001 }
+    - { id: E-037, type: USES, from: SOL-SVC-001, to: SOL-DATA-002 }
+    - { id: E-038, type: USES, from: SOL-SVC-002, to: SOL-TECH-004 }
+    - { id: E-039, type: USES, from: SOL-SVC-004, to: SOL-INTG-001 }
+    - { id: E-040, type: USES, from: SOL-SVC-007, to: SOL-INTG-002 }
+    - { id: E-041, type: USES, from: SOL-SVC-009, to: SOL-INTG-003 }
+    - { id: E-042, type: EXPOSES, from: SOL-APP-001, to: SOL-API-001 }
+    - { id: E-043, type: EXPOSES, from: SOL-SVC-006, to: SOL-API-002 }
+    - { id: E-044, type: DEPLOYED_TO, from: SOL-APP-001, to: SOL-DEPLOY-001 }
+    - { id: E-045, type: PROTECTED_BY, from: SOL-FEAT-007, to: SOL-RULE-002 }
+    - { id: E-046, type: PROTECTED_BY, from: SOL-FEAT-007, to: SOL-RULE-004 }
+    - { id: E-047, type: PROTECTED_BY, from: SOL-FEAT-008, to: SOL-RULE-005 }
+    - { id: E-048, type: PROTECTED_BY, from: SOL-FEAT-009, to: SOL-RULE-006 }
+    - { id: E-049, type: VALIDATED_BY, from: SOL-FEAT-001, to: SOL-TEST-001 }
+    - { id: E-050, type: VALIDATED_BY, from: SOL-FEAT-003, to: SOL-TEST-002 }
+    - { id: E-051, type: VALIDATED_BY, from: SOL-FEAT-002, to: SOL-TEST-003 }
+    - { id: E-052, type: VALIDATED_BY, from: SOL-FEAT-004, to: SOL-TEST-004 }
+    - { id: E-053, type: VALIDATED_BY, from: SOL-FEAT-005, to: SOL-TEST-005 }
+    - { id: E-054, type: VALIDATED_BY, from: SOL-FEAT-006, to: SOL-TEST-005 }
+    - { id: E-055, type: VALIDATED_BY, from: SOL-FEAT-007, to: SOL-TEST-006 }
+    - { id: E-056, type: VALIDATED_BY, from: SOL-FEAT-007, to: SOL-TEST-007 }
+    - { id: E-057, type: VALIDATED_BY, from: SOL-FEAT-008, to: SOL-TEST-008 }
+    - { id: E-058, type: VALIDATED_BY, from: SOL-FEAT-009, to: SOL-TEST-009 }
+    - { id: E-059, type: VALIDATED_BY, from: SOL-FEAT-010, to: SOL-TEST-010 }
+    - { id: E-060, type: VALIDATED_BY, from: SOL-FEAT-011, to: SOL-TEST-011 }
+    - { id: E-061, type: VALIDATED_BY, from: SOL-PAGE-001, to: SOL-TEST-012 }
+    - { id: E-062, type: USES, from: SOL-SVC-003, to: SOL-DATA-003 }
+    - { id: E-063, type: USES, from: SOL-SVC-001, to: SOL-DATA-004 }
+    - { id: E-064, type: USES, from: SOL-SVC-003, to: SOL-DATA-005 }
+    - { id: E-065, type: USES, from: SOL-SVC-006, to: SOL-DATA-006 }
+    - { id: E-066, type: USES, from: SOL-SVC-008, to: SOL-DATA-007 }
+    - { id: E-067, type: USES, from: SOL-SVC-008, to: SOL-DATA-008 }
+    - { id: E-068, type: PROTECTED_BY, from: SOL-FEAT-001, to: SOL-RULE-001 }
+    - { id: E-069, type: PROTECTED_BY, from: SOL-FEAT-005, to: SOL-RULE-003 }
+    - { id: E-070, type: PROTECTED_BY, from: SOL-FEAT-011, to: SOL-RULE-007 }
+    - { id: E-071, type: PROTECTED_BY, from: SOL-APP-001, to: SOL-RULE-008 }
+    - { id: E-072, type: USES, from: SOL-APP-001, to: SOL-TECH-001 }
+    - { id: E-073, type: USES, from: SOL-PAGE-001, to: SOL-TECH-002 }
+    - { id: E-074, type: USES, from: SOL-SVC-001, to: SOL-TECH-003 }
+    - { id: E-075, type: PROTECTED_BY, from: SOL-DEPLOY-002, to: SOL-RULE-007 }
+    - { id: E-076, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-007 }
+    - { id: E-077, type: DEPENDS_ON, from: SOL-WORK-006, to: SOL-WORK-002 }
+    - { id: E-078, type: DEPENDS_ON, from: SOL-WORK-003, to: SOL-WORK-006 }
+    - { id: E-079, type: REALIZES, from: SOL-WORK-006, to: SOL-FEAT-012 }
+    - { id: E-080, type: REALIZES, from: SOL-WORK-003, to: SOL-FEAT-013 }
+    - { id: E-081, type: PRESENTS, from: SOL-COMP-007, to: SOL-FEAT-012 }
+    - { id: E-082, type: USES, from: SOL-FEAT-012, to: SOL-SVC-010 }
+    - { id: E-083, type: USES, from: SOL-FEAT-013, to: SOL-SVC-010 }
+    - { id: E-084, type: USES, from: SOL-SVC-010, to: SOL-DATA-009 }
+    - { id: E-085, type: USES, from: SOL-SVC-006, to: SOL-DATA-010 }
+    - { id: E-086, type: PROTECTED_BY, from: SOL-FEAT-012, to: SOL-RULE-009 }
+    - { id: E-087, type: PROTECTED_BY, from: SOL-FEAT-013, to: SOL-RULE-010 }
+    - { id: E-088, type: VALIDATED_BY, from: SOL-FEAT-012, to: SOL-TEST-013 }
+    - { id: E-089, type: VALIDATED_BY, from: SOL-FEAT-013, to: SOL-TEST-014 }
+    - { id: E-090, type: PROJECTS, from: SOL-SVC-005, to: SOL-DATA-009 }
+    - { id: E-091, type: PROJECTS, from: SOL-SVC-005, to: SOL-DATA-010 }
+    - { id: E-092, type: USES_CAPABILITY, from: SOL-ROLE-001, to: SOL-CAP-001 }
+    - { id: E-093, type: USES_CAPABILITY, from: SOL-ROLE-002, to: SOL-CAP-002 }
+    - { id: E-094, type: USES_CAPABILITY, from: SOL-ROLE-003, to: SOL-CAP-003 }
+    - { id: E-095, type: USES_CAPABILITY, from: SOL-ROLE-004, to: SOL-CAP-003 }
+    - { id: E-096, type: USES_CAPABILITY, from: SOL-ROLE-005, to: SOL-CAP-003 }
+    - { id: E-097, type: USES_CAPABILITY, from: SOL-ROLE-006, to: SOL-CAP-003 }
+    - { id: E-098, type: USES_CAPABILITY, from: SOL-ROLE-007, to: SOL-CAP-004 }
+    - { id: E-099, type: USES_CAPABILITY, from: SOL-ROLE-008, to: SOL-CAP-004 }
+    - { id: E-100, type: USES_CAPABILITY, from: SOL-ROLE-009, to: SOL-CAP-004 }
+    - { id: E-101, type: JUSTIFIED_BY, from: SOL-ROLE-001, to: SOL-WORK-001 }
+    - { id: E-102, type: JUSTIFIED_BY, from: SOL-ROLE-002, to: SOL-WORK-002 }
+    - { id: E-103, type: JUSTIFIED_BY, from: SOL-ROLE-003, to: SOL-SVC-001 }
+    - { id: E-104, type: JUSTIFIED_BY, from: SOL-ROLE-004, to: SOL-SVC-003 }
+    - { id: E-105, type: JUSTIFIED_BY, from: SOL-ROLE-005, to: SOL-PAGE-001 }
+    - { id: E-106, type: JUSTIFIED_BY, from: SOL-ROLE-006, to: SOL-SVC-007 }
+    - { id: E-107, type: JUSTIFIED_BY, from: SOL-ROLE-007, to: SOL-SVC-008 }
+    - { id: E-108, type: JUSTIFIED_BY, from: SOL-ROLE-008, to: SOL-SVC-008 }
+    - { id: E-109, type: JUSTIFIED_BY, from: SOL-ROLE-009, to: SOL-FEAT-011 }
+    - { id: E-110, type: INFORMS, from: SOL-PERSONA-001, to: SOL-ROLE-001 }
+    - { id: E-111, type: INFORMS, from: SOL-PERSONA-001, to: SOL-ROLE-002 }
+    - { id: E-112, type: INFORMS, from: SOL-PERSONA-001, to: SOL-ROLE-005 }
+    - { id: E-113, type: INFORMS, from: SOL-PERSONA-002, to: SOL-ROLE-002 }
+    - { id: E-114, type: INFORMS, from: SOL-PERSONA-002, to: SOL-ROLE-003 }
+    - { id: E-115, type: INFORMS, from: SOL-PERSONA-002, to: SOL-ROLE-004 }
+    - { id: E-116, type: INFORMS, from: SOL-PERSONA-003, to: SOL-ROLE-006 }
+    - { id: E-117, type: INFORMS, from: SOL-PERSONA-003, to: SOL-ROLE-007 }
+    - { id: E-118, type: INFORMS, from: SOL-PERSONA-003, to: SOL-ROLE-008 }
+    - { id: E-119, type: INFORMS, from: SOL-PERSONA-003, to: SOL-ROLE-009 }
+    - { id: E-120, type: INFORMS, from: SOL-PERSONA-004, to: SOL-ROLE-003 }
+    - { id: E-121, type: INFORMS, from: SOL-PERSONA-004, to: SOL-ROLE-004 }
+    - { id: E-122, type: INFORMS, from: SOL-PERSONA-004, to: SOL-ROLE-005 }
+    - { id: E-123, type: INFORMS, from: SOL-PERSONA-004, to: SOL-ROLE-006 }
+    - { id: E-124, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-007, to: SOL-ROLE-003 }
+    - { id: E-125, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-007, to: SOL-ROLE-004 }
+    - { id: E-126, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-007, to: SOL-ROLE-005 }
+    - { id: E-127, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-007, to: SOL-ROLE-006 }
+    - { id: E-128, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-008, to: SOL-ROLE-003 }
+    - { id: E-129, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-008, to: SOL-ROLE-004 }
+    - { id: E-130, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-008, to: SOL-ROLE-005 }
+    - { id: E-131, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-008, to: SOL-ROLE-006 }
+    - { id: E-132, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-009, to: SOL-ROLE-003 }
+    - { id: E-133, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-009, to: SOL-ROLE-004 }
+    - { id: E-134, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-009, to: SOL-ROLE-005 }
+    - { id: E-135, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-009, to: SOL-ROLE-006 }
+    - { id: E-136, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-007, to: SOL-ROLE-009 }
+    - { id: E-137, type: MUST_BE_INDEPENDENT_FROM, from: SOL-ROLE-008, to: SOL-ROLE-009 }
+deferred_solution_nodes:
+  - Hosted Cloudflare control plane
+  - Outbound remote runner enrollment
+  - Additional execution-provider adapters
+  - Parallel task dispatch
+  - Automatic repair dispatch
+  - Public developer API
+  - Graph database
+  - graphslop.com route or traffic cutover
+approval_required:
+  artifact: solution-v2
+  effect: freezes the generated Role and Persona team plan and authorizes recompilation of affected Execution work
+  does_not_authorize: [push, draft_pull_request_creation, merge, deploy, domain_cutover, traffic_cutover]
