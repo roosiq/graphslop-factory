@@ -1,0 +1,83 @@
+schema_version: 1
+task_id: T001
+contract_id: TC-001
+status: accepted
+accepted_at: 2026-07-27T16:01:47-04:00
+protected_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+base_commit: 1e1944db9f58b21840e9b27062c45fcf43de9a6f
+candidate_commits:
+  - 9cd205ac3d42b4a2b0a9d37654fc0683f158a7f8
+  - 29065de06a7e4647e1d75832cc6df2ba594c99e0
+changed_files:
+  - path: .nvmrc
+    sha256: 68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53
+  - path: package.json
+    sha256: 6cbb437cb1344e7801bd1fef24e9ca8ffe3fef98dffa26611e6be80c38b78eb8
+  - path: package-lock.json
+    sha256: 3738ebde8c566557255cf05260b635007db4ad07731b3f5dace1571b59483f85
+  - path: tsconfig.json
+    sha256: 1054596f278bd8334a2eca52a7c7542e7904f3239c1652acab1576f2b3e46753
+  - path: apps/control-plane/package.json
+    sha256: e44571c7b416bf699b7a59b57f093bae18b1bb69c38c6c5a6e71324ada07021d
+  - path: apps/runner/package.json
+    sha256: ea457a46d56a992ddef5d8005abbd3d55ef8b7b25b58b86f4e506fbdf3d12b09
+  - path: packages/codex-adapter/package.json
+    sha256: 26d95e93d8b8ba2a66473433856b9a71d69f1c0a1c4e4ffa234ca0f037be63dc
+  - path: packages/contracts/package.json
+    sha256: aa2d0b2d29b2656f33b5d4719a87d2c86a2d620f1528bd61947b2e89b4e1d729
+  - path: packages/control-state/package.json
+    sha256: ba20deafb41e421931c31488beada847bdb100b72e7f1ae7fa5dd05aac551c55
+  - path: packages/file-store/package.json
+    sha256: d39870d5d761e4db44334aa32182e4fc0247327f46b7f4a0ccdab1f0e3580b4c
+  - path: packages/graph-kernel/package.json
+    sha256: bec119b18119d9d31d0b3e9d7dc0acb59f7654c4f39aa9c62a70b77cfff14b82
+  - path: packages/testing/package.json
+    sha256: 902af32cd64cabf13d25abc61df2fa6cfc145bf35ad463c5c4f1dea6222c7274
+acceptance_checks:
+  - id: AC-001
+    outcome: pass
+    evidence:
+      - command: npm ci --no-audit --no-fund
+        outcome: pass
+      - command: npm pkg get name --workspaces --json
+        outcome: pass
+        observation: Exactly eight required workspaces returned.
+      - command: npm run typecheck
+        outcome: pass
+        observation: Empty skeleton succeeds without hiding future workspace sources.
+      - command: npm run typecheck with valid temporary workspace TypeScript source
+        outcome: pass
+      - command: npm run typecheck with deliberate string-to-number type error
+        outcome: expected_failure
+        observation: TypeScript TS2322, exit status 2.
+      - command: npx --yes --package=node@22 npm --prefix . pkg get name
+        outcome: expected_failure
+        observation: EBADDEVENGINES rejects Node 22.
+tdd_evidence:
+  failing_precondition:
+    command: npm ci at base commit
+    observation: EUSAGE because no lockfile existed.
+  regression:
+    command: git diff --check 1e1944d..29065de
+    outcome: pass
+agents:
+  implementer: /root/t001_implement
+  specification_reviewer: /root/t001_spec_review
+  quality_reviewer: /root/t001_quality_review
+reviews:
+  specification:
+    outcome: pass
+    cycles: 2
+  quality:
+    outcome: approved
+    cycles: 2
+    revision:
+      issue: Initial tsconfig checked only a TypeScript library file and excluded future workspace source.
+      disposition: Root source inclusion and a proven negative type fixture were added.
+unresolved_issues: []

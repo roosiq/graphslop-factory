@@ -135,7 +135,7 @@ Every `TC-*` row inherits these exact fields:
 
 **Purpose**: Establish a reproducible TypeScript workspace and verification commands.
 
-- [ ] T001 Create the Node/npm workspace and package skeleton in `package.json`, `apps/*/package.json`, and `packages/*/package.json` per TC-001
+- [x] T001 Create the Node/npm workspace and package skeleton in `package.json`, `apps/*/package.json`, and `packages/*/package.json` per TC-001
 - [ ] T002 Configure formatting, linting, type checking, Vitest, Vite, Playwright, and build commands in root config files per TC-002
 - [ ] T003 Define common strict schemas and JSON Schema exports in `packages/contracts/` per TC-003
 

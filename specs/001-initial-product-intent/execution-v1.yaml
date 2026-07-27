@@ -45,7 +45,10 @@ graph:
     contract_id: TC-001
     type: Implement
     objective: Create the deterministic npm-workspace and TypeScript build skeleton
-    status: ready
+    status: accepted
+    accepted_at: '2026-07-27T16:01:47-04:00'
+    candidate_commit: 29065de06a7e4647e1d75832cc6df2ba594c99e0
+    evidence_ref: specs/001-initial-product-intent/evidence/T001/result.yaml
     satisfies_solution_nodes:
     - SOL-TECH-001
     - SOL-APP-001
@@ -100,7 +103,7 @@ graph:
     contract_id: TC-002
     type: Implement
     objective: Configure formatting, lint, type, unit, browser, and build commands
-    status: blocked
+    status: ready
     satisfies_solution_nodes:
     - SOL-TEST-001
     - SOL-TEST-002
@@ -166,7 +169,7 @@ graph:
     type: Implement
     objective: Define common strict, implementation-portable schemas and exported
       JSON Schema registry
-    status: blocked
+    status: ready
     satisfies_solution_nodes:
     - SOL-TECH-003
     - SOL-API-001
