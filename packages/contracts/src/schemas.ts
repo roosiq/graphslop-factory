@@ -28,7 +28,10 @@ export const GraphKindSchema = IdentifierSchema.describe(
 export const NodeRefSchema = z
   .object({
     graphKind: GraphKindSchema,
+    graphId: IdentifierSchema,
     nodeId: IdentifierSchema,
+    nodeVersion: z.number().int().positive(),
+    snapshotId: IdentifierSchema,
   })
   .strict();
 
