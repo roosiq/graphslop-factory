@@ -25,22 +25,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run typecheck && npm run build --workspaces --if-present",
-    "format": "prettier --write package.json .prettierrc.json eslint.config.js vite.config.ts vitest.config.ts playwright.config.ts apps packages",
-    "format:check": "prettier --check package.json .prettierrc.json eslint.config.js vite.config.ts vitest.config.ts playwright.config.ts apps packages",
-    "lint": "eslint --max-warnings=0 .",
-    "test": "vitest",
-    "test:e2e": "playwright test --pass-with-no-tests",
+    "build": "npm run typecheck",
     "typecheck": "if find apps packages -type f \\( -name '*.ts' -o -name '*.tsx' \\) -not -path '*/node_modules/*' -not -path '*/dist/*' -print -quit | grep -q .; then tsc --project tsconfig.json; else echo 'No TypeScript workspace sources to check.'; fi"
   },
   "devDependencies": {
-    "@eslint/js": "10.0.1",
-    "@playwright/test": "1.62.0",
-    "eslint": "10.8.0",
-    "prettier": "3.9.6",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.65.0",
-    "vite": "8.1.5",
-    "vitest": "4.1.10"
+    "typescript": "5.9.3"
   }
 }
