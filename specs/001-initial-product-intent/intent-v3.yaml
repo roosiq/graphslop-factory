@@ -1,25 +1,26 @@
 schema_version: 1
-proposal_id: intent-v3
+baseline_id: intent-v3
 project_id: graphslop
-status: awaiting_owner_approval
-immutable: false
+status: approved
+immutable: true
 created_at: '2026-07-27T18:35:38-04:00'
-would_supersede:
+approved_at: '2026-07-27T18:41:25-04:00'
+supersedes_baseline:
   id: intent-v2
   artifact: specs/001-initial-product-intent/intent-v2.yaml
   sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
 source:
   owner_message_id: msg-caveman-role-correction-20260727-01
   quote: Ensure we have not overcooked this. Instructions for agents or “roles” should be in plain caveman language.
-  proposed_specification: specs/001-initial-product-intent/intent-v3-proposed.md
-  proposed_specification_sha256: abb3c850f45a589d4a3518f4419f927e17978f50fb65ccf30eabed7fa021d9c9
+  approved_specification: specs/001-initial-product-intent/intent-v3-spec.md
+  approved_specification_sha256: 882a6ebb49a40e8cce6d6a59c31cf059ab486e593d4e4279566e211e1ad27a43
 classification:
   - correction
   - constraint
   - exclusion
   - new_requirement
 normalized_change: Keep strict machine policy, but generate the smallest useful team and render all worker instructions as compact ordinary-language briefs rather than long role contracts or fictional personas.
-proposed_intent_node_versions:
+intent_node_versions:
   INT-001: 2
   INT-002: 1
   INT-003: 1
@@ -50,7 +51,7 @@ proposed_intent_node_versions:
   INT-028: 1
   INT-029: 2
   INT-030: 1
-proposed_exclusion_versions:
+exclusion_versions:
   EXC-001: 1
   EXC-002: 1
   EXC-003: 1
@@ -65,7 +66,7 @@ proposed_exclusion_versions:
   EXC-012: 1
   EXC-013: 1
   EXC-014: 1
-proposed_decision_versions:
+decision_versions:
   UNR-001: 2
   DEC-002: 1
   DEC-003: 1
@@ -97,11 +98,11 @@ changed_exclusions:
     from_version: 2
     to_version: 3
     statement: Exclude fake org charts, biographies, role-play, decorative Personas, duplicate Roles, personality authority, and long prompts that restate machine policy.
-proposed_decision:
+decision:
   id: DEC-004
   version: 1
   statement: Keep rich machine validation and expose only the smallest caveman brief needed to act and review safely.
-proposed_protected_assertions:
+protected_assertions:
   - id: lean-project-team
     statement: A Role must have a distinct job, permission boundary, handoff, or independence reason; overlapping Roles are merged.
     source_intent_nodes: [INT-025]
@@ -117,17 +118,19 @@ proposed_protected_assertions:
   - id: independent-role-and-worker
     statement: A producer cannot verify or accept its own result.
     source_intent_nodes: [INT-014, INT-015, INT-028]
-blocking_questions:
-  - id: approve-intent-v3
-    question: Approve this simplified intent-v3 baseline?
-    resolves: [INT-025, INT-026, INT-027, INT-029, INT-030, EXC-007, DEC-004]
+unresolved_blocking_questions: []
 approval:
-  required: true
-  effect:
-    - freeze immutable intent-v3
-    - withdraw the overcooked solution-v2 proposal
-    - permit generation of a smaller solution-v3 proposal
-  does_not_authorize:
+  actor: authenticated_project_owner
+  message_id: msg-approve-intent-v3-20260727-01
+  quote: Do it
+  displayed_artifact: specs/001-initial-product-intent/intent-v3-proposed.md
+  normalized_decision: Approve the simplified intent-v3 with strict machine enforcement, the smallest useful team, caveman Role briefs, and optional tiny Personas.
+  authority_granted:
+    - freeze_intent_v3
+    - withdraw_solution_v2
+    - generate_proposed_solution_v3
+    - create_successor_impact_analysis
+  authority_not_granted:
     - approve_solution_v3
     - modify_application_code
     - dispatch_execution_or_repair_tasks

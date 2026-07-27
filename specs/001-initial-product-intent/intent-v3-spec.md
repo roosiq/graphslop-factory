@@ -1,12 +1,14 @@
-# Proposed Intent Change: Caveman Role Briefs
+# Approved Intent Change: Caveman Role Briefs
 
 **Project**: Graphslop
 
-**Proposed Baseline**: `intent-v3`
+**Baseline**: `intent-v3`
 
-**Would supersede**: approved `intent-v2` without modifying it
+**Supersedes**: approved `intent-v2` without modifying it
 
-**Status**: Awaiting owner approval
+**Status**: Approved by the authenticated project owner
+
+**Approved message**: “Do it.” on 2026-07-27
 
 ## Why This Change Exists
 
@@ -15,7 +17,7 @@ company with many titles, biographies, and repeated contracts.
 
 Keep the safety. Cut the ceremony.
 
-## Proposed Meaning
+## Approved Meaning
 
 - The machine keeps exact paths, permissions, baselines, dependencies, and review separation.
 - A worker gets a short plain-language brief.
@@ -25,7 +27,7 @@ Keep the safety. Cut the ceremony.
 - Similar jobs are merged. A new Role must earn its place.
 - “Caveman language” means short, ordinary sentences. It does not mean broken grammar.
 
-## Proposed Intent Changes
+## Approved Intent Changes
 
 ### Superseded Nodes
 
@@ -53,7 +55,7 @@ Keep the safety. Cut the ceremony.
 - **EXC-007 v3**: Exclude fake org charts, biographies, role-play, decorative Personas, duplicate
   Roles, personality-based authority, and long agent prompts that restate machine policy.
 
-### Proposed Decision
+### Decision
 
 - **DEC-004 — Safety inside, caveman outside**: Keep rich machine validation. Show workers and the
   owner only the smallest plain-language brief needed to act and review safely.
@@ -106,7 +108,8 @@ narrower machine policy wins and dispatch stops.
 - No worker may broaden scope or approve its own result.
 - No push, pull request, merge, deploy, domain, or traffic action is authorized.
 
-## Gate
+## Approval Boundary
 
-This is a proposed correction to approved `intent-v2`. It does not freeze `intent-v3`, approve a
-new Solution, compile work, or authorize execution. One explicit owner approval is required.
+The owner approved this correction with “Do it.” The approval freezes `intent-v3` and permits a
+smaller `solution-v3` proposal. It does not approve that Solution, compile work, run agents, change
+application code, push, create a pull request, merge, deploy, or change domain or traffic.

@@ -13,7 +13,7 @@ change:
   proposed_solution:
     id: solution-v2
     artifact: specs/001-initial-product-intent/solution-v2.proposed.yaml
-    sha256: cc3dc417dbd8e65873b6676c2141069e8d02ba5faec854df92e2f76361e47952
+    sha256: 34b91c6f3b5dfb5ff954b049b53ca006a63b185f22e85cf208027e542be7d0e6
   changed_intent_nodes:
     - { id: INT-014, from_version: 1, to_version: 2, classification: modified }
     - { id: INT-017, from_version: 2, to_version: 3, classification: modified }

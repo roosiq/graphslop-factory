@@ -1,24 +1,24 @@
 schema_version: 1
 execution_id: execution-v1
-revision: 5
+revision: 6
 project_id: graphslop
 status: paused_for_successor_solution
 compiled_at: '2026-07-27T15:45:07-04:00'
 authorized_at: '2026-07-27T15:45:07-04:00'
-paused_at: '2026-07-27T18:12:19-04:00'
+paused_at: '2026-07-27T18:41:25-04:00'
 pause:
-  reason: intent-v2 supersedes the protected Intent baseline used to compile execution-v1
+  reason: intent-v3 supersedes the protected Intent baseline used to compile execution-v1; solution-v3 remains proposed
   successor_intent:
-    id: intent-v2
-    artifact: specs/001-initial-product-intent/intent-v2.yaml
-    sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+    id: intent-v3
+    artifact: specs/001-initial-product-intent/intent-v3.yaml
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
   impact_analysis:
-    id: impact-intent-v2
-    artifact: specs/001-initial-product-intent/impact-intent-v2.yaml
+    id: impact-intent-v3
+    artifact: specs/001-initial-product-intent/impact-intent-v3.yaml
   dispatchable_tasks: []
   resume_conditions:
-    - explicit approval of solution-v2
-    - compilation and validation of execution-v2 against intent-v2 and solution-v2
+    - explicit approval of solution-v3
+    - compilation and validation of execution-v2 against intent-v3 and solution-v3
     - exact owner authorization of any reissued repair task
 amendments:
 - id: execution-amendment-001

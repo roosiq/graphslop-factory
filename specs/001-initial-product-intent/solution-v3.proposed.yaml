@@ -1,0 +1,198 @@
+schema_version: 1
+proposal_id: solution-v3
+project_id: graphslop
+status: proposed
+approved: false
+generated_at: '2026-07-27T18:41:25-04:00'
+source_intent_baseline:
+  baseline_id: intent-v3
+  artifact: specs/001-initial-product-intent/intent-v3.yaml
+  baseline_sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  specification_sha256: 882a6ebb49a40e8cce6d6a59c31cf059ab486e593d4e4279566e211e1ad27a43
+base_solution:
+  baseline_id: solution-v1
+  artifact: specs/001-initial-product-intent/solution-v1.yaml
+  sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+  node_count: 72
+  edge_count: 75
+proposal_form: exact_base_plus_validated_delta
+graph:
+  id: solution-graph-v3
+  kind: Solution
+  compiler_contract_version: 3
+  materialized_node_count: 82
+  materialized_edge_count: 99
+  delta:
+    remove_nodes: []
+    remove_edges: []
+    add_nodes:
+      - id: SOL-FEAT-012
+        type: Feature
+        name: Smallest team and caveman work briefs
+        description: Generate only distinct project jobs and show each worker a compact brief while exact task policy stays machine-enforced.
+        scope: product
+        satisfies: [INT-025, INT-026, INT-027, INT-028, INT-029, INT-030]
+
+      - id: SOL-COMP-007
+        type: Component
+        name: Compact work brief and team trace
+        description: One small view shows each Role, why it exists, its current task, its five-line brief, and the independent checker.
+        scope: product
+        satisfies: [INT-025, INT-026, INT-029, INT-030]
+
+      - id: SOL-DATA-009
+        type: DataObject
+        name: RoleDefinition and WorkBrief
+        scope: implementation_support
+        supports: [SOL-FEAT-012, SOL-COMP-007, SOL-DATA-006, SOL-SVC-004, SOL-SVC-006]
+
+      - id: SOL-RULE-009
+        type: Rule
+        name: Plain words never grant authority
+        description: A Role title, brief, Persona note, or model identity cannot widen the exact task, baseline, lease, path, tool, network, approval, or release policy.
+        scope: product
+        satisfies: [INT-012, INT-013, INT-014, INT-026, INT-027, INT-028, INT-030]
+
+      - id: SOL-TEST-013
+        type: TestableBehavior
+        name: Team compiler keeps only distinct jobs and accepts zero Personas
+        scope: product
+        satisfies: [INT-025, INT-027, INT-029]
+
+      - id: SOL-TEST-014
+        type: TestableBehavior
+        name: Five-line briefs stay inside machine policy and checking stays independent
+        scope: product
+        satisfies: [INT-026, INT-028, INT-030]
+
+      - id: SOL-ROLE-001
+        type: Role
+        name: Figure Out
+        scope: product
+        mode: intent
+        selection_reason: Intent proposals have a distinct no-code authority boundary.
+        brief:
+          job: Understand what the owner wants. Keep unknown things unknown.
+          use: Owner messages and the current Intent Graph.
+          touch: Intent proposals, summaries, and one next question.
+          dont: Design the app. Change the repository. Approve anything.
+          done: Show the updated understanding. Ask one useful question when needed.
+        machine:
+          authority_source: assigned task and current protected baselines
+          independence_class: planning
+        satisfies: [INT-003, INT-004, INT-014, INT-025, INT-026, INT-030]
+
+      - id: SOL-ROLE-002
+        type: Role
+        name: Plan
+        scope: product
+        mode: solution
+        selection_reason: Solution and task proposals require approved Intent but no repository writes.
+        brief:
+          job: Turn approved intent into the smallest build plan.
+          use: Approved Intent, repository facts, and current decisions.
+          touch: Proposed Solution nodes, task proposals, and acceptance checks.
+          dont: Change approved intent. Change application code. Approve the plan.
+          done: Show a traceable plan with no orphan work or hidden scope.
+        machine:
+          authority_source: assigned task and current protected baselines
+          independence_class: planning
+        satisfies: [INT-010, INT-011, INT-014, INT-025, INT-026, INT-030]
+
+      - id: SOL-ROLE-003
+        type: Role
+        name: Build
+        scope: product
+        mode: execution
+        selection_reason: Repository mutation needs one bounded producer Role.
+        brief:
+          job: Finish one approved task.
+          use: The task, current baselines, repository context, and named checks.
+          touch: Only the paths allowed by the task.
+          dont: Add features. Change intent. Approve your work. Push or deploy.
+          done: Checks pass. Show changed files, results, and problems.
+        machine:
+          authority_source: exact task, lease, protected baselines, and runner policy
+          independence_class: producer
+        satisfies: [INT-011, INT-012, INT-013, INT-014, INT-025, INT-026, INT-028, INT-030]
+
+      - id: SOL-ROLE-004
+        type: Role
+        name: Check
+        scope: product
+        mode: verification
+        selection_reason: Acceptance requires a worker invocation independent from the producer.
+        brief:
+          job: Check one result against the approved task and graphs.
+          use: Current baselines, task checks, repository result, and evidence.
+          touch: Read the result. Write verification evidence or a drift report.
+          dont: Build the result. Change baselines. Hide failures. Authorize repair.
+          done: Accept with evidence or report exact drift.
+        machine:
+          authority_source: verification task, read policy, and current protected baselines
+          independence_class: verifier
+        satisfies: [INT-014, INT-015, INT-018, INT-025, INT-026, INT-028, INT-030]
+
+    add_edges:
+      - { id: E-076, type: CONTAINS, from: SOL-APP-001, to: SOL-FEAT-012 }
+      - { id: E-077, type: CONTAINS, from: SOL-PAGE-001, to: SOL-COMP-007 }
+      - { id: E-078, type: REALIZES, from: SOL-COMP-007, to: SOL-FEAT-012 }
+      - { id: E-079, type: USES, from: SOL-FEAT-012, to: SOL-DATA-009 }
+      - { id: E-080, type: PROTECTED_BY, from: SOL-FEAT-012, to: SOL-RULE-009 }
+      - { id: E-081, type: VALIDATED_BY, from: SOL-FEAT-012, to: SOL-TEST-013 }
+      - { id: E-082, type: VALIDATED_BY, from: SOL-FEAT-012, to: SOL-TEST-014 }
+      - { id: E-083, type: CONTAINS, from: SOL-FEAT-012, to: SOL-ROLE-001 }
+      - { id: E-084, type: CONTAINS, from: SOL-FEAT-012, to: SOL-ROLE-002 }
+      - { id: E-085, type: CONTAINS, from: SOL-FEAT-012, to: SOL-ROLE-003 }
+      - { id: E-086, type: CONTAINS, from: SOL-FEAT-012, to: SOL-ROLE-004 }
+      - { id: E-087, type: USES, from: SOL-WORK-001, to: SOL-ROLE-001 }
+      - { id: E-088, type: USES, from: SOL-WORK-002, to: SOL-ROLE-002 }
+      - { id: E-089, type: USES, from: SOL-WORK-003, to: SOL-ROLE-003 }
+      - { id: E-090, type: USES, from: SOL-WORK-003, to: SOL-ROLE-004 }
+      - { id: E-091, type: USES, from: SOL-WORK-004, to: SOL-ROLE-004 }
+      - { id: E-092, type: USES, from: SOL-WORK-005, to: SOL-ROLE-001 }
+      - { id: E-093, type: USES, from: SOL-WORK-005, to: SOL-ROLE-002 }
+      - { id: E-094, type: PROTECTED_BY, from: SOL-ROLE-003, to: SOL-RULE-009 }
+      - { id: E-095, type: PROTECTED_BY, from: SOL-ROLE-004, to: SOL-RULE-009 }
+      - { id: E-096, type: USES, from: SOL-ROLE-001, to: SOL-DATA-009 }
+      - { id: E-097, type: USES, from: SOL-ROLE-002, to: SOL-DATA-009 }
+      - { id: E-098, type: USES, from: SOL-ROLE-003, to: SOL-DATA-009 }
+      - { id: E-099, type: USES, from: SOL-ROLE-004, to: SOL-DATA-009 }
+
+team_projection:
+  roles:
+    - SOL-ROLE-001
+    - SOL-ROLE-002
+    - SOL-ROLE-003
+    - SOL-ROLE-004
+  personas: []
+  capability_nodes: []
+  reason: Four jobs have distinct authority or independence boundaries. This project needs no Persona advice.
+  not_a_fourth_authoritative_graph: true
+technical_defaults:
+  - Reuse the existing Solution model gateway to propose Roles.
+  - Reuse ExecutionTask and TaskLease policy as the only authority source.
+  - Store RoleDefinition as a Solution node and bind role_ref on Execution tasks and evidence.
+  - Render the five headings from validated fields; do not send a second hidden role essay.
+  - Keep optional Persona advice as CARE and WATCH fields on a future traced advice node; zero advice is valid.
+  - Use the existing projection engine and Solution review page; add no team service or team database.
+deferred_solution_nodes:
+  - Persistent fictional agent identities
+  - Rich Persona profiles
+  - Separate Capability graph nodes
+  - A fourth Team Graph
+  - Parallel task dispatch
+  - Additional worker adapters
+  - Autonomous repair or release
+  - graphslop.com route or traffic cutover
+protected_assertions:
+  - The exact task, protected baselines, lease, runner policy, and narrowest deny remain authoritative.
+  - A Role or Persona string cannot grant permission.
+  - Duplicate Roles fail validation or are merged before Solution review.
+  - Zero Personas is a valid team.
+  - Build and Check use different worker invocations.
+  - No application code, task dispatch, push, pull request, merge, deployment, domain, or traffic action is authorized by this proposal.
+approval_required:
+  artifact: solution-v3
+  effect: Freeze the four-Role, zero-Persona Solution delta and permit recompilation of affected Execution work.
+  does_not_authorize: [push, draft_pull_request_creation, merge, deploy, domain_cutover, traffic_cutover]

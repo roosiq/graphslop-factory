@@ -4,7 +4,7 @@ project_id: graphslop
 status: withdrawn_after_owner_correction
 approved: false
 approval_blocked: true
-superseded_by_intent_proposal: intent-v3
+superseded_by_intent_baseline: intent-v3
 generated_at: '2026-07-27T18:12:19-04:00'
 source_intent_baseline:
   baseline_id: intent-v2

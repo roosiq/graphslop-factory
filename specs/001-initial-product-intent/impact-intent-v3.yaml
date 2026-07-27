@@ -1,0 +1,92 @@
+schema_version: 1
+impact_id: impact-intent-v3
+project_id: graphslop
+status: awaiting_solution_v3_approval
+created_at: '2026-07-27T18:35:38-04:00'
+change:
+  prior_baseline:
+    id: intent-v2
+    artifact: specs/001-initial-product-intent/intent-v2.yaml
+    sha256: 2060a9c3b8d9d22a79c231640adc1f08cdfd27eed70921dbc626e8a1e83cff74
+  successor_baseline:
+    id: intent-v3
+    artifact: specs/001-initial-product-intent/intent-v3.yaml
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+    status: approved
+  changed_intent_nodes: [INT-025, INT-026, INT-027, INT-029]
+  new_intent_nodes: [INT-030]
+  changed_exclusions: [EXC-007]
+  new_decisions: [DEC-004]
+solution_impact:
+  prior_approved_solution:
+    id: solution-v1
+    artifact: specs/001-initial-product-intent/solution-v1.yaml
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+    status: approved
+    node_count: 72
+    edge_count: 75
+  overcooked_proposal:
+    id: solution-v2
+    artifact: specs/001-initial-product-intent/solution-v2.proposed.yaml
+    node_count: 100
+    edge_count: 137
+    added_capabilities: 4
+    added_personas: 4
+    added_roles: 9
+    disposition: withdrawn
+    reason: It exposes repeated machine policy as a large team model and conflicts with the proposed plain-language constraint.
+  proposed_successor:
+    id: solution-v3
+    artifact: specs/001-initial-product-intent/solution-v3.proposed.yaml
+    sha256: 578e7d265921d435cc9265d104241ad650933a453e9a9617e23a6993f330541b
+    status: proposed
+    base_node_count: 72
+    added_node_count: 10
+    removed_node_count: 0
+    materialized_node_count: 82
+    base_edge_count: 75
+    added_edge_count: 24
+    removed_edge_count: 0
+    materialized_edge_count: 99
+    roles: [SOL-ROLE-001, SOL-ROLE-002, SOL-ROLE-003, SOL-ROLE-004]
+    personas: []
+    capability_nodes: []
+    new_services: []
+    new_databases: []
+execution_impact:
+  current_execution:
+    id: execution-v1
+    status: paused_for_successor_solution
+    dispatchable_tasks: []
+  accepted_unaffected:
+    - task_id: T001
+      evidence_reusable: true
+  failed_history_retained:
+    - { task_id: T002, drift: drift-001 }
+    - { task_id: T003, drift: drift-002 }
+  blocked_unaffected_but_rebind_required:
+    tasks: [T004, T005, T006, T007, T008, T009, T011, T012, T013, T014, T015, T016, T017, T023, T029, T033, T035, T037]
+    count: 18
+  tasks_requiring_modification:
+    tasks: [T010, T018, T019, T020, T021, T022, T024, T025, T026, T027, T028, T030, T031, T032, T034, T036, T038, T039, T040]
+    count: 19
+  discarded_tasks: []
+  new_tasks: []
+  withdrawn_successor_tasks:
+    tasks: [T041, T042, T043, T044, T045]
+    disposition: never_compiled
+    reason: They were derived from the overcooked solution-v2 proposal.
+repair_impact:
+  - existing_repair: repair-t002-001
+    disposition: retain_historical_non_dispatchable
+    successor_action: Reissue with intent-v3 and solution-v3 hashes only after solution-v3 approval and exact owner authorization.
+  - existing_repair: repair-t003-001
+    disposition: retain_historical_non_dispatchable
+    successor_action: Reissue with intent-v3 and solution-v3 hashes only after solution-v3 approval and exact owner authorization.
+gates:
+  intent_v3_approved: true
+  solution_v3_generation_allowed: true
+  solution_v3_approved: false
+  execution_recompile_allowed: false
+  task_dispatch_allowed: false
+  next_required_action: Display the compact solution-v3 delta and obtain explicit owner approval.
