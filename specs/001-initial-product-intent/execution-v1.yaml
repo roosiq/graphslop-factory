@@ -1,9 +1,14 @@
 schema_version: 1
 execution_id: execution-v1
+revision: 2
 project_id: graphslop
 status: authorized
 compiled_at: '2026-07-27T15:45:07-04:00'
 authorized_at: '2026-07-27T15:45:07-04:00'
+amendments:
+- id: execution-amendment-001
+  artifact: specs/001-initial-product-intent/execution-amendment-001.yaml
+  applied_at: '2026-07-27T16:04:00-04:00'
 authorization:
   actor: authenticated_project_owner
   message_id: msg-approval-solution-v1-20260727-01
@@ -129,6 +134,8 @@ graph:
     dependencies:
     - T001
     allowed_paths:
+    - package.json
+    - package-lock.json
     - ".prettierrc*"
     - eslint.config.*
     - vitest*.ts
@@ -192,6 +199,7 @@ graph:
     allowed_paths:
     - packages/contracts/**
     - tests/contract/common-*
+    - package-lock.json
     forbidden_changes:
     - modify files outside allowed_paths
     - change approved Intent or Solution baselines
@@ -253,6 +261,8 @@ graph:
     - packages/graph-kernel/src/canonical/**
     - packages/graph-kernel/src/delta/**
     - packages/graph-kernel/test/schema/**
+    - packages/graph-kernel/package.json
+    - package-lock.json
     forbidden_changes:
     - modify files outside allowed_paths
     - change approved Intent or Solution baselines
@@ -362,6 +372,7 @@ graph:
     allowed_paths:
     - packages/file-store/**
     - tests/integration/file-store/**
+    - package-lock.json
     forbidden_changes:
     - modify files outside allowed_paths
     - change approved Intent or Solution baselines
@@ -783,6 +794,8 @@ graph:
     - apps/control-plane/src/services/intent/**
     - apps/control-plane/src/api/messages/**
     - apps/control-plane/tests/intent/**
+    - apps/control-plane/package.json
+    - package-lock.json
     forbidden_changes:
     - modify files outside allowed_paths
     - change approved Intent or Solution baselines
@@ -842,6 +855,8 @@ graph:
     - apps/control-plane/src/web/features/intent/**
     - apps/control-plane/src/web/components/project-state/**
     - apps/control-plane/tests/components/intent/**
+    - apps/control-plane/package.json
+    - package-lock.json
     forbidden_changes:
     - modify files outside allowed_paths
     - change approved Intent or Solution baselines

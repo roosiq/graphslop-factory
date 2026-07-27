@@ -1,0 +1,40 @@
+schema_version: 1
+amendment_id: execution-amendment-001
+project_id: graphslop
+execution_id: execution-v1
+from_revision: 1
+to_revision: 2
+created_at: 2026-07-27T16:04:00-04:00
+classification: execution_contract_correction
+trigger:
+  gate: pre_flight
+  finding: Approved dependency and tool configuration could not update required package manifests or the shared npm lockfile within the original task path bounds.
+baseline_impact:
+  intent: none
+  solution: none
+  reason: The approved stack, product behavior, authority, traces, task objectives, dependencies, and acceptance checks are unchanged.
+changes:
+  - task_id: T002
+    added_allowed_paths: [package.json, package-lock.json]
+  - task_id: T003
+    added_allowed_paths: [package-lock.json]
+  - task_id: T004
+    added_allowed_paths: [packages/graph-kernel/package.json, package-lock.json]
+  - task_id: T006
+    added_allowed_paths: [package-lock.json]
+  - task_id: T013
+    added_allowed_paths: [apps/control-plane/package.json, package-lock.json]
+  - task_id: T014
+    added_allowed_paths: [apps/control-plane/package.json, package-lock.json]
+invariants:
+  - Only dependencies already named by the approved Solution plan may be added.
+  - A task may change only its owning package manifest and the shared npm lockfile.
+  - Dependency changes require independent specification and quality review.
+  - Sequential dispatch prevents concurrent lockfile writes.
+  - No new product behavior, provider, storage engine, external action, or authority is granted.
+disposition:
+  requires_new_intent_baseline: false
+  requires_new_solution_baseline: false
+  affected_completed_tasks: []
+  affected_ready_tasks: [T002, T003]
+  resume_from: T002
