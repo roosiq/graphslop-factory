@@ -1,0 +1,64 @@
+schema_version: 1
+drift_id: drift-001
+project_id: graphslop
+task_id: T002
+status: blocking
+severity: blocking
+type: acceptance_drift
+detected_at: 2026-07-27T16:19:02-04:00
+detected_by: /root/t002_quality_review
+protected_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+expected:
+  statement: Canonical format, lint, test, browser-test, typecheck, and build commands must fail closed when required workspace or test coverage is absent.
+  source_solution_nodes:
+    - SOL-TEST-001
+    - SOL-TEST-012
+  source_task_check: AC-002
+observed:
+  statement: Literal commands passed, but aggregate build skipped missing workspace build scripts, canonical tests permitted zero discovered suites, and formatting omitted the root tests tree and tsconfig.
+  candidate_commits:
+    - 88b2ba53cd109c6bc591599886bf5d5ddeb41bd9
+    - 63044b48ad9c581eeaa66d4e6688f5129a9112a9
+  files:
+    - package.json
+    - eslint.config.js
+    - vitest.config.ts
+  findings:
+    - Root build used --if-present and could silently skip every workspace build.
+    - Canonical unit and browser test commands could succeed with zero discovered tests.
+    - Formatting omitted root tests and tsconfig.json.
+    - ESLint omitted several generated cache paths from its explicit ignore list.
+verification_history:
+  specification_review:
+    outcome: pass
+    cycles: 2
+  quality_review:
+    outcome: request_changes
+    revision_budget_consumed: 1
+    open_critical_issues: 0
+    open_important_issues: 3
+    open_minor_issues: 1
+integration_disposition:
+  candidate_integrated: false
+  revert_commits:
+    - 6ca5a38
+    - 2f633d1
+impact:
+  blocked_tasks:
+    - T002
+    - T014
+    - T015
+    - T036
+    - T040
+  unaffected_ready_tasks:
+    - T003
+recommended_action:
+  type: repair
+  repair_task_id: repair-t002-001
+  instruction: Recreate T002 from the current accepted base with fail-closed build and test gates, complete format/lint coverage, and the original AC-002 checks.

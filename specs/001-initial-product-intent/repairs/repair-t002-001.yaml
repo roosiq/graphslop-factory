@@ -1,0 +1,83 @@
+schema_version: 1
+task_id: repair-t002-001
+type: Repair
+status: proposed
+dispatchable: false
+authorization_required:
+  actor: authenticated_project_owner
+  exact_task_id: repair-t002-001
+  protected_baselines: [intent-v1, solution-v1]
+objective: Recreate the Graphslop quality toolchain with fail-closed build, test, format, and lint coverage.
+repairs_drift: drift-001
+satisfies_solution_nodes:
+  - SOL-TEST-001
+  - SOL-TEST-002
+  - SOL-TEST-003
+  - SOL-TEST-004
+  - SOL-TEST-005
+  - SOL-TEST-006
+  - SOL-TEST-007
+  - SOL-TEST-008
+  - SOL-TEST-009
+  - SOL-TEST-010
+  - SOL-TEST-011
+  - SOL-TEST-012
+protected_baselines:
+  intent:
+    id: intent-v1
+    sha256: d6f64a0971dc53a2fa32e48c3da4867b5798eb04dc738c3ed3b16853728b035e
+  solution:
+    id: solution-v1
+    sha256: a654b9ba058db098af279acc46ed6c61bb6c2d3c063534e8a4a0efdd33596fb1
+expected_base_commit: 2f633d1eb24b97d74374c2b2b8ff5ecc03c5c412
+dependencies:
+  - T001
+  - drift-001
+allowed_paths:
+  - package.json
+  - package-lock.json
+  - .gitignore
+  - .prettierrc*
+  - eslint.config.*
+  - vitest*.ts
+  - playwright.config.ts
+  - vite.config.ts
+  - apps/*/package.json
+  - packages/*/package.json
+  - scripts/verify-workspace-builds.mjs
+  - tests/toolchain/toolchain.test.ts
+  - tests/e2e/toolchain.spec.ts
+forbidden_changes:
+  - change approved Intent or Solution baselines
+  - add runtime product behavior or dependencies outside the approved T002 toolchain
+  - use pass-with-no-tests on canonical release commands
+  - silently skip missing workspace build coverage
+  - format or modify immutable specification artifacts
+  - push, create a pull request, merge, deploy, or change domain or traffic
+required_outputs:
+  - exact locked quality-tool dependencies
+  - fail-closed canonical build and test commands
+  - complete source, test, configuration, and generated-path coverage
+  - focused toolchain smoke tests
+  - redaction-safe evidence bundle
+acceptance_checks:
+  - id: REPAIR-AC-001
+    statement: npm run format:check, lint, test -- --run, build, Playwright discovery, and Vite config load all pass from a clean npm ci.
+  - id: REPAIR-AC-002
+    statement: Removing or bypassing the committed unit/browser toolchain smoke tests makes the corresponding canonical test command fail rather than pass with zero tests.
+  - id: REPAIR-AC-003
+    statement: A workspace source fixture without required build coverage makes the aggregate build gate fail; approved empty/support-only packages have an explicit non-build disposition.
+  - id: REPAIR-AC-004
+    statement: Formatting includes tsconfig and root test sources without targeting immutable specs, and ESLint explicitly ignores every generated cache/report path.
+retry_limit: 1
+required_evidence:
+  - changed files and hashes
+  - focused failing and passing checks
+  - clean install and full AC-002 results
+  - independent specification review
+  - independent code-quality review
+  - drift closure mapping
+implementer_assignment: fresh_implementation_agent
+verifier_assignment:
+  - fresh_specification_compliance_reviewer
+  - fresh_code_quality_reviewer

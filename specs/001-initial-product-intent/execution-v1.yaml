@@ -1,6 +1,6 @@
 schema_version: 1
 execution_id: execution-v1
-revision: 2
+revision: 3
 project_id: graphslop
 status: authorized
 compiled_at: '2026-07-27T15:45:07-04:00'
@@ -9,6 +9,15 @@ amendments:
 - id: execution-amendment-001
   artifact: specs/001-initial-product-intent/execution-amendment-001.yaml
   applied_at: '2026-07-27T16:04:00-04:00'
+drift_reports:
+- id: drift-001
+  artifact: specs/001-initial-product-intent/drift/drift-001.yaml
+  status: blocking
+repair_proposals:
+- id: repair-t002-001
+  artifact: specs/001-initial-product-intent/repairs/repair-t002-001.yaml
+  status: proposed
+  dispatchable: false
 authorization:
   actor: authenticated_project_owner
   message_id: msg-approval-solution-v1-20260727-01
@@ -108,7 +117,13 @@ graph:
     contract_id: TC-002
     type: Implement
     objective: Configure formatting, lint, type, unit, browser, and build commands
-    status: ready
+    status: verification_failed
+    failed_at: '2026-07-27T16:19:02-04:00'
+    failed_candidate_commits:
+    - 88b2ba53cd109c6bc591599886bf5d5ddeb41bd9
+    - 63044b48ad9c581eeaa66d4e6688f5129a9112a9
+    drift_ref: drift-001
+    repair_proposal_ref: repair-t002-001
     satisfies_solution_nodes:
     - SOL-TEST-001
     - SOL-TEST-002

@@ -139,6 +139,10 @@ Every `TC-*` row inherits these exact fields:
 - [ ] T002 Configure formatting, linting, type checking, Vitest, Vite, Playwright, and build commands in root config files per TC-002
 - [ ] T003 Define common strict schemas and JSON Schema exports in `packages/contracts/` per TC-003
 
+`T002` failed independent quality verification after its one revision. Its candidate commits were
+reverted, `drift-001` is blocking for T002-dependent work, and `repair-t002-001` remains
+non-dispatchable until explicit owner authorization. T003 and its descendants are unaffected.
+
 **Checkpoint**: Fresh `npm ci`, type check, empty suite, and production skeleton build pass.
 
 ## Phase 2: Foundational Graph and Control Boundaries
