@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.vite/
+.vitest/
+playwright-report/
+test-results/
+blob-report/
+.factory/
+*.tsbuildinfo
