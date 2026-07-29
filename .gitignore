@@ -1,0 +1,14 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+.local/
+.factory/
+authority-secrets.json
+.wrangler/
+apps/edge/.dev.vars
+apps/edge/.dev.vars.*
+!apps/edge/.dev.vars.example

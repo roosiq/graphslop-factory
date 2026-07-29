@@ -1,0 +1,22 @@
+{
+  "name": "@graphslop/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --project tsconfig.build.json --noEmit",
+    "typecheck:consumer": "tsc --noEmit --target ES2024 --module NodeNext --moduleResolution NodeNext --strict --skipLibCheck ../../tests/contract/common-contracts.typecheck.ts",
+    "test": "node --test ../../tests/contract/*.test.mjs",
+    "verify": "npm run build && npm run typecheck:consumer && npm run test"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  }
+}

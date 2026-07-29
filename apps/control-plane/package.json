@@ -1,0 +1,23 @@
+{
+  "name": "@graphslop/control-plane",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config ../../vite.config.ts --host 127.0.0.1",
+    "start": "node dist/server/control-plane/src/server.js",
+    "build": "npm --workspace @graphslop/control-state run build && npm --workspace @graphslop/codex-adapter run build && npm --workspace @graphslop/build-pack run build && vite build --config ../../vite.config.ts && tsc --noCheck --outDir dist/server --noEmit false --module NodeNext --moduleResolution NodeNext --target ES2024 --skipLibCheck --declaration false --sourceMap false src/server.ts",
+    "test": "cd ../.. && vitest run tests/control-plane/control-plane.test.ts"
+  },
+  "dependencies": {
+    "@graphslop/build-pack": "file:../../packages/build-pack",
+    "@graphslop/codex-adapter": "file:../../packages/codex-adapter",
+    "@graphslop/control-state": "file:../../packages/control-state",
+    "@hono/node-server": "^2.0.12",
+    "@xyflow/react": "12.9.3",
+    "fflate": "0.8.2",
+    "hono": "4.12.32",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

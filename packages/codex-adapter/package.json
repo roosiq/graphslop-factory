@@ -1,0 +1,21 @@
+{
+  "name": "@graphslop/codex-adapter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npm --workspace @graphslop/contracts run build && tsc --project tsconfig.build.json",
+    "typecheck": "tsc --project tsconfig.build.json --noEmit",
+    "test": "npm run build && node --test ../../tests/provider/*.test.mjs",
+    "verify": "npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "@graphslop/contracts": "file:../contracts"
+  }
+}
