@@ -418,6 +418,7 @@ export async function executeContainedArgv(
   const [file, ...commandArgs] = command.argv;
   const relativeCwd = relative(worktreeRoot, cwd).replaceAll('\\', '/');
   const sandboxCwd = relativeCwd ? `/workspace/${relativeCwd}` : '/workspace';
+  const nodeRuntimeRoot = resolve(dirname(process.execPath), '..');
   const runtimeMounts = ['/usr', '/bin', '/lib', '/lib64', '/etc']
     .flatMap((path) => ['--ro-bind', path, path]);
   const args = [
@@ -425,10 +426,11 @@ export async function executeContainedArgv(
     '--unshare-net', '--unshare-ipc',
     '--unshare-pid', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--dir', '/tmp/home',
     ...runtimeMounts,
+    '--dir', '/runtime', '--ro-bind', nodeRuntimeRoot, '/runtime/node',
     options.readOnly ? '--ro-bind' : '--bind', worktreeRoot, '/workspace',
     '--chdir', sandboxCwd,
     '--clearenv',
-    '--setenv', 'PATH', '/usr/bin:/bin',
+    '--setenv', 'PATH', '/runtime/node/bin:/usr/bin:/bin',
     '--setenv', 'HOME', '/tmp/home',
     '--setenv', 'TMPDIR', '/tmp',
     '--setenv', 'CI', '1',
