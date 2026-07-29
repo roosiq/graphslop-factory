@@ -1,0 +1,4 @@
+interface:
+  display_name: "Graphslop"
+  short_description: "Turn rough ideas into executable project graphs"
+  default_prompt: "Use $graphslop to turn this rough project idea into approved graphs and bounded execution files."

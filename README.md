@@ -1,129 +1,120 @@
 # Graphslop
 
-Graphslop turns rough software ideas into a portable build pack.
+Graphslop is a small agent skill that turns rough software ideas into an
+executable project graph.
 
-You describe the product in ordinary language. Graphslop asks only questions that resolve important gaps, records the answers in a connected graph, freezes approved requirements, and compiles bounded work for the coding harness you already use.
-
-It does not require a hosted model, a Graphslop account, or Graphslop infrastructure.
-
-![Graphslop cinematic caveman interface](apps/control-plane/public/brand/caveman-neanderthal-confused-hero.webp)
-
-## What comes out
-
-A project ends as a `.factory/` directory or ZIP containing:
-
-- approved Intent and Solution baselines;
-- the dependency-ordered Execution graph;
-- one bounded file per task;
-- protected decisions and exclusions;
-- acceptance checks and traceability;
-- plain `JOB / USE / TOUCH / DON'T / DONE` worker instructions;
-- a small Python controller and a reusable coding-agent skill.
-
-Use that pack with Codex, Claude Code, Hermes, a custom agent, or a human development team. Graphslop is the compiler and memory; your harness does the implementation.
-
-## Run it entirely on your machine
-
-Requirements:
-
-- Git;
-- Node.js 24 and npm 11;
-- an OpenAI-compatible model server reachable on loopback.
-
-The model server must implement:
-
-- `GET /v1/models`;
-- `POST /v1/chat/completions`;
-- JSON-object responses.
-
-Then:
-
-```bash
-git clone https://github.com/roosiq/graphslop-factory.git
-cd graphslop
-npm ci
-npm run self-host -- --repo /absolute/path/to/your/project
-```
-
-Graphslop prints:
-
-- the local URL, normally `http://127.0.0.1:4173`;
-- a one-time owner key used to claim the private workspace.
-
-By default it expects the model at `http://127.0.0.1:8001/v1`. Point it at another local endpoint when needed:
-
-```bash
-npm run self-host -- \
-  --repo /absolute/path/to/your/project \
-  --model-url http://127.0.0.1:11434/v1 \
-  --model your-model-name
-```
-
-You can also copy [`.env.example`](.env.example) to `.env` and run the shorter command:
-
-```bash
-npm run self-host
-```
-
-Private state and generated authority keys are kept outside Git under `.local/state` unless you provide another `--state` path.
-
-## Model choice
-
-Graphslop is model-portable. The current prompt contract is tested with a local Qwen-class model, but any sufficiently capable OpenAI-compatible local model can be used.
-
-The model may propose meaning and the next question. Deterministic code owns IDs, graph mutations, status transitions, approvals, baseline hashes, dependency readiness, and protected-decision checks.
-
-## Optional coding workers
-
-Creating and downloading the build pack does not require a coding-agent CLI.
-
-If you dispatch implementation or verification work from the local runner, install the `codex` CLI or replace the worker adapter with another harness. Execution workers receive one bounded task and cannot rewrite approved project intent.
-
-The hardened Linux runner also requires `bubblewrap`. It is not needed to create, edit, or download a build pack.
-
-## Optional Cloudflare edge
-
-The local server is the private authority and model boundary. The optional Worker serves the web assets and proxies API traffic to an HTTPS origin you control.
-
-See [Self-hosting](docs/SELF_HOSTING.md) for the tunnel and Worker procedure. Cloudflare is not required for a local installation.
-
-## Architecture
+It does not build the app. It creates the files that tell your coding harness
+what to build, in what order, and without quietly changing what you approved.
 
 ```text
 rough words
     ↓
-Intent Graph → approved Intent baseline
+Intent Graph       what you want
     ↓
-Solution Graph → approved Solution baseline
+Solution Graph     what the product means
     ↓
-Execution Graph → portable .factory build pack
+Execution Graph    small jobs, dependencies, paths, checks
     ↓
-your coding harness
+your harness       Codex, Claude Code, Hermes, or a human team
 ```
 
-Every product-facing Solution node traces to Intent. Every Execution task traces to Solution. Verification walks the chain in reverse and creates bounded repair work when implementation drifts.
+## What is here
 
-See [Architecture](docs/ARCHITECTURE.md) for the component boundaries.
+- one installable skill: [`skills/graphslop`](skills/graphslop);
+- four plain-language agent modes: intent, solution, execution, verification;
+- one dependency-free Python script for graph validation, immutable baselines,
+  dependency cycles, and ready-job selection;
+- tests for the deterministic guardrails.
 
-## Development
+There is no web app, hosted model, account, database, or required agent runtime.
+The earlier experimental SaaS implementation remains preserved in the
+[`v0.1.0`](https://github.com/roosiq/graphslop-factory/releases/tag/v0.1.0)
+release.
+
+## Use it
+
+Clone the repository and make the skill visible to your harness. For Codex:
 
 ```bash
-npm ci
-npm run build
-npm run typecheck
-npm test
-npm run test:ui
-npm run test:e2e
-npm run ci
+git clone https://github.com/roosiq/graphslop-factory.git
+mkdir -p ~/.codex/skills
+cp -R graphslop-factory/skills/graphslop ~/.codex/skills/graphslop
 ```
 
-The repository is a private-package npm workspace. “Private” prevents accidental npm publication; it does not restrict the MIT-licensed source.
+Then say:
 
-## Security
+```text
+Use $graphslop to turn this into a build pack:
+Make site where paste writing and tell if AI. Keep simple. No login.
+```
 
-Graphslop binds the control plane to loopback by default, generates local authority keys with restrictive file permissions, and does not send project text to a hosted provider unless you deliberately replace the local model adapter.
+A harness without skill discovery can read
+[`skills/graphslop/SKILL.md`](skills/graphslop/SKILL.md) as its operating
+instructions.
 
-Read [SECURITY.md](SECURITY.md) before exposing the control plane through a tunnel.
+## What it creates
+
+Graphslop maintains a human-readable `.factory/` directory in the target
+project:
+
+```text
+.factory/
+  project.json
+  status.json
+  messages.jsonl
+  decisions.jsonl
+  intent/
+    graph.json
+    baselines/intent-v1.json
+  solution/
+    graph.json
+    baselines/solution-v1.json
+  execution/
+    graph.json
+  evidence/
+  drift/
+```
+
+Questions are not hard-coded. The intent mode asks about unresolved,
+contradictory, or missing high-impact nodes in the live graph. Corrections
+supersede earlier interpretations without deleting history.
+
+The build pack stops at executable work definitions. Running those jobs is a
+separate choice owned by your harness.
+
+## Deterministic guardrails
+
+The model handles meaning. The script handles authority and structure:
+
+```bash
+python3 skills/graphslop/scripts/graphslop.py init \
+  --root /path/to/project \
+  --name "My project"
+
+python3 skills/graphslop/scripts/graphslop.py validate \
+  --root /path/to/project
+
+python3 skills/graphslop/scripts/graphslop.py freeze \
+  --root /path/to/project \
+  --graph intent \
+  --message-id msg-approval
+
+python3 skills/graphslop/scripts/graphslop.py next \
+  --root /path/to/project
+```
+
+`freeze` writes a versioned snapshot with a SHA-256 hash. `validate` rejects
+broken trace links, missing protected baselines, invalid node types, missing
+dependencies, and dependency cycles.
+
+## Test
+
+Python 3.10 or newer is enough:
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 -m py_compile skills/graphslop/scripts/graphslop.py
+```
 
 ## License
 

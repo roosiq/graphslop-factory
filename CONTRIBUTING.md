@@ -1,29 +1,24 @@
 # Contributing
 
-Graphslop is deliberately small. Changes should preserve the separation between what the owner wants, what the approved solution means, and what a worker is allowed to do.
+Keep Graphslop small. It is a portable skill and graph guardrail, not a coding
+platform.
 
-## Before opening a pull request
+Before opening a pull request:
 
 ```bash
-npm ci
-npm run ci
+python3 -m unittest discover -s tests -v
+python3 -m py_compile skills/graphslop/scripts/graphslop.py
 ```
 
-Include:
+Preserve these rules:
 
-- the behavior being changed;
-- the graph or authority boundary it affects;
-- tests proving the approved behavior;
-- confirmation that no product scope was added silently.
+- model output is a proposal;
+- inferred intent is not approved intent;
+- corrections preserve history;
+- product solution nodes trace to intent;
+- execution jobs trace to solution;
+- dependency order is explicit;
+- worker boundaries and acceptance checks are concrete;
+- no runtime, model provider, or hosted service is required.
 
-## Design rules
-
-- Model output is an untrusted proposal.
-- Deterministic code owns authority and state transitions.
-- Inferred requirements are never treated as approved.
-- Product-facing Solution nodes trace to Intent.
-- Execution tasks trace to Solution.
-- Workers receive bounded paths and acceptance checks.
-- Worker instructions stay short: `JOB / USE / TOUCH / DON'T / DONE`.
-
-Open an issue before making a breaking graph-schema or build-pack-format change.
+Open an issue before changing the graph or baseline format.
