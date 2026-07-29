@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { access, chmod, mkdir, mkdtemp, realpath, symlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
@@ -389,7 +389,7 @@ test('applies timeout, process containment, minimal environment, and bounded out
 
 test('bwrap sandbox blocks absolute host writes and network while allowing local node checks', async () => {
   const fixture = await workspaceFixture();
-  const hostTarget = join(dirname(fixture.source), `graphslop-host-${Date.now()}.txt`);
+  const hostTarget = join(fixture.source, `graphslop-host-${Date.now()}.txt`);
   await writeFile(join(fixture.worktree, 'sandbox.test.mjs'), `
     import test from 'node:test';
     import assert from 'node:assert/strict';
