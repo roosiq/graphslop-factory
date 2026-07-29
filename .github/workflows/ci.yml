@@ -27,6 +27,8 @@ jobs:
             sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
           fi
           bwrap --unshare-user --uid 0 --gid 0 --unshare-net \
-            --ro-bind /usr /usr --ro-bind /bin /bin -- /usr/bin/true
+            --ro-bind /usr /usr --ro-bind /bin /bin \
+            --ro-bind /lib /lib --ro-bind /lib64 /lib64 \
+            --ro-bind /etc /etc --proc /proc --dev /dev -- /usr/bin/true
       - run: npx playwright install --with-deps chromium
       - run: npm run ci
