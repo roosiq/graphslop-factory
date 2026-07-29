@@ -20,6 +20,13 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Install execution sandbox
-        run: sudo apt-get update && sudo apt-get install --yes bubblewrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap
+          if sysctl kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          bwrap --unshare-user --uid 0 --gid 0 --unshare-net \
+            --ro-bind /usr /usr --ro-bind /bin /bin -- true
       - run: npx playwright install --with-deps chromium
       - run: npm run ci
