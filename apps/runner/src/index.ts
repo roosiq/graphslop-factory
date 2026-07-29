@@ -421,7 +421,8 @@ export async function executeContainedArgv(
   const runtimeMounts = ['/usr', '/bin', '/lib', '/lib64', '/etc']
     .flatMap((path) => ['--ro-bind', path, path]);
   const args = [
-    '--die-with-parent', '--new-session', '--unshare-net', '--unshare-ipc',
+    '--die-with-parent', '--new-session', '--unshare-user', '--uid', '0', '--gid', '0',
+    '--unshare-net', '--unshare-ipc',
     '--unshare-pid', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--dir', '/tmp/home',
     ...runtimeMounts,
     options.readOnly ? '--ro-bind' : '--bind', worktreeRoot, '/workspace',
