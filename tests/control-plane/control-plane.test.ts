@@ -735,7 +735,7 @@ describe('production adapter', () => {
       status: 'idle',
     });
     expect(await adapter.commandAtomic('authorize-repair', {
-      bindings: repairBindings!,
+      bindings: { ...repairBindings!, taskId: 'stale-task' },
       input: { authorization, drift, baseCommit: 'd'.repeat(40) },
     })).toEqual({ ok: false, code: 'stale_binding' });
     await expect(bridge.authorizeRepair({
