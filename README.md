@@ -79,6 +79,8 @@ Creating and downloading the build pack does not require a coding-agent CLI.
 
 If you dispatch implementation or verification work from the local runner, install the `codex` CLI or replace the worker adapter with another harness. Execution workers receive one bounded task and cannot rewrite approved project intent.
 
+The hardened Linux runner also requires `bubblewrap`. It is not needed to create, edit, or download a build pack.
+
 ## Optional Cloudflare edge
 
 The local server is the private authority and model boundary. The optional Worker serves the web assets and proxies API traffic to an HTTPS origin you control.

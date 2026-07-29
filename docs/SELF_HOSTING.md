@@ -13,6 +13,8 @@ npm run self-host -- --repo /absolute/path/to/your/project
 
 The target must already be a Git repository. Graphslop reads its current commit so generated tasks can be bound to an exact starting point.
 
+Build-pack creation needs no coding-agent CLI. Dispatching work through the hardened Linux runner additionally requires `bubblewrap` and either the `codex` CLI or a replacement worker adapter.
+
 ### Configuration
 
 | Variable | Default | Purpose |
