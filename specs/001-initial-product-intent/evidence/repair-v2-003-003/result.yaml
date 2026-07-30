@@ -1,0 +1,49 @@
+schema_version: 1
+task_id: repair-v2-003-003
+status: accepted
+accepted_at: '2026-07-27T22:03:39-04:00'
+repairs_drift: drift-v2-005-003
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-003-003-20260727
+  quote: Authorize repair-v2-003-003 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-003-003
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/scheduler.ts, sha256: 36da0d8035435b97f49f90192ba19cd30fa31e5052722294efd66502e808c847 }
+  - { path: tests/kernel/scheduler-contract.test.mjs, sha256: 6317757408f6e3b9a096183f81b17cc34dcfb328e4c83d5ee5dc2d8f9bcd482e }
+  - { path: tests/kernel/completeness-contract.test.mjs, sha256: 0c5ffe85ef56b92f3580e497ba40fe946550b828f3489ada8d9ae1b5b627c336 }
+  - { path: tests/kernel/flywheel-contract.test.mjs, sha256: 654555d200bedfe065f0b520826f16ec469e6095455cfb3fdc0b7911f0a1e258 }
+acceptance_checks:
+  - { id: REPAIR-V2-003-003-AC-01, outcome: pass, evidence: not_authorized invalidates authorized, leased, running, produced, verifying, and accepted lifecycle claims. }
+  - { id: REPAIR-V2-003-003-AC-02, outcome: pass, evidence: Unauthorized accepted direct or transitive ancestors invalidate scheduling and cannot unlock a dependant. }
+  - { id: REPAIR-V2-003-003-AC-03, outcome: pass, evidence: Unauthorized accepted required work makes completeness invalid and advanceFactory returns block_invalid_state rather than complete. }
+  - { id: REPAIR-V2-003-003-AC-04, outcome: pass, evidence: Proposed, blocked, ready, repair_proposed, failed, and discarded not_authorized states remain valid; ready remains nondispatchable. }
+  - { id: REPAIR-V2-003-003-AC-05, outcome: pass, evidence: Authorized accepted work with current complete closure still satisfies dependencies and completion. }
+  - { id: REPAIR-V2-003-003-AC-06, outcome: pass, evidence: Contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass. }
+commands:
+  - { command: node --test tests/kernel/scheduler-contract.test.mjs tests/kernel/completeness-contract.test.mjs tests/kernel/flywheel-contract.test.mjs, outcome: pass, observation: 43 tests }
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 56 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+independent_probes:
+  - complete lifecycle authorization matrix
+  - direct and transitive unauthorized accepted dependencies
+  - mixed invalid and safe lifecycle states
+  - unauthorized accepted early completion
+  - authorized accepted complete closure
+  - stale and unfinished ancestor regression
+  - repeated deterministic non-mutating evaluation
+independence:
+  implementer: /root/v2_004_repair
+  verifier: /root/v2_004_check
+  verifier_did_not_modify_implementation_or_tests: true
+drift_closure:
+  drift_id: drift-v2-005-003
+  outcome: resolved
+unresolved_issues: []

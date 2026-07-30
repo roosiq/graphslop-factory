@@ -1,0 +1,44 @@
+schema_version: 1
+task_id: repair-v2-003-001
+status: accepted
+accepted_at: '2026-07-27T21:34:19-04:00'
+repairs_drift: drift-v2-005-001
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-003-001-20260727
+  quote: Authorize repair-v2-003-001 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-003-001
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/scheduler.ts, sha256: 95a7d6ca1282967e532eb3c142d8a14b96586cffe52d02209f2073e0c22c84d3 }
+  - { path: tests/kernel/scheduler-contract.test.mjs, sha256: 2ff025b4714674e37cdc9411afa491df3791b099a01e418df3ef7022349b9abb }
+acceptance_checks:
+  - { id: REPAIR-V2-003-AC-01, outcome: pass, evidence: Direct and transitive stale accepted dependencies make their ready dependants non-dispatchable. }
+  - { id: REPAIR-V2-003-AC-02, outcome: pass, evidence: Stable stale_baseline blockers name stale dependency sources and dependency_blocked blockers name affected ready tasks. }
+  - { id: REPAIR-V2-003-AC-03, outcome: pass, evidence: A fully fresh accepted dependency closure remains dispatchable. }
+  - { id: REPAIR-V2-003-AC-04, outcome: pass, evidence: Contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass. }
+commands:
+  - { command: node --test tests/kernel/scheduler-contract.test.mjs, outcome: pass, observation: 10 tests }
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 50 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+independent_probes:
+  - direct stale accepted dependency
+  - transitive stale accepted dependency
+  - multiple stale upstream dependencies
+  - same baseline ID with a different content hash
+  - fully fresh accepted dependency chain
+  - repeated deterministic non-mutating scheduling
+independence:
+  implementer: /root/v2_004_repair
+  verifier: /root/v2_004_check
+  verifier_did_not_modify_implementation_or_tests: true
+drift_closure:
+  drift_id: drift-v2-005-001
+  outcome: resolved
+unresolved_issues: []

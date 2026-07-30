@@ -1,0 +1,51 @@
+schema_version: 1
+task_id: P3-003
+type: Implement
+status: accepted
+accepted_at: '2026-07-28T00:21:58-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+implementation:
+  - { path: packages/contracts/src/proposal.ts, sha256: d74016f7eeeb7b7827227fc3c709af30485d1495c3233daec36ac81025fd508c }
+  - { path: packages/contracts/src/index.ts, sha256: e43cf8255797aa2ad5cbc2c5a130b5908e34435a3b78dea87a6de157e0206a66 }
+  - { path: packages/codex-adapter/src/index.ts, sha256: 7a65e2ce4ce85ccbf9ea5ad649031a68aa35b7257c5ed67559195310fa437374 }
+  - { path: packages/control-state/src/index.ts, sha256: 677f68a2632b3260baec26495deef2afcee336c06a00e63eee53bcb045a3d3f2 }
+  - { path: packages/control-state/src/project-service.ts, sha256: 664cbb188d10f24cdf086c212261372549adcfde37883b06a62049cea532ad73 }
+  - { path: tests/factory/project-service.test.mjs, sha256: 06afca685e6291c696f4a894bf6e5325c78698e008f1a16ca645c7075ff3710a }
+  - { path: tests/provider/proposal-provider.test.mjs, sha256: 4b95f99adb5eb605dfd94845230a023ec059e453f12a75d950ed442a2e9a14a1 }
+
+acceptance_checks:
+  - { check: Rough language creates proposed Intent and exactly one ranked question without code work, outcome: pass }
+  - { check: Corrections append before-and-after deltas and never overwrite history, outcome: pass }
+  - { check: Provider failure preserves the message and leaves all graphs unchanged, outcome: pass }
+  - { check: Graph and projection hashes bind owner approvals exactly, outcome: pass }
+  - { check: Solution and Execution proposals retain complete trace links, outcome: pass }
+  - { check: Default tests use a deterministic fixture provider and Codex remains optional, outcome: pass }
+  - { check: Blocking questions require an exact recorded answer or deferral before approval, outcome: pass }
+
+verification:
+  - { command: npm ci, outcome: pass }
+  - { command: npm run ci, outcome: pass }
+  - { command: node --test tests/factory/*.test.mjs tests/state/*.test.mjs, outcome: pass, observation: 15 of 15 tests passed }
+  - { command: node --test tests/provider/*.test.mjs, outcome: pass, observation: 2 of 2 tests passed }
+  - { command: git diff --check, outcome: pass }
+
+necessary_repairs:
+  - Correction deltas retain prior and next meaning; unknown targets fail without graph mutation.
+  - Empty proposals fail closed and unresolved discovery always exposes exactly one deterministic question.
+  - Codex receives current stable node IDs but cannot supply IDs, timestamps, hashes, or authority.
+  - Baseline and approval IDs are unique and exact current snapshot hashes prevent stale replay.
+  - Review cannot clear a blocker; explicit owner answer or deferral creates durable resolution evidence.
+  - Question resolution requires the exact expected question ID and stale actions do not mutate state.
+
+review:
+  specification: { verifier: /root/p3_003_spec_review, outcome: accept_after_repairs }
+  code_quality: { verifier: /root/p3_003_quality_review, outcome: accept_after_repairs }
+
+state_note: >-
+  P3-003 accepts proposal and approval orchestration only. Repository execution,
+  verification evidence production, drift repair, API, UI, and deployment remain incomplete.

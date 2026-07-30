@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install execution sandbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap
+          if sysctl kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          bwrap --unshare-user --uid 0 --gid 0 --unshare-net \
+            --ro-bind /usr /usr --ro-bind /bin /bin \
+            --ro-bind /lib /lib --ro-bind /lib64 /lib64 \
+            --ro-bind /etc /etc --proc /proc --dev /dev -- /usr/bin/true
+      - run: npx playwright install --with-deps chromium
+      - run: npm run ci

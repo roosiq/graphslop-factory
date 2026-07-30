@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts",
+    "worker-configuration.d.ts"
+  ],
+  "exclude": [
+    "dist/**",
+    ".wrangler/**"
+  ]
+}

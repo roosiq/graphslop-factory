@@ -1,0 +1,48 @@
+schema_version: 1
+task_id: repair-v2-003-002
+status: accepted
+accepted_at: '2026-07-27T21:49:17-04:00'
+repairs_drift: drift-v2-005-002
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-003-002-20260727
+  quote: Authorize repair-v2-003-002 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-003-002
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/scheduler.ts, sha256: 677ee79ab3d789ffa7f8f2e4adcb94b27ff4f938baed7f867b0e78c1650c40c3 }
+  - { path: tests/kernel/scheduler-contract.test.mjs, sha256: 959ed6dacd97a422a0e0490d7bb96fd9e2f00f616a4b748b910ffd91729772e5 }
+  - { path: tests/kernel/flywheel-contract.test.mjs, sha256: 5de8087da17c4944a20d66c21e3bbacc2dedae9c9f255e6b9a6acf933456fd71 }
+acceptance_checks:
+  - { id: REPAIR-V2-003-002-AC-01, outcome: pass, evidence: Every dependency ancestor must be accepted before its ready dependant can dispatch. }
+  - { id: REPAIR-V2-003-002-AC-02, outcome: pass, evidence: Direct and transitive unfinished, failed, discarded, active, authorized, and mixed ancestor states fail closed deterministically. }
+  - { id: REPAIR-V2-003-002-AC-03, outcome: pass, evidence: advanceFactory returns missing_work rather than execute_task through an inconsistent accepted intermediary. }
+  - { id: REPAIR-V2-003-002-AC-04, outcome: pass, evidence: A fully accepted and current transitive dependency closure remains dispatchable. }
+  - { id: REPAIR-V2-003-002-AC-05, outcome: pass, evidence: Contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass. }
+commands:
+  - { command: node --test tests/kernel/scheduler-contract.test.mjs tests/kernel/flywheel-contract.test.mjs, outcome: pass, observation: 26 tests }
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 52 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+independent_probes:
+  - active and authorized direct or transitive ancestors
+  - failed and discarded direct or transitive ancestors
+  - unfinished direct or transitive ancestors
+  - mixed failed and unfinished ancestor chains
+  - exact hash-only stale mismatch
+  - fully accepted and current dependency chain
+  - integrated flywheel missing-work route
+  - repeated deterministic non-mutating evaluation
+independence:
+  implementer: /root/v2_004_repair
+  verifier: /root/v2_004_check
+  verifier_did_not_modify_implementation_or_tests: true
+drift_closure:
+  drift_id: drift-v2-005-002
+  outcome: resolved
+unresolved_issues: []

@@ -1,0 +1,2 @@
+# Shared only with the local Qwen queue consumer.
+MODEL_RUNNER_TOKEN=replace-with-a-long-random-token

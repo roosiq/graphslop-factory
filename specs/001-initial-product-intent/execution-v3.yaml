@@ -1,0 +1,320 @@
+schema_version: 1
+execution_id: execution-v3
+project_id: graphslop
+status: complete
+compiled_at: '2026-07-27T23:36:16-04:00'
+authorized_at: '2026-07-27T23:36:16-04:00'
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-build-actual-product-20260727
+  quote: great - build the actual product now.
+  scope: bounded_local_product_build
+  repair_policy: absolutely_necessary_only
+  does_not_authorize: [push, create_pull_request, merge, deploy, domain_cutover, traffic_cutover]
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+accepted_kernel:
+  execution_id: execution-v2
+  evidence_ref: specs/001-initial-product-intent/evidence/V2-005/result.yaml
+  evidence_sha256: 0abbf404186ecf1d7617c5f7cbfe86e54eab4cbd8f04bef33b370bcdb820714b
+  status: accepted
+historical_execution:
+  execution_id: execution-v1
+  disposition: superseded_task_decomposition
+  carried_forward_outcomes: [T001]
+  remaining_behavior_recompiled: true
+transformation:
+  id: transform-solution-v3-to-execution-v3
+  compiler_contract_version: 4
+  source_solution_graph: solution-graph-v3
+  generated_task_count: 7
+  prior_remaining_task_count: 37
+  simplification: Seven behavioral and architectural boundaries replace the overcooked remaining task sequence.
+  validation:
+    every_task_traces_to_solution: true
+    every_task_traces_transitively_to_intent: true
+    every_materialized_solution_node_covered: true
+    dependency_graph_acyclic: true
+    exactly_one_task_ready: true
+    bounded_paths: true
+    independent_verification: true
+dispatch_policy:
+  max_active_tasks: 1
+  ready_order: stable_topological_then_lexical_id
+  repair_action: only_concrete_blocking_or_important_drift
+  no_speculative_hardening: true
+graph:
+  id: execution-graph-v3
+  kind: Execution
+  nodes:
+    - id: P3-001
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Add the smallest product toolchain and reliable root commands for development, testing, building, and starting Graphslop.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [V2-005]
+      satisfies_solution_nodes: [SOL-TECH-001, SOL-TECH-002, SOL-TECH-003, SOL-TECH-004, SOL-DEPLOY-001, SOL-DEPLOY-002, SOL-RULE-008]
+      traces_to_intent_nodes: [INT-017, INT-018, INT-020, INT-021, INT-024]
+      allowed_paths:
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - apps/*/package.json
+        - packages/*/package.json
+        - apps/control-plane/index.html
+        - vite.config.ts
+        - vitest.config.ts
+        - playwright.config.ts
+        - .gitignore
+      forbidden_changes:
+        - Add hosted CI, deployment, a database, or another provider.
+        - Change approved graphs or kernel behavior.
+        - Push, publish, or deploy.
+      acceptance_checks:
+        - npm ci succeeds.
+        - Root dev, start, build, typecheck, test, and ci commands resolve.
+        - Workspace dependency directions remain packages-to-packages and apps-to-packages.
+        - Default tests never call a model, push, create a pull request, or deploy.
+      brief:
+        job: Give the product working commands.
+        use: The accepted stack and current workspace.
+        touch: Only package and tool config files.
+        dont: Build features. Add cloud stuff. Push or deploy.
+        done: Install, test, build, and start commands work. Show proof.
+
+    - id: P3-002
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement canonical file-backed project state, lifecycle transitions, approvals, projections, and recovery.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-001]
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-002, SOL-SVC-003, SOL-DATA-001, SOL-DATA-002, SOL-DATA-003, SOL-DATA-004, SOL-DATA-005, SOL-RULE-002, SOL-RULE-003, SOL-RULE-004]
+      traces_to_intent_nodes: [INT-003, INT-005, INT-006, INT-009, INT-010, INT-011, INT-016, INT-017, INT-022, INT-024]
+      allowed_paths:
+        - packages/file-store/**
+        - packages/control-state/**
+        - packages/contracts/**
+        - tests/state/**
+        - tests/store/**
+      forbidden_changes:
+        - Add a database, multi-project state, hosted synchronization, or graph grammar.
+        - Let the filesystem or model bypass graph validation.
+        - Change approved baselines.
+      acceptance_checks:
+        - State materializes the human-readable .factory layout atomically.
+        - One writer and exact expected-head hashes prevent stale writes.
+        - Approved baselines are immutable and corrections preserve history.
+        - Crash recovery never selects a partial or hash-invalid head.
+        - Lifecycle and approval transitions fail closed.
+      brief:
+        job: Save the factory without losing truth.
+        use: The kernel, current baselines, and .factory layout.
+        touch: Only state, store, contracts, and their tests.
+        dont: Add a database. Guess through stale state. Change baselines.
+        done: Save, reload, reject stale writes, and recover safely. Show proof.
+
+    - id: P3-003
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement the proposal gateway and project service for conversation, questions, Intent approval, Solution approval, and Execution compilation.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-002]
+      satisfies_solution_nodes: [SOL-FEAT-001, SOL-FEAT-002, SOL-FEAT-003, SOL-FEAT-004, SOL-FEAT-005, SOL-FEAT-006, SOL-WORK-001, SOL-WORK-002, SOL-SVC-004, SOL-SVC-005, SOL-RULE-001, SOL-API-001, SOL-INTG-001, SOL-TEST-001, SOL-TEST-002, SOL-TEST-003, SOL-TEST-004, SOL-TEST-005, SOL-ROLE-001, SOL-ROLE-002]
+      traces_to_intent_nodes: [INT-001, INT-002, INT-003, INT-004, INT-005, INT-006, INT-007, INT-008, INT-009, INT-010, INT-011, INT-012, INT-014, INT-022, INT-023, INT-024, INT-025, INT-026, INT-030]
+      allowed_paths:
+        - packages/codex-adapter/**
+        - packages/control-state/**
+        - packages/contracts/**
+        - tests/factory/**
+        - tests/provider/**
+      forbidden_changes:
+        - Let model output create authority, approval, IDs, timestamps, or repository writes.
+        - Ask more than one next question.
+        - Add another provider or public API.
+      acceptance_checks:
+        - Rough language creates proposed Intent state and exactly one ranked question without code work.
+        - Corrections append deltas and never overwrite history.
+        - Model failures preserve messages and do not mutate graphs.
+        - Exact graph and projection hashes bind approvals.
+        - Solution and Execution proposals retain complete trace links.
+        - A deterministic fixture provider supports all default tests; Codex remains an optional live boundary.
+      brief:
+        job: Turn rough words into approved graphs.
+        use: Messages, current graphs, the provider contract, and state service.
+        touch: Only proposal, orchestration, contracts, and tests.
+        dont: Approve for the owner. Write code repos. Ask a questionnaire.
+        done: Words become traceable proposals and one useful question. Show proof.
+
+    - id: P3-004
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement the sequential local runner, signed leases, repository boundary, evidence, verification, drift, repairs, change impact, and pull-request preview.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-003]
+      satisfies_solution_nodes: [SOL-FEAT-007, SOL-FEAT-008, SOL-FEAT-009, SOL-FEAT-010, SOL-FEAT-011, SOL-WORK-003, SOL-WORK-004, SOL-WORK-005, SOL-SVC-006, SOL-SVC-007, SOL-SVC-008, SOL-SVC-009, SOL-DATA-006, SOL-DATA-007, SOL-DATA-008, SOL-RULE-004, SOL-RULE-005, SOL-RULE-006, SOL-RULE-007, SOL-API-002, SOL-INTG-001, SOL-INTG-002, SOL-INTG-003, SOL-TEST-006, SOL-TEST-007, SOL-TEST-008, SOL-TEST-009, SOL-TEST-010, SOL-TEST-011, SOL-ROLE-003, SOL-ROLE-004]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-013, INT-014, INT-015, INT-016, INT-017, INT-018, INT-019, INT-022, INT-024, INT-025, INT-026, INT-028, INT-030]
+      allowed_paths:
+        - apps/runner/**
+        - packages/codex-adapter/**
+        - packages/testing/**
+        - packages/control-state/**
+        - packages/contracts/**
+        - tests/runner/**
+        - tests/integration/**
+      forbidden_changes:
+        - Run against an untrusted repository.
+        - Dispatch two tasks, auto-authorize repair, accept producer self-report, push, or deploy.
+        - Use shell command strings for declared acceptance commands.
+      acceptance_checks:
+        - Only one exact owner-authorized ready task receives a signed expiring lease.
+        - Git worktrees and real paths enforce allowed changes.
+        - Evidence is redacted, hashed, and bound to task and baselines.
+        - A separate verifier accepts or emits exact drift.
+        - Repairs remain idle until exact owner authorization and stop after one attempt.
+        - Pull-request preview performs no remote action.
+      brief:
+        job: Run one safe job and prove what happened.
+        use: The exact lease, task, baselines, repository, and checks.
+        touch: Only runner, adapter, test fixtures, and evidence code.
+        dont: Run two jobs. Trust the builder. Push or deploy.
+        done: One job runs inside its fence and a different worker checks it. Show proof.
+
+    - id: P3-005
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement the loopback control-plane server, sole-owner session, CSRF boundary, local command API, and event progress.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-004]
+      satisfies_solution_nodes: [SOL-APP-001, SOL-API-001, SOL-API-002, SOL-DEPLOY-001, SOL-RULE-004]
+      traces_to_intent_nodes: [INT-004, INT-017, INT-019, INT-020, INT-023, INT-024]
+      allowed_paths:
+        - package.json
+        - apps/control-plane/package.json
+        - apps/control-plane/src/api/**
+        - apps/control-plane/src/auth/**
+        - apps/control-plane/src/services/**
+        - apps/control-plane/src/server.ts
+        - apps/control-plane/tests/**
+        - tests/control-plane/**
+      forbidden_changes:
+        - Bind outside loopback.
+        - Create multiple owners, a public API, hosted execution, or release authority.
+        - Return secrets, raw model streams, or unrestricted filesystem paths.
+      acceptance_checks:
+        - One-time claim creates one HttpOnly SameSite owner session and cannot replay.
+        - Mutations require the matching CSRF token and idempotency key.
+        - Owner and runner routes cannot impersonate each other.
+        - API commands enforce exact graph, baseline, projection, task, and lease hashes.
+        - Events are redaction-safe and never mutate state.
+      brief:
+        job: Let one owner control the local factory.
+        use: Project services, sessions, exact hashes, and runner messages.
+        touch: Only the local server, auth, API, and tests.
+        dont: Listen publicly. Leak secrets. Grant release power.
+        done: One local owner can use every approved command safely. Show proof.
+
+    - id: P3-006
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Build the responsive owner workspace for conversation, graph understanding, approvals, execution, Roles, evidence, drift, changes, and pull-request readiness.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-005]
+      satisfies_solution_nodes: [SOL-PAGE-001, SOL-FEAT-001, SOL-FEAT-002, SOL-FEAT-003, SOL-FEAT-004, SOL-FEAT-005, SOL-FEAT-006, SOL-FEAT-007, SOL-FEAT-008, SOL-FEAT-009, SOL-FEAT-010, SOL-FEAT-011, SOL-FEAT-012, SOL-WORK-001, SOL-WORK-002, SOL-WORK-003, SOL-WORK-004, SOL-WORK-005, SOL-COMP-001, SOL-COMP-002, SOL-COMP-003, SOL-COMP-004, SOL-COMP-005, SOL-COMP-006, SOL-COMP-007, SOL-DATA-009, SOL-RULE-009, SOL-TEST-012, SOL-TEST-013, SOL-TEST-014, SOL-ROLE-001, SOL-ROLE-002, SOL-ROLE-003, SOL-ROLE-004]
+      traces_to_intent_nodes: [INT-001, INT-002, INT-004, INT-007, INT-008, INT-009, INT-010, INT-011, INT-014, INT-015, INT-016, INT-017, INT-019, INT-023, INT-025, INT-026, INT-027, INT-028, INT-029, INT-030]
+      allowed_paths:
+        - apps/control-plane/package.json
+        - apps/control-plane/src/server.ts
+        - apps/control-plane/src/services/bridge.ts
+        - apps/control-plane/src/services/control.ts
+        - apps/control-plane/src/services/durable-authority.ts
+        - apps/control-plane/src/services/production.ts
+        - apps/control-plane/src/web/**
+        - apps/control-plane/src/client.tsx
+        - apps/control-plane/src/styles.css
+        - apps/control-plane/index.html
+        - apps/runner/src/index.ts
+        - packages/control-state/src/project-service.ts
+        - tests/control-plane/**
+        - tests/factory/**
+        - tests/runner/**
+        - tests/ui/**
+        - tests/e2e/**
+        - tests/accessibility/**
+      forbidden_changes:
+        - Expose graph editing, prompt editing, fake personas, team graphs, or decorative dashboards.
+        - Hide assumptions, exclusions, blocking questions, drift, or authority.
+        - Add release or deployment controls.
+      acceptance_checks:
+        - Caveman input, one question, understanding, graph trace, approvals, tasks, evidence, and drift are usable without graph syntax.
+        - Role cards use only JOB, USE, TOUCH, DON'T, and DONE.
+        - Desktop and mobile layouts have no clipped controls or horizontal overflow.
+        - Keyboard, focus, labels, semantics, live status, errors, and contrast pass.
+        - Empty, loading, blocked, failed, repair, and accepted states are visible.
+      brief:
+        job: Make the factory easy to see and control.
+        use: The local API and approved project projections.
+        touch: Only the owner web app and UI tests.
+        dont: Add dashboards for show. Hide truth. Invent graph controls.
+        done: A normal person can take the project from rough words to checked work. Show proof.
+
+    - id: P3-007
+      type: Verify
+      role_ref: SOL-ROLE-004
+      objective: Independently verify the complete local product against the approved graphs and produce the final reviewable readiness record.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      dependencies: [P3-006]
+      satisfies_solution_nodes: [SOL-TEST-001, SOL-TEST-002, SOL-TEST-003, SOL-TEST-004, SOL-TEST-005, SOL-TEST-006, SOL-TEST-007, SOL-TEST-008, SOL-TEST-009, SOL-TEST-010, SOL-TEST-011, SOL-TEST-012, SOL-TEST-013, SOL-TEST-014]
+      traces_to_intent_nodes: [INT-001, INT-003, INT-004, INT-009, INT-010, INT-011, INT-012, INT-014, INT-015, INT-016, INT-017, INT-018, INT-019, INT-022, INT-023, INT-024, INT-025, INT-026, INT-028, INT-029, INT-030]
+      allowed_paths:
+        - specs/001-initial-product-intent/evidence/P3-007/**
+        - specs/001-initial-product-intent/drift/**
+      forbidden_changes:
+        - Change product code, tests, baselines, or authority.
+        - Invent optional hardening as blocking drift.
+        - Push, create a pull request, merge, or deploy.
+      acceptance_checks:
+        - Install, typecheck, unit, contract, integration, build, and browser checks pass.
+        - Caveman intake through approved graphs and one bounded verified task works with fixture providers.
+        - Security, path, lease, redaction, recovery, and no-remote boundaries fail closed.
+        - All product-facing Solution nodes have observable acceptance evidence.
+        - No blocking or important drift remains.
+      brief:
+        job: Try the whole product and tell the truth.
+        use: Approved graphs, product, tests, and current evidence.
+        touch: Only final evidence or one exact drift report.
+        dont: Fix code. Hunt for trivia. Push or deploy.
+        done: Accept with proof or report one real blocking problem.
+  edges:
+    - { id: P3-E001, type: DEPENDS_ON, from: P3-001, to: V2-005 }
+    - { id: P3-E002, type: DEPENDS_ON, from: P3-002, to: P3-001 }
+    - { id: P3-E003, type: DEPENDS_ON, from: P3-003, to: P3-002 }
+    - { id: P3-E004, type: DEPENDS_ON, from: P3-004, to: P3-003 }
+    - { id: P3-E005, type: DEPENDS_ON, from: P3-005, to: P3-004 }
+    - { id: P3-E006, type: DEPENDS_ON, from: P3-006, to: P3-005 }
+    - { id: P3-E007, type: DEPENDS_ON, from: P3-007, to: P3-006 }
+current:
+  ready_tasks: []
+  active_tasks: []
+  accepted_tasks: [T001, V2-001, V2-002, V2-003, V2-004, V2-005, repair-v2-003-001, repair-v2-003-002, repair-v2-003-003, repair-v2-004-001, repair-v2-002-001, P3-001, P3-002, P3-003, P3-004, P3-005, P3-006, P3-007]
+  blocking_findings: []
+  pending_owner_decisions: []
+  product_complete: true
+  final_evidence:
+    path: specs/001-initial-product-intent/evidence/P3-007/result.yaml
+    sha256: cd6f394722d540cb5a86ce547dc83cb6f57d52180a28548232302d4d1c673858
+  deployment_status: not_authorized

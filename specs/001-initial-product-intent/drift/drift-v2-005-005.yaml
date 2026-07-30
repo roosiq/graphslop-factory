@@ -1,0 +1,96 @@
+schema_version: 1
+drift_id: drift-v2-005-005
+status: resolved
+severity: important
+type: baseline_integrity_drift
+detected_at: '2026-07-27T22:49:27-04:00'
+detected_by:
+  task_id: V2-005
+  role: Check
+  worker: /root/v2_005_integrated_check
+resolved_at: '2026-07-27T23:19:04-04:00'
+resolved_by:
+  task_id: repair-v2-002-001
+  evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-002-001/result.yaml
+  independent_verifiers:
+    - /root/v2_002_hash_spec_check
+    - /root/v2_002_hash_quality_check
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+affected_tasks: [V2-001, V2-002, V2-004, repair-v2-004-001]
+expected:
+  statement: >-
+    A GraphSnapshot contentHash must be the SHA-256 digest of the documented canonical
+    snapshot bytes with contentHash omitted. Graph validation and the authoritative factory
+    must reject a snapshot whose fields changed while its claimed hash, baseline reference,
+    and cross-graph refs retain an older digest. A frozen approved baseline must therefore
+    bind actual graph content, not an arbitrary hash-shaped string supplied beside it.
+  sources:
+    - specs/001-initial-product-intent/contracts/graph-kernel.md#hash-contract
+    - specs/001-initial-product-intent/contracts/graph-kernel.md#snapshot-rules
+    - specs/001-initial-product-intent/execution-v2.yaml#flywheel_order
+    - V2-002-AC-03-exact-snapshot-hash-trace-validation
+    - REPAIR-V2-004-001-AC-01-exact-current-snapshot-and-baseline-binding
+observed:
+  statement: >-
+    GraphSnapshotSchema requires only a lowercase 64-character string. validateGraphSnapshots
+    validates grammar and self-declared references but never canonicalizes or hashes snapshot
+    bytes; its own contract comment says it performs no hashing. The authoritative factory
+    compares baseline.snapshotContentHash only to the snapshot's unverified contentHash field.
+    No source code imports a SHA-256 primitive or implements the specified canonical hash
+    contract.
+  files:
+    - packages/contracts/src/graph.ts
+    - packages/contracts/src/schemas.ts
+    - packages/graph-kernel/src/validate.ts
+    - packages/graph-kernel/src/execution/factory.ts
+  current_file_hashes:
+    - { path: packages/contracts/src/graph.ts, sha256: 5351ff4404a70de9d87060ce7182d76d18e6c596824bc33abcb268abfae7106e }
+    - { path: packages/contracts/src/schemas.ts, sha256: 955430cfe6ce3399e0a3511835a5894f9679c7862c80855135cab3ee6da2ac49 }
+    - { path: packages/graph-kernel/src/validate.ts, sha256: 10cc323a41183f8671a9f745a85d31eeacb79413dc95f140c36b05cb237652cc }
+    - { path: packages/graph-kernel/src/execution/factory.ts, sha256: ef4994dcabd6f7e9ec6c8b7726c37b1d2c7327a4289f5dd6f3e55f3cb6dbedb9 }
+reproduction:
+  command: >-
+    node --input-type=module -e "import { advanceFactory, validateGraphSnapshots } from './packages/graph-kernel/dist/index.js'; import { completeComposedInput } from './tests/kernel/completeness-fixtures.mjs'; const input=completeComposedInput(); const intent=input.graphValidation.snapshots.find((snapshot)=>snapshot.graphKind==='intent'); const goal=intent.nodes.find((node)=>node.id==='int-goal-1'); goal.statementOrName='Build a product the approved owner never requested'; console.log({declaredHash:intent.contentHash,graphValidationValid:validateGraphSnapshots(input.graphValidation).valid,factoryAction:advanceFactory(input).action,factoryComplete:advanceFactory(input).completeness.complete});"
+  result:
+    declared_hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    graph_validation_valid: true
+    factory_action: complete
+    factory_complete: true
+impact:
+  statement: >-
+    An altered Intent, Solution, or Execution graph can masquerade as the approved graph by
+    retaining its old hash-shaped contentHash and matching baseline reference. Because the
+    closure is then derived from the altered graph, the factory can declare completion for a
+    different owner outcome without a new immutable baseline, impact analysis, or approval.
+    This defeats the central no-drift and intent-freeze boundary.
+recommended_repair:
+  type: Repair
+  instruction: >-
+    Implement the documented canonical snapshot hash contract in the graph kernel: omit
+    contentHash, stably order every set-like collection by its specified key, RFC-8785
+    canonicalize, SHA-256 the UTF-8 bytes, and require the resulting lowercase digest to equal
+    every supplied current or source GraphSnapshot.contentHash before any semantic validation
+    or factory closure work. Give mismatches a stable structured error and make advanceFactory
+    block through its graph-validation-first path. Replace placeholder fixture hashes with
+    correctly derived hashes and add valid, statement-mutation, edge-mutation,
+    cross-link-mutation, source-snapshot, baseline, deterministic, and non-mutation tests.
+    Do not change approved intent-v3 or solution-v3 baselines, broaden worker authority, or
+    add a database or product feature.
+proposed_repair_task_id: repair-v2-002-001
+authorization:
+  repair_authorized: true
+  exact_task_id: repair-v2-002-001
+  protected_baselines: [intent-v3, solution-v3]
+  owner_message_id: msg-authorize-repair-v2-002-001-20260727
+  repair_policy: absolutely_necessary_only
+  scope_amendment:
+    decision_id: scope-amendment-repair-v2-002-001-001
+    owner_message_id: msg-authorize-scope-amendment-repair-v2-002-001-001-20260727
+    protected_baselines: [intent-v3, solution-v3]
+  no_code_changed_by_verifier: true

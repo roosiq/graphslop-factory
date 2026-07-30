@@ -1,0 +1,87 @@
+schema_version: 1
+task_id: repair-v2-003-002
+type: Repair
+status: accepted
+dispatchable: false
+proposed_at: '2026-07-27T21:38:02-04:00'
+authorized_at: '2026-07-27T21:45:01-04:00'
+accepted_at: '2026-07-27T21:49:17-04:00'
+evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-002/result.yaml
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-003-002-20260727
+  quote: Authorize repair-v2-003-002 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-003-002
+  protected_baselines: [intent-v3, solution-v3]
+authorization_required:
+  actor: authenticated_project_owner
+  exact_task_id: repair-v2-003-002
+  protected_baselines: [intent-v3, solution-v3]
+objective: Stop a ready task when any dependency ancestor is not accepted.
+repairs_drift: drift-v2-005-002
+satisfies_solution_nodes:
+  - SOL-SVC-001
+  - SOL-SVC-003
+  - SOL-FEAT-006
+  - SOL-FEAT-007
+  - SOL-RULE-009
+traces_to_intent_nodes:
+  - INT-011
+  - INT-012
+  - INT-017
+  - INT-022
+  - INT-024
+  - INT-025
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+expected_base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+dependencies:
+  - repair-v2-003-001
+  - drift-v2-005-002
+allowed_paths:
+  - packages/graph-kernel/src/execution/scheduler.ts
+  - tests/kernel/scheduler-contract.test.mjs
+  - tests/kernel/flywheel-contract.test.mjs
+forbidden_changes:
+  - Change scheduler task vocabulary or baseline authority.
+  - Change completeness or flywheel implementation behavior.
+  - Add a graph, service, dependency, or product feature.
+  - Change approved Intent or Solution baselines.
+  - Push, create a pull request, merge, deploy, or change production.
+required_outputs:
+  - Fail-closed recursive dependency-lifecycle scheduling.
+  - Direct and transitive unfinished-ancestor tests.
+  - Integrated flywheel regression proof.
+  - Independent verification evidence.
+acceptance_checks:
+  - id: REPAIR-V2-003-002-AC-01
+    statement: A ready task is not selected unless every task in its dependency closure is accepted.
+  - id: REPAIR-V2-003-002-AC-02
+    statement: Direct and transitive proposed, blocked, failed, discarded, or otherwise unaccepted ancestors block dispatch deterministically.
+  - id: REPAIR-V2-003-002-AC-03
+    statement: advanceFactory never returns execute_task for a candidate whose dependency closure is incomplete.
+  - id: REPAIR-V2-003-002-AC-04
+    statement: A ready task with a fully accepted and current dependency closure remains selectable.
+  - id: REPAIR-V2-003-002-AC-05
+    statement: Full contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass.
+retry_limit: 1
+required_evidence:
+  - changed files and hashes
+  - direct and transitive lifecycle probes
+  - integrated flywheel probe
+  - full verification command results
+  - independent specification-compliance review
+  - drift closure mapping
+implementer_assignment: fresh_implementation_agent
+verifier_assignment: fresh_verification_agent
+brief:
+  job: Do not run new work through unfinished old work.
+  use: The drift report, current graphs, scheduler, and flywheel checks.
+  touch: Only the scheduler and scheduler or flywheel tests.
+  dont: Change the flywheel code. Add features. Push or deploy.
+  done: Every old dependency is accepted before new work runs. Show proof.

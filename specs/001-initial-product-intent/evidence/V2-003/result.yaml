@@ -1,0 +1,37 @@
+schema_version: 1
+task_id: V2-003
+status: accepted
+accepted_at: '2026-07-27T20:10:43-04:00'
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/scheduler.ts, sha256: 4625706b898dad1abce54b28fb04e9db17170011f2cc865f130ac1f2a13da67e }
+  - { path: packages/graph-kernel/src/index.ts, sha256: ef31e0e65a511add50192df16fedb51b75105f75eb34c9d5454d820b1b396248 }
+  - { path: packages/graph-kernel/package.json, sha256: 300b05a33e7a1b60912d09ca3059c35dcdb04d2311fc48578c27ce4a9d2e9f80 }
+  - { path: tests/kernel/scheduler-contract.test.mjs, sha256: 4a059e8afa8c0dd8f8ba4130c136f6b92b3c28e412bf74b97f8a15dd5e502f90 }
+acceptance_checks:
+  - { id: V2-003-AC-01, outcome: pass, evidence: Dependencies precede dependants and lexical IDs break equal-ready ties. }
+  - { id: V2-003-AC-02, outcome: pass, evidence: Cycles identify actual cycle members and fail closed. }
+  - { id: V2-003-AC-03, outcome: pass, evidence: Missing, self, repeated, and duplicate task dependencies fail with task IDs. }
+  - { id: V2-003-AC-04, outcome: pass, evidence: Stale, unauthorized, failed, discarded, unfinished, and active work never dispatches. }
+  - { id: V2-003-AC-05, outcome: pass, evidence: At most one task is selected and input is never mutated. }
+  - { id: V2-003-AC-06, outcome: pass, evidence: Every material blocker class remains visible in deterministic order, including while safe work is selected. }
+commands:
+  - { command: npm ci, outcome: pass }
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 22 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+independence:
+  implementer: /root/v2_003_implement
+  repair_implementer: /root/v2_003_repair
+  verifier: /root/v2_003_check
+  verifier_did_not_modify_implementation: true
+verification_cycles:
+  - outcome: reject
+    findings: [duplicate_dependency_accepted, mixed_blockers_collapsed]
+  - outcome: accept
+    findings: []
+unresolved_issues: []

@@ -1,0 +1,45 @@
+schema_version: 1
+task_id: P3-004
+type: Implement
+status: accepted
+accepted_at: '2026-07-28T01:11:17-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+implementation:
+  - { path: apps/runner/src/index.ts, sha256: 2a88c461ee07737c6853e80ed31f695a7cd5bb57e252a83f5331b2a6c0d97955 }
+  - { path: apps/runner/package.json, sha256: 7b37a341fe967d996eb04401d82df9f0e194f2905c5eac43c712c65689ca14f6 }
+  - { path: apps/runner/tsconfig.build.json, sha256: 916e8a12ec161d611e4f3b7d87281ff1f73e7716e2e139aa822c954a69b09ebc }
+  - { path: tests/runner/runner.test.mjs, sha256: 806f8913b1a39b06d46ab3c79068dd8601f02c02ea389cf7fd53a4f4ff2e2b44 }
+
+acceptance_checks:
+  - { check: Only one exact owner-authorized ready task receives a signed expiring lease, outcome: pass }
+  - { check: Isolated Git worktree realpaths and both rename endpoints enforce allowed changes, outcome: pass }
+  - { check: Evidence is redacted hashed sealed and bound to task baselines repository and actual executions, outcome: pass }
+  - { check: A separately authenticated Check reruns commands and verifies semantic graph compliance, outcome: pass }
+  - { check: Blocking drift creates only exact owner-authorized one-attempt repair work, outcome: pass }
+  - { check: Baseline changes traverse dependency impact and local pull-request preview performs no remote action, outcome: pass }
+
+verification:
+  - { command: npm run verify --workspace @graphslop/runner, outcome: pass, observation: 28 of 28 tests passed }
+  - { command: npm run ci, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+
+security_and_authority_evidence:
+  - Bubblewrap exposes only a writable candidate and private temporary directories, clears environment, and unshares network and processes.
+  - Exact accepted Execution bytes are canonically rehashed and kernel-validated before task resolution.
+  - Runner-owned Build and Check receipts override worker claims; nonzero commands force rejection.
+  - Candidate seals bind content, Git modes, change paths, and complete semantic coverage.
+  - Source chunks are transient; durable evidence contains only hashes, sizes, modes, coverage, and findings.
+  - File-backed leases, identities, terminal results, cleanup failures, locks, and repair attempts survive fresh instances and fail closed.
+
+review:
+  specification: { verifier: /root/p3_004_spec_review, outcome: accept_after_necessary_repairs }
+  code_quality: { verifier: /root/p3_004_quality_review, outcome: accept_after_necessary_repairs }
+
+state_note: >-
+  P3-004 accepts the local bounded runner and verification boundary only.
+  The loopback API, owner interface, final integrated acceptance, and deployment remain incomplete.

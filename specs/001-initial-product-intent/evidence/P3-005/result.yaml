@@ -1,0 +1,51 @@
+schema_version: 1
+task_id: P3-005
+type: Implement
+status: accepted
+accepted_at: '2026-07-28T02:00:46-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+implementation:
+  - { path: apps/control-plane/src/api/app.ts, sha256: 9be31ec94f4684c5d7677f62e932720bd5d5a0554fe7a44da40f9f7c7dec409c }
+  - { path: apps/control-plane/src/auth/session.ts, sha256: 2ea16fd2ddf7dc0ed3430ec24c30008cb73417372d78b610b79b33dc4dcafc50 }
+  - { path: apps/control-plane/src/server.ts, sha256: f7606b22b6a19bfacadd0ffb8a71654abb1cdf526acc4ddb053c16d13baa165b }
+  - { path: apps/control-plane/src/services/bridge.ts, sha256: 5a333685dfd9e17b7a050c3c5d150230eb9c7f3d4ac751ff337fbde4208b8c65 }
+  - { path: apps/control-plane/src/services/control.ts, sha256: da7ddc4be78ed4990607761f911ec511c311ee3d9d5f62f29bc243c0be1257c5 }
+  - { path: apps/control-plane/src/services/durable-authority.ts, sha256: 36690edf5de1d420d27f975b373e53dc0be41a9b652827514d0bc4ecb2f34333 }
+  - { path: apps/control-plane/src/services/idempotency.ts, sha256: f5a09ebf0563fa37041f2824fdd3fd0ef397f44ccdaba8ba6a7f81cbdb2b2bf1 }
+  - { path: apps/control-plane/src/services/production.ts, sha256: 96473e3fcb2d1aaf9973f0c8838dee128a73a0e290378155d1ddc95e00141eac }
+  - { path: tests/control-plane/control-plane.test.ts, sha256: 54964a69734a897ef350ce05a2d94872961cf2e69749c7e7a5a27646dbacda03 }
+  - { path: apps/control-plane/package.json, sha256: 259f4b1283a098be7381bb7d69454f1cbdb90322b989182477c346571fb73c97 }
+
+acceptance_checks:
+  - { check: One-time claim creates one sole-owner HttpOnly SameSite session and cannot replay, outcome: pass }
+  - { check: Mutations require matching CSRF idempotency and command-stage exact authority, outcome: pass }
+  - { check: Owner and runner identities cannot impersonate each other, outcome: pass }
+  - { check: CAPTURE through compiled Execution and real LocalRunner dispatch works through the same API, outcome: pass }
+  - { check: Events are server-identified structured redacted idempotent and read-only, outcome: pass }
+  - { check: Signed verifier drift and exact repair authorization persist and reject forgery or replay, outcome: pass }
+
+verification:
+  - { command: npm run test --workspace @graphslop/control-plane, outcome: pass, observation: 18 of 18 tests passed }
+  - { command: npm run ci, outcome: pass }
+  - { command: git diff --check -- apps/control-plane tests/control-plane, outcome: pass }
+
+authority_evidence:
+  - Versioned /api/v1 loopback routes use typed stage-specific bindings and server-issued next-command capabilities.
+  - Approved Solution projection identity and content hash remain authoritative despite later projections.
+  - Compiled Execution is schema/hash/kernel validated, scheduler selected, installed by explicit versioned CAS, and leased by real LocalRunner.
+  - File-backed execution, repair, and verifier-drift records survive fresh instances.
+  - Check drift ingest uses a signed expiring one-time receipt bound to canonical drift and existing worker identity.
+  - Persisted signed drift remains resolvable after ingest TTL while tampering and forged identities fail.
+
+review:
+  specification: { verifier: /root/p3_005_spec_review, outcome: accept_after_necessary_repairs }
+  code_quality: { verifier: /root/p3_005_quality_review, outcome: accept_after_necessary_repairs }
+
+state_note: >-
+  P3-005 accepts the loopback control plane and actual service bridge.
+  The owner interface, browser acceptance, and final integrated verification remain incomplete.

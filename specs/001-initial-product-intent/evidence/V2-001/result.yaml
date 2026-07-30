@@ -1,0 +1,54 @@
+schema_version: 1
+task_id: V2-001
+status: accepted
+accepted_at: '2026-07-27T19:24:20-04:00'
+repairs_drift: drift-002
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/contracts/src/schemas.ts, sha256: 955430cfe6ce3399e0a3511835a5894f9679c7862c80855135cab3ee6da2ac49 }
+  - { path: packages/contracts/src/index.ts, sha256: daa54828973a082db74240e347fa4d856091322e8cfb14ac07ed268a2c682231 }
+  - { path: packages/contracts/tsconfig.build.json, sha256: 088739000ea754350d9f15bdc03aadcbda35ef95b191869a9eeba0dc2f6b8f38 }
+  - { path: packages/contracts/package.json, sha256: e72309303f2597d5f01f7fbb41b890cb54f583942924c3b91dc13d113f0593df }
+  - { path: tests/contract/common-contracts.test.mjs, sha256: 0ac86286e1a299a3d0997f85467efb387fc0666c89663916097ab68ad0dbcd57 }
+  - { path: tests/contract/common-contracts.typecheck.ts, sha256: 7b3c6313b9927af9e5fa4a734600672ea6055f4807b179cdfb0949b75d5d3273 }
+  - { path: package-lock.json, sha256: 1f3f0e909fe56cf01810f861619705df39e1c32cd1743084b865278e09d5c102 }
+acceptance_checks:
+  - id: V2-001-AC-01
+    outcome: pass
+    evidence: NodeRef requires graph kind, graph ID, node ID, positive safe version, snapshot ID, and snapshot content hash.
+  - id: V2-001-AC-02
+    outcome: pass
+    evidence: Validation paths accept string keys and nonnegative safe integer indexes.
+  - id: V2-001-AC-03
+    outcome: pass
+    evidence: ValidationReport is a discriminated union in which valid is true exactly when issues is empty.
+  - id: V2-001-AC-04
+    outcome: pass
+    evidence: Runtime mutation throws and emitted TypeScript declarations reject nested object and array mutation.
+  - id: V2-001-AC-05
+    outcome: pass
+    evidence: Clean npm install, package build, consumer typecheck, eight tests, and root typecheck pass.
+commands:
+  - { command: npm ci, outcome: pass }
+  - { command: npm run verify --workspace @graphslop/contracts, outcome: pass, observation: build plus consumer typecheck plus 8 of 8 tests }
+  - { command: npm run typecheck --workspace @graphslop/contracts, outcome: pass }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+independence:
+  implementer: /root/v2_001_implement
+  repair_implementer: /root/v2_001_repair
+  verifier: /root/v2_001_check
+  verifier_did_not_modify_implementation: true
+verification_cycles:
+  - outcome: block
+    finding: Exported registry type was shallow-readonly even though runtime values were deeply frozen.
+  - outcome: accept
+    finding: Recursive DeepReadonly and consumer compile-time probes closed the gap.
+unresolved_issues: []

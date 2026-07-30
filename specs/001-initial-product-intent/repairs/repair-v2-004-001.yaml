@@ -1,0 +1,112 @@
+schema_version: 1
+task_id: repair-v2-004-001
+type: Repair
+status: accepted
+dispatchable: false
+proposed_at: '2026-07-27T22:12:36-04:00'
+authorized_at: '2026-07-27T22:14:31-04:00'
+accepted_at: '2026-07-27T22:43:17-04:00'
+evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-004-001/result.yaml
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-004-001-20260727
+  quote: Authorize repair-v2-004-001 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-004-001
+  protected_baselines: [intent-v3, solution-v3]
+scope_amendments:
+  - decision_id: scope-amendment-repair-v2-004-001-001
+    status: authorized
+    authorized_at: '2026-07-27T22:30:11-04:00'
+    actor: authenticated_project_owner
+    message_id: msg-authorize-scope-amendment-repair-v2-004-001-001-20260727
+    quote: Authorize scope-amendment-repair-v2-004-001-001 against intent-v3 and solution-v3.
+    protected_baselines: [intent-v3, solution-v3]
+    add_allowed_path: tests/kernel/completeness-contract.test.mjs
+    change: Rename three imports and calls from advanceFactory to the non-authoritative projection helper.
+    reason: The authoritative advanceFactory export must reject projection-only input, while these tests intentionally exercise the lower-level projection evaluator.
+    implementation_started_before_authorization: false
+authorization_required:
+  actor: authenticated_project_owner
+  exact_task_id: repair-v2-004-001
+  protected_baselines: [intent-v3, solution-v3]
+objective: Bind factory completion to validated Intent, Solution, and Execution graph snapshots.
+repairs_drift: drift-v2-005-004
+satisfies_solution_nodes:
+  - SOL-SVC-001
+  - SOL-SVC-003
+  - SOL-FEAT-006
+  - SOL-FEAT-007
+  - SOL-FEAT-008
+  - SOL-RULE-009
+traces_to_intent_nodes:
+  - INT-011
+  - INT-012
+  - INT-014
+  - INT-017
+  - INT-022
+  - INT-024
+  - INT-025
+  - INT-030
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+expected_base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+dependencies:
+  - repair-v2-003-003
+  - drift-v2-005-004
+allowed_paths:
+  - packages/graph-kernel/src/execution/factory.ts
+  - packages/graph-kernel/src/execution/flywheel.ts
+  - packages/graph-kernel/src/index.ts
+  - tests/kernel/flywheel-contract.test.mjs
+  - tests/kernel/flywheel-composition-contract.test.mjs
+  - tests/kernel/completeness-fixtures.mjs
+  - tests/kernel/metamodel-fixtures.mjs
+  - tests/kernel/completeness-contract.test.mjs
+forbidden_changes:
+  - Change approved graph grammar or node and edge vocabularies.
+  - Change scheduler, completeness, or graph-validator semantics.
+  - Add a graph, service, database, dependency, or product feature.
+  - Change approved Intent or Solution baselines.
+  - Push, create a pull request, merge, deploy, or change production.
+required_outputs:
+  - One authoritative composed advanceFactory entry point.
+  - Graph-to-projection binding validation.
+  - Projection-only and corrupt-graph rejection tests.
+  - Valid composed completion test.
+  - Independent verification evidence.
+acceptance_checks:
+  - id: REPAIR-V2-004-001-AC-01
+    statement: The authoritative advanceFactory input requires exactly one current Intent, Solution, and Execution snapshot plus exact approved baseline references and closure state.
+  - id: REPAIR-V2-004-001-AC-02
+    statement: Graph validation runs before scheduling, completeness, or completion and any graph issue returns block_invalid_state.
+  - id: REPAIR-V2-004-001-AC-03
+    statement: Required node IDs, solution scopes and supports, cross-graph trace facts, task identity and status, dependency edges, owner authority, and protected baselines in closure state are bound to the supplied validated snapshots.
+  - id: REPAIR-V2-004-001-AC-04
+    statement: Projection-only input, missing graph kind, baseline mismatch, corrupt graph, omitted required graph work, and invented projection facts never return complete.
+  - id: REPAIR-V2-004-001-AC-05
+    statement: A fully valid composed graph and closure input delegates to the existing pure flywheel and can return complete.
+  - id: REPAIR-V2-004-001-AC-06
+    statement: The projection evaluator remains pure but is explicitly non-authoritative and is not exported as advanceFactory.
+  - id: REPAIR-V2-004-001-AC-07
+    statement: Full contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass.
+retry_limit: 1
+required_evidence:
+  - changed files and hashes
+  - composed input contract and binding matrix
+  - corrupt, missing, stale, omitted, invented, and valid probes
+  - full verification command results
+  - independent specification-compliance review
+  - drift closure mapping
+implementer_assignment: fresh_implementation_agent
+verifier_assignment: fresh_verification_agent
+brief:
+  job: Check the real graphs before saying done.
+  use: The graph validator, current snapshots, baseline refs, and closure state.
+  touch: Only the composed factory boundary, exports, fixtures, and its tests.
+  dont: Add features. Change graph rules. Push or deploy.
+  done: Fake graph or fake projection blocks. Real matching graph can complete. Show proof.

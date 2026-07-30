@@ -1,0 +1,162 @@
+schema_version: 1
+task_id: V2-005
+type: Verify
+status: accepted
+accepted_at: '2026-07-27T23:23:25-04:00'
+accepted_scope: graph_kernel_milestone_only
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+
+current_implementation_hashes:
+  - { path: packages/contracts/src/graph.ts, sha256: 5351ff4404a70de9d87060ce7182d76d18e6c596824bc33abcb268abfae7106e }
+  - { path: packages/contracts/src/index.ts, sha256: ecb48a80523dd64bb9e4d134c362a100b8f9973d87d8391c74d640785d322d80 }
+  - { path: packages/contracts/src/metamodel.ts, sha256: 71fd958520cbfa95ef6a83c1c648178d7fc8344bc89b7af8017468011ea7fbad }
+  - { path: packages/contracts/src/schemas.ts, sha256: 955430cfe6ce3399e0a3511835a5894f9679c7862c80855135cab3ee6da2ac49 }
+  - { path: packages/graph-kernel/src/hash.ts, sha256: 69d96df6a484b36e936ae760a60ab16ded6367f1a2a22d26387e5e5e59b4cc00 }
+  - { path: packages/graph-kernel/src/validate.ts, sha256: 6e07b793b26ae69a25ca06bb75b907b3b585dd52497855b10b3f761d93ce10b9 }
+  - { path: packages/graph-kernel/src/execution/scheduler.ts, sha256: 36da0d8035435b97f49f90192ba19cd30fa31e5052722294efd66502e808c847 }
+  - { path: packages/graph-kernel/src/execution/completeness.ts, sha256: 3b241200458e3302d4c4ab97f4239942f5b4bdc59449056e75edffe6b5a2b626 }
+  - { path: packages/graph-kernel/src/execution/flywheel.ts, sha256: 31f3d0da2c6923e593a8c0123962889ead51b1a9762e477a0e8817876a0b3466 }
+  - { path: packages/graph-kernel/src/execution/factory.ts, sha256: ef4994dcabd6f7e9ec6c8b7726c37b1d2c7327a4289f5dd6f3e55f3cb6dbedb9 }
+  - { path: packages/graph-kernel/src/index.ts, sha256: 6e168627c4ad2162cc5924bbdee2b49f98205f4ee8b6ec1cd873ebf390ea3e36 }
+  - { path: package-lock.json, sha256: 706bbf915a8385a6784b36869418c463087e54819d9a0462d448c9d0af01f517 }
+
+current_test_hashes:
+  - { path: tests/contract/common-contracts.test.mjs, sha256: 0ac86286e1a299a3d0997f85467efb387fc0666c89663916097ab68ad0dbcd57 }
+  - { path: tests/kernel/metamodel-contract.test.mjs, sha256: bef829ddd08ff570a609f2e76674588088f94dd1a669bbe499c3bae03cd40f02 }
+  - { path: tests/kernel/scheduler-contract.test.mjs, sha256: 6317757408f6e3b9a096183f81b17cc34dcfb328e4c83d5ee5dc2d8f9bcd482e }
+  - { path: tests/kernel/completeness-contract.test.mjs, sha256: 8383269789b9b0321e8712a1a586b4070e978033add67329d29e75cb5012347a }
+  - { path: tests/kernel/flywheel-contract.test.mjs, sha256: 5d059f91a0c8005f2c41045011cb61d64a79d362c3893630205bdd347274718d }
+  - { path: tests/kernel/flywheel-composition-contract.test.mjs, sha256: f3923e270f20b3e4bcc78fc50da702a06443d419547434f3d03559c0d98c2afb }
+
+acceptance_checks:
+  - id: V2-005-AC-01
+    outcome: pass
+    evidence: >-
+      The authoritative registry contains only Intent, Solution, and Execution;
+      Role is a Solution node; unknown nodes, edges, endpoint pairs, dangling refs,
+      stale versions, stale hashes, and missing mandatory traces fail closed.
+  - id: V2-005-AC-02
+    outcome: pass
+    evidence: >-
+      Canonical GraphSnapshot SHA-256 digests independently match declared hashes.
+      Node, edge, cross-link, current-source, and duplicate-current-source mutation
+      without a new digest fails before semantic or factory authority.
+  - id: V2-005-AC-03
+    outcome: pass
+    evidence: >-
+      Stable topological ordering selects at most one task. Cycles, stale accepted
+      dependencies, unfinished ancestors, failed dependencies, active work, and
+      missing owner authorization never dispatch.
+  - id: V2-005-AC-04
+    outcome: pass
+    evidence: >-
+      Completeness requires full per-node Intent-to-Solution-to-Execution closure,
+      accepted tasks, distinct independent Check evidence, success evidence, current
+      baseline bindings, system checks, resolved decisions, and no blocking drift.
+  - id: V2-005-AC-05
+    outcome: pass
+    evidence: >-
+      The public advanceFactory validates exact current graph snapshots and baselines,
+      binds graph-derived closure facts, rejects projection-only or invented input,
+      and returns complete only for the valid graph-backed closure.
+  - id: V2-005-AC-06
+    outcome: pass
+    evidence: >-
+      All five important V2-005 drift reports are resolved by accepted, authorized,
+      baseline-bound Repair tasks with independent evidence. No open blocking or
+      important kernel drift remains.
+  - id: V2-005-AC-07
+    outcome: pass
+    evidence: >-
+      Clean install, package builds, consumer typechecks, 74 automated tests, root
+      typecheck, dependency-tree validation, audit, and diff check all pass.
+
+commands:
+  - command: npm ci
+    outcome: pass
+    observation: 10 packages installed; 19 audited; 0 vulnerabilities
+  - command: npm run verify --workspace @graphslop/contracts
+    outcome: pass
+    observation: build, consumer typecheck, and 8 of 8 tests passed
+  - command: npm run verify --workspace @graphslop/graph-kernel
+    outcome: pass
+    observation: build, package and consumer typechecks, and 66 of 66 tests passed
+  - command: npm run typecheck
+    outcome: pass
+  - command: npm ls --all
+    outcome: pass
+    observation: complete dependency tree with one deduplicated workspace dependency
+  - command: git diff --check
+    outcome: pass
+
+independent_probes:
+  - id: exact-snapshot-digest
+    outcome: pass
+    observation: Exported digest and independent Node SHA-256 of canonical bytes both equal the declared Intent snapshot hash.
+  - id: stale-snapshot-content
+    outcome: pass
+    observation: A changed confirmed Intent goal with its old hash returns graph_snapshot_content_hash_mismatch and block_invalid_state.
+  - id: duplicate-current-source-integrity
+    outcome: pass
+    observation: A duplicate-declared current source with changed bytes is hash-checked and blocked.
+  - id: graph-grammar-and-trace
+    outcome: pass
+    observation: Rehashed Persona grammar produces unknown_node_type and invalid_edge_endpoints; a stale cross-graph hash blocks.
+  - id: dependency-order
+    outcome: pass
+    observation: A cycle returns dependency_cycle; stale accepted work selects no dependant and reports stale_baseline plus dependency_blocked.
+  - id: authorization-and-early-completion
+    outcome: pass
+    observation: Unauthorized accepted work makes projection evaluation invalid and cannot complete.
+  - id: evidence-closure
+    outcome: pass
+    observation: Removing required evidence returns missing_work and complete false.
+  - id: composed-authority
+    outcome: pass
+    observation: Projection-only input blocks; the valid graph-backed input completes deterministically without mutation.
+
+drift_closure:
+  - { drift_id: drift-v2-005-001, status: resolved, repair_task_id: repair-v2-003-001, repair_status: accepted }
+  - { drift_id: drift-v2-005-002, status: resolved, repair_task_id: repair-v2-003-002, repair_status: accepted }
+  - { drift_id: drift-v2-005-003, status: resolved, repair_task_id: repair-v2-003-003, repair_status: accepted }
+  - { drift_id: drift-v2-005-004, status: resolved, repair_task_id: repair-v2-004-001, repair_status: accepted }
+  - { drift_id: drift-v2-005-005, status: resolved, repair_task_id: repair-v2-002-001, repair_status: accepted }
+
+evidence_integrity:
+  frozen_intent_hash_matches: true
+  frozen_solution_hash_matches: true
+  latest_repair_manifest_hashes_match: true
+  latest_repair_id: repair-v2-002-001
+  latest_repair_evidence: specs/001-initial-product-intent/evidence/repair-v2-002-001/result.yaml
+  open_blocking_or_important_kernel_drift: []
+
+independence:
+  verifier: /root/v2_005_integrated_check
+  verifier_role: Check
+  implementation_workers:
+    - /root/v2_001_implement
+    - /root/v2_002_implement
+    - /root/v2_003_implement
+    - /root/v2_004_build
+    - /root/v2_004_repair
+    - /root/v2_002_hash_repair
+  verifier_did_not_modify_implementation_tests_baselines_or_state: true
+
+verifier_changed_paths:
+  - specs/001-initial-product-intent/evidence/V2-005/result.yaml
+
+state_note: >-
+  This evidence accepts V2-005 and the graph-kernel milestone only. The verifier
+  did not edit execution-v2 state. The full Graphslop application remains incomplete,
+  project_complete remains false, and push, pull request, merge, deployment, domain,
+  and traffic actions remain unauthorized.
+unresolved_issues: []

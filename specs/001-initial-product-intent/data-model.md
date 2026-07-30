@@ -39,7 +39,7 @@ createdBy             ActorRef
 nodes                 complete set of all retained node versions
 edges                 complete set of all retained edge versions
 crossGraphLinks       exact versioned references into other approved graphs
-contentHash           SHA-256 of RFC 8785 canonical snapshot without this field
+contentHash           SHA-256 of RFC 8785 canonical snapshot without this field or local NodeRef snapshotContentHash
 ```
 
 Validation:

@@ -1,0 +1,46 @@
+schema_version: 1
+task_id: V2-002
+status: accepted
+accepted_at: '2026-07-27T19:55:48-04:00'
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/contracts/src/graph.ts, sha256: 5351ff4404a70de9d87060ce7182d76d18e6c596824bc33abcb268abfae7106e }
+  - { path: packages/contracts/src/metamodel.ts, sha256: 71fd958520cbfa95ef6a83c1c648178d7fc8344bc89b7af8017468011ea7fbad }
+  - { path: packages/contracts/src/index.ts, sha256: ecb48a80523dd64bb9e4d134c362a100b8f9973d87d8391c74d640785d322d80 }
+  - { path: packages/graph-kernel/src/validate.ts, sha256: 10cc323a41183f8671a9f745a85d31eeacb79413dc95f140c36b05cb237652cc }
+  - { path: packages/graph-kernel/src/index.ts, sha256: df9ae3a40a583cdad115b82e12d0779314f0d6fc53608323d6f7f7b7fa431048 }
+  - { path: packages/graph-kernel/tsconfig.build.json, sha256: 088739000ea754350d9f15bdc03aadcbda35ef95b191869a9eeba0dc2f6b8f38 }
+  - { path: packages/graph-kernel/package.json, sha256: a4d37b46702e550b97eaa6353a21b12b1db0db9b5aff609cf6b2fe4832dac9d3 }
+  - { path: tests/kernel/metamodel-contract.test.mjs, sha256: 81e2f0bbafe7e413a0a6a70a455774d6e78f43ad4fdb4e846796a788f4953688 }
+  - { path: tests/kernel/metamodel-fixtures.mjs, sha256: a75bb28980b10f046f7dcd25e5d1bcea52ce76f7b2a19a90b078eb68b43813b5 }
+  - { path: tests/kernel/metamodel.typecheck.ts, sha256: ced43126709d347c93fc4225c6d5edb2fcbe14393dd5d7235044944667482239 }
+  - { path: package-lock.json, sha256: 706bbf915a8385a6784b36869418c463087e54819d9a0462d448c9d0af01f517 }
+acceptance_checks:
+  - { id: V2-002-AC-01, outcome: pass, evidence: Unknown graph node and edge types fail with structured issues. }
+  - { id: V2-002-AC-02, outcome: pass, evidence: Every edge type has explicit legal source and target pairs; incompatible endpoints fail. }
+  - { id: V2-002-AC-03, outcome: pass, evidence: Dangling, stale, wrong-direction, wrong-version, and wrong-baseline trace references fail. }
+  - { id: V2-002-AC-04, outcome: pass, evidence: Product Solution nodes require Intent traces and Execution nodes require Solution traces. }
+  - { id: V2-002-AC-05, outcome: pass, evidence: Role is a Solution node while Persona and Capability are rejected as node types. }
+  - { id: V2-002-AC-06, outcome: pass, evidence: Intent provenance and status, source baselines, exact parent lineage, and all source snapshots validate fail closed. }
+commands:
+  - { command: npm ci, outcome: pass }
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests plus consumer typecheck }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 13 tests plus consumer typecheck }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+independence:
+  implementer: /root/v2_002_implement
+  repair_implementers: [/root/v2_002_repair, /root/v2_002_source_repair]
+  verifier: /root/v2_002_check
+  verifier_did_not_modify_implementation: true
+verification_cycles:
+  - outcome: reject
+    findings: [intent_semantics_too_loose, invented_support_trace_prohibition, missing_source_baseline, unresolved_parent_lineage]
+  - outcome: reject
+    findings: [unvalidated_current_source_snapshots]
+  - outcome: accept
+    findings: []
+unresolved_issues: []

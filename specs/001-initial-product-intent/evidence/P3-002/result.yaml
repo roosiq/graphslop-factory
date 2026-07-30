@@ -1,0 +1,48 @@
+schema_version: 1
+task_id: P3-002
+type: Implement
+status: accepted
+accepted_at: '2026-07-28T00:07:00-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+implementation:
+  - { path: packages/contracts/src/state.ts, sha256: e5aeab96b47d43568fa54997994f1359f24dbd3225758011167e12049424ecd7 }
+  - { path: packages/contracts/src/index.ts, sha256: 530ebd29d44ea93512fc86267df073107e74d2d82754265979386d650e2397b0 }
+  - { path: packages/file-store/src/index.ts, sha256: 96d37e2b3a6a0597333de8022def0e74f2aa00ebaac19ce4bb34305716da402a }
+  - { path: packages/control-state/src/index.ts, sha256: 2ea74ee7991393c7d1cb32624d4a6d696d187554a894de40add8fbe1a66f54b4 }
+  - { path: tests/store/file-store.test.mjs, sha256: 01801688eeca5e9edf737daf8bbeea60c64add00a646ab126decfa45e3c7a154 }
+  - { path: tests/state/control-state.test.mjs, sha256: d79ae237936e9d46ea120beae0993f9c9d404f7b911257dfa93e938aa7d85882 }
+
+acceptance_checks:
+  - { check: State materializes human-readable .factory data atomically, outcome: pass }
+  - { check: One writer and exact expected-head hashes reject stale writes, outcome: pass }
+  - { check: Approved baselines are immutable and corrections preserve history, outcome: pass }
+  - { check: Recovery never selects partial or hash-invalid state, outcome: pass }
+  - { check: Lifecycle and approval transitions fail closed, outcome: pass }
+  - { check: Authoritative graph state cannot bypass kernel validation, outcome: pass }
+  - { check: A valid full Intent Solution Execution closure persists and reloads, outcome: pass }
+
+verification:
+  - { command: npm run typecheck, outcome: pass }
+  - { command: npm test, outcome: pass, observation: 92 of 92 tests passed }
+  - { command: node --test tests/store/*.test.mjs, outcome: pass, observation: 11 of 11 tests passed }
+  - { command: node --test tests/state/*.test.mjs, outcome: pass, observation: 7 of 7 tests passed }
+  - { command: git diff --check, outcome: pass }
+
+necessary_repairs:
+  - Authoritative graph files now validate their complete current graph and source-baseline closure before head publication.
+  - Lifecycle policy is deeply immutable and Solution or Execution entry requires exact approved prerequisite records.
+  - Transaction directory entries are synced child-to-parent before the durable head is published.
+  - Execution graph validation derives an exact compiler source binding without inventing an owner approval.
+
+review:
+  specification: { verifier: /root/p3_002_spec_review, outcome: accept_after_repairs }
+  code_quality: { verifier: /root/p3_002_quality_review, outcome: accept_after_repairs }
+
+state_note: >-
+  P3-002 accepts the local state and lifecycle boundary only. Product orchestration,
+  task execution, user interface, remote operations, and deployment remain incomplete.

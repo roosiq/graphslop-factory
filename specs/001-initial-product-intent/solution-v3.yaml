@@ -1,9 +1,28 @@
 schema_version: 1
-proposal_id: solution-v3
+baseline_id: solution-v3
 project_id: graphslop
-status: proposed
-approved: false
+status: approved
+approved: true
+immutable: true
 generated_at: '2026-07-27T18:41:25-04:00'
+approved_at: '2026-07-27T19:10:19-04:00'
+approval:
+  actor: authenticated_project_owner
+  message_id: msg-bring-it-together-20260727-01
+  quote: Perfect, now bring it together
+  displayed_artifact: full_architecture_graph_and_execution_flywheel
+  source_proposal_sha256: 578e7d265921d435cc9265d104241ad650933a453e9a9617e23a6993f330541b
+  authority_granted:
+    - freeze_solution_v3
+    - compile_execution_v2
+    - authorize_bounded_local_execution
+    - authorize_reissued_local_repairs
+  authority_not_granted:
+    - push
+    - create_pull_request
+    - merge
+    - deploy
+    - change_domain_or_traffic
 source_intent_baseline:
   baseline_id: intent-v3
   artifact: specs/001-initial-product-intent/intent-v3.yaml
@@ -191,8 +210,5 @@ protected_assertions:
   - Duplicate Roles fail validation or are merged before Solution review.
   - Zero Personas is a valid team.
   - Build and Check use different worker invocations.
-  - No application code, task dispatch, push, pull request, merge, deployment, domain, or traffic action is authorized by this proposal.
-approval_required:
-  artifact: solution-v3
-  effect: Freeze the four-Role, zero-Persona Solution delta and permit recompilation of affected Execution work.
-  does_not_authorize: [push, draft_pull_request_creation, merge, deploy, domain_cutover, traffic_cutover]
+  - Local application code and bounded task dispatch require this exact approved baseline.
+  - Push, pull request, merge, deployment, domain, and traffic actions remain unauthorized.

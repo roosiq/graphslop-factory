@@ -1,0 +1,64 @@
+schema_version: 1
+task_id: P3-006
+type: Implement
+status: accepted
+accepted_at: '2026-07-28T08:56:32-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+implementation:
+  - { path: apps/control-plane/src/server.ts, sha256: 76adf8417756a10931a53ebf8ac0a89ee4f58e4268e75e48da2fbc80acc9a48e }
+  - { path: apps/control-plane/src/services/bridge.ts, sha256: 766f5c95cafe6bba98e494be024f2a5b67137f23245bf11692950a0053fbdc0e }
+  - { path: apps/control-plane/src/services/durable-authority.ts, sha256: 136e83bf4dbacb9fa8f645b977459dc8a44874a47c1cdcff50dc73ccb829ff74 }
+  - { path: apps/control-plane/src/services/production.ts, sha256: 148434aa26486c584f6595467b850150395ab5be013199d300d83dc47f0a6bb5 }
+  - { path: apps/control-plane/src/web/App.tsx, sha256: 47f92637dbd65a2e5b8c5dd461c10c22c87856f1bd2f5b904f518b657c0b4f72 }
+  - { path: apps/control-plane/src/web/api.ts, sha256: 7482a573a792d55e5a40c23c7ea1870e2d629a07e47e265521811d7f9c1b191d }
+  - { path: apps/control-plane/src/web/model.ts, sha256: 75a40783e16e577594a485a39090a86cf87aa4237ae7f462baaa51ff2d55075f }
+  - { path: apps/control-plane/src/styles.css, sha256: 9ae5b924e4a8b498e3c1262a6e0c93c4e1500ad0fc055000fda91076e009bffb }
+  - { path: apps/runner/src/index.ts, sha256: 220f89e1fd2b81f170c51225a56503888dff5de032aa3ac26ce718db1070236b }
+  - { path: packages/control-state/src/project-service.ts, sha256: 40be7ef2ab4d2f22fbf74d618bfb89ec15fac9d5bc218bd790376aadc15c04de }
+  - { path: tests/e2e/owner-workspace.spec.ts, sha256: 69ffd3267cf2ca96a6915de96b8e8da4f64f2dc8810d2d80e63c51edc17cb0cd }
+  - { path: tests/runner/runner.test.mjs, sha256: 266110e930dd529ed4af72c4426411a05ffceb15533751a84bed7047bac1fca4 }
+
+acceptance_checks:
+  - { check: Caveman intake through exact Intent and Solution review reaches bounded checked work, outcome: pass }
+  - { check: Concrete message Intent Solution Execution traces dependencies order and gaps are visible, outcome: pass }
+  - { check: Roles are Figure Out Plan Build Check and use only JOB USE TOUCH DON'T DONE, outcome: pass }
+  - { check: Desktop and 320 360 768 1280 layouts are accessible and have no horizontal overflow, outcome: pass }
+  - { check: Loading blocked failed drift repair accepted and readiness states use real authority, outcome: pass }
+  - { check: Rejected candidate is repaired at its exact commit and cited file fence, outcome: pass }
+  - { check: Accepted software survives cleanup restart and yields an actual Git-diff local PR preview, outcome: pass }
+
+verification:
+  - { command: npm ci, outcome: pass }
+  - { command: npm run ci, outcome: pass, observation: includes UI model tests production build and real browser suite }
+  - { command: npm run verify --workspace @graphslop/runner, outcome: pass, observation: 30 focused runner tests in final CI }
+  - { command: npx playwright test tests/e2e/owner-workspace.spec.ts, outcome: pass, observation: 5 of 5 tests passed }
+  - { command: git diff --check, outcome: pass }
+
+browser_evidence:
+  - Real same-origin API and UI; no route mocks in the primary journey.
+  - Owner claim, new-tab CSRF recovery, two-message discovery, exact Intent and Solution projections, and baseline freezes pass.
+  - Plan creates a real artifact, Build produces signed drift, owner authorizes exact repair, independent Check accepts the repaired chain.
+  - Restart restores project, checkpoint chain, terminal evidence, readiness, and events.
+  - Ref tamper removes authority and PR readiness.
+  - Axe reports no violations; keyboard focus and overflow pass at 320, 360, 768, and 1280 pixels.
+
+integration_truth:
+  - Production uses bounded Codex Build and Codex semantic Check; missing worker configuration fails closed.
+  - Implement Repair and Decide require bounded artifacts; Verify is read-only.
+  - Accepted and quarantine candidates are sealed into create-only local namespaced refs without changing the source branch.
+  - Repair starts from the exact rejected commit and can touch only verifier-cited files.
+  - Later work starts from the accumulated accepted integration commit.
+  - PR preview derives durable accepted evidence and SHA-256 of actual bounded Git diff bytes.
+
+review:
+  specification: { verifier: /root/p3_006_spec_review, outcome: accept_after_necessary_repairs }
+  code_quality: { verifier: /root/p3_006_quality_review, outcome: accept_after_necessary_repairs }
+
+state_note: >-
+  P3-006 accepts the complete local owner product and browser flow. Final independent
+  whole-product verification remains P3-007. No push, merge, deployment, domain, or traffic action occurred.

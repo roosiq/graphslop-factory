@@ -1,0 +1,580 @@
+schema_version: 1
+execution_id: execution-v2
+project_id: graphslop
+status: kernel_milestone_accepted
+compiled_at: '2026-07-27T19:10:19-04:00'
+authorized_at: '2026-07-27T19:10:19-04:00'
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-bring-it-together-20260727-01
+  quote: Perfect, now bring it together
+  scope: bounded_local_execution_only
+  does_not_authorize:
+    - push
+    - create_pull_request
+    - merge
+    - deploy
+    - domain_cutover
+    - traffic_cutover
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+base_execution:
+  id: execution-v1
+  revision: 6
+  artifact: specs/001-initial-product-intent/execution-v1.yaml
+  disposition: historical_full_project_plan
+  carried_forward:
+    accepted: [T001]
+    failed_history: [T002, T003]
+    remaining_tasks: [T006, T008, T009, T010, T012, T013, T014, T015, T016, T017, T019, T021, T022, T023, T024, T025, T026, T027, T028, T029, T030, T031, T033, T034, T035, T036, T037, T038, T039, T040]
+  replaced_for_kernel_milestone: [T004, T005, T007, T011, T018, T020, T032]
+  note: This graph integrates the kernel milestone without pretending the complete application is finished.
+transformation:
+  id: transform-solution-v3-to-execution-v2
+  compiler_contract_version: 3
+  source_solution_graph: solution-graph-v3
+  generated_task_count: 10
+  validation:
+    every_task_traces_to_solution: true
+    every_task_traces_transitively_to_intent: true
+    dependency_graph_acyclic: true
+    no_unapproved_task_ready: true
+    paths_bounded: true
+    independent_final_verification: true
+dispatch_policy:
+  max_active_tasks: 1
+  ready_order: stable_topological_then_lexical_id
+  stale_baseline_action: block_and_recompile
+  repair_action: require_exact_owner_authorization
+  no_ready_incomplete_action: emit_missing_work_report
+graph:
+  id: execution-graph-v2
+  kind: Execution
+  nodes:
+    - id: V2-001
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Repair the strict portable common contracts required by the graph kernel.
+      status: accepted
+      accepted_at: '2026-07-27T19:24:20-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/V2-001/result.yaml
+      repairs_drift: drift-002
+      satisfies_solution_nodes: [SOL-TECH-003, SOL-API-001, SOL-API-002, SOL-RULE-008]
+      traces_to_intent_nodes: [INT-012, INT-020, INT-021, INT-024]
+      dependencies: [T001]
+      allowed_paths:
+        - packages/contracts/**
+        - tests/contract/**
+        - package-lock.json
+      forbidden_changes:
+        - Add graph lifecycle behavior or provider authority.
+        - Change approved graph baselines.
+        - Push, deploy, or change production.
+      required_outputs:
+        - Strict common schemas and types.
+        - Deeply immutable JSON Schema registry.
+        - Package build and tests.
+      acceptance_checks:
+        - Node references bind graph, node version, snapshot, and snapshot hash.
+        - Validation paths accept object keys and array indexes.
+        - Validation reports cannot disagree with their issue list.
+        - Nested schema registry values reject mutation.
+        - The package builds and tests from a clean install.
+      brief:
+        job: Fix the shared graph words.
+        use: intent-v3, solution-v3, drift-002, and this task.
+        touch: Only contracts, contract tests, and the lockfile.
+        dont: Add product behavior. Change authority. Push or deploy.
+        done: Contracts build. Tests pass. Show evidence.
+
+    - id: V2-002
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Define the authoritative graph metamodel and validate node, edge, and cross-graph compatibility.
+      status: accepted
+      accepted_at: '2026-07-27T19:55:48-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/V2-002/result.yaml
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-DATA-001, SOL-DATA-004, SOL-RULE-003, SOL-RULE-008]
+      traces_to_intent_nodes: [INT-005, INT-006, INT-010, INT-011, INT-012, INT-022]
+      dependencies: [V2-001]
+      allowed_paths:
+        - packages/contracts/**
+        - packages/graph-kernel/**
+        - tests/kernel/metamodel-*
+        - package-lock.json
+      forbidden_changes:
+        - Add a graph database.
+        - Add a fourth authoritative graph.
+        - Treat Role prose as permission.
+        - Change approved graph baselines.
+        - Push, deploy, or change production.
+      required_outputs:
+        - One versioned node and edge registry.
+        - Explicit allowed source and target node types.
+        - First-class Solution-to-Intent and Execution-to-Solution trace links.
+        - Fail-closed validation reports.
+      acceptance_checks:
+        - Unknown node and edge types fail.
+        - Invalid edge endpoint pairs fail.
+        - Dangling and stale cross-graph links fail.
+        - A product Solution node without Intent trace fails.
+        - An Execution task without Solution trace fails.
+        - Role is a Solution node; Capability and Persona are not graph nodes in this MVP.
+      brief:
+        job: Say what can be a node and what can connect.
+        use: The approved graphs and shared contracts.
+        touch: Only contracts, graph kernel, and metamodel tests.
+        dont: Invent another graph. Add team machinery. Push or deploy.
+        done: Bad graph shapes fail. Good graph shapes pass.
+
+    - id: V2-003
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement deterministic dependency scheduling for the Execution graph.
+      status: accepted
+      accepted_at: '2026-07-27T20:10:43-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/V2-003/result.yaml
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-DATA-006, SOL-FEAT-006, SOL-FEAT-007]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-017, INT-022, INT-024]
+      dependencies: [V2-002]
+      allowed_paths:
+        - packages/graph-kernel/src/execution/**
+        - packages/graph-kernel/src/index.ts
+        - packages/graph-kernel/package.json
+        - tests/kernel/scheduler-*
+      forbidden_changes:
+        - Run a task or mutate a repository.
+        - Schedule more than one active task.
+        - Ignore stale baselines or failed dependencies.
+        - Push, deploy, or change production.
+      required_outputs:
+        - Stable topological ordering.
+        - Ready-task selection.
+        - Cycle and deadlock reports.
+      acceptance_checks:
+        - Dependencies always run before dependants.
+        - Equal-ready tasks sort by task ID.
+        - Cycles fail with the involved task IDs.
+        - Stale, unauthorized, or dependency-blocked tasks are not ready.
+        - At most one next task is selected.
+      brief:
+        job: Pick the next safe job.
+        use: The Execution graph and current baseline hashes.
+        touch: Only scheduler code and tests.
+        dont: Run work. Guess through a blockage. Pick two jobs.
+        done: The same graph always picks the same next job.
+
+    - id: V2-004
+      type: Implement
+      role_ref: SOL-ROLE-003
+      objective: Implement completeness closure and the single deterministic factory flywheel.
+      status: accepted
+      accepted_at: '2026-07-27T20:48:06-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/V2-004/result.yaml
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-SVC-008, SOL-DATA-007, SOL-DATA-008, SOL-RULE-003, SOL-FEAT-008, SOL-FEAT-009, SOL-FEAT-010]
+      traces_to_intent_nodes: [INT-012, INT-014, INT-015, INT-016, INT-018, INT-022, INT-024]
+      dependencies: [V2-002, V2-003]
+      allowed_paths:
+        - packages/graph-kernel/src/execution/**
+        - packages/graph-kernel/src/index.ts
+        - packages/graph-kernel/package.json
+        - tests/kernel/completeness-*
+        - tests/kernel/flywheel-*
+      forbidden_changes:
+        - Auto-authorize repair.
+        - Mark incomplete work complete.
+        - Hide uncovered graph nodes, missing evidence, drift, stale work, or failed checks.
+        - Push, deploy, or change production.
+      required_outputs:
+        - Structured CompletenessReport.
+        - Structured MissingWorkReport.
+        - Pure advanceFactory decision function.
+      acceptance_checks:
+        - Complete requires full Intent-to-Solution-to-Execution-to-evidence closure.
+        - Produced work routes to independent verification.
+        - Blocking drift routes to owner repair authorization or an authorized repair.
+        - Baseline change routes to impact analysis and recompilation.
+        - Incomplete work with no ready action returns a missing-work report, never complete.
+      brief:
+        job: Keep the factory moving until nothing is missing.
+        use: Graph traces, task states, evidence, drift, and baseline hashes.
+        touch: Only completeness, flywheel, exports, and tests.
+        dont: Approve repair. Hide gaps. Say done early.
+        done: Return one next move or prove the project is complete.
+
+    - id: V2-005
+      type: Verify
+      role_ref: SOL-ROLE-004
+      objective: Independently verify the integrated graph metamodel, scheduler, completeness closure, and flywheel.
+      status: accepted
+      accepted_at: '2026-07-27T23:23:25-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/V2-005/result.yaml
+      verification_outcome: accepted
+      verification_history:
+        - outcome: rejected
+          drift_ref: specs/001-initial-product-intent/drift/drift-v2-005-001.yaml
+        - outcome: repair_accepted
+          repair_ref: specs/001-initial-product-intent/repairs/repair-v2-003-001.yaml
+        - outcome: rejected
+          drift_ref: specs/001-initial-product-intent/drift/drift-v2-005-002.yaml
+        - outcome: repair_accepted
+          repair_ref: specs/001-initial-product-intent/repairs/repair-v2-003-002.yaml
+        - outcome: rejected
+          drift_ref: specs/001-initial-product-intent/drift/drift-v2-005-003.yaml
+        - outcome: repair_accepted
+          repair_ref: specs/001-initial-product-intent/repairs/repair-v2-003-003.yaml
+        - outcome: rejected
+          drift_ref: specs/001-initial-product-intent/drift/drift-v2-005-004.yaml
+        - outcome: repair_accepted
+          repair_ref: specs/001-initial-product-intent/repairs/repair-v2-004-001.yaml
+        - outcome: rejected
+          drift_ref: specs/001-initial-product-intent/drift/drift-v2-005-005.yaml
+        - outcome: repair_accepted
+          repair_ref: specs/001-initial-product-intent/repairs/repair-v2-002-001.yaml
+        - outcome: accepted
+          evidence_ref: specs/001-initial-product-intent/evidence/V2-005/result.yaml
+      satisfies_solution_nodes: [SOL-FEAT-008, SOL-RULE-003, SOL-RULE-009, SOL-TEST-013, SOL-TEST-014]
+      traces_to_intent_nodes: [INT-014, INT-015, INT-018, INT-022, INT-025, INT-026, INT-028, INT-030]
+      dependencies: [V2-004, repair-v2-003-001, repair-v2-003-002, repair-v2-003-003, repair-v2-004-001, repair-v2-002-001]
+      allowed_paths:
+        - specs/001-initial-product-intent/evidence/V2-005/**
+        - specs/001-initial-product-intent/drift/**
+      forbidden_changes:
+        - Change implementation code.
+        - Change approved baselines.
+        - Accept based only on implementer tests.
+        - Authorize repair.
+        - Push, deploy, or change production.
+      required_outputs:
+        - Independent requirement mapping.
+        - Independent test results.
+        - Acceptance or exact drift report.
+      acceptance_checks:
+        - Every implemented behavior traces to approved Solution and Intent.
+        - Negative tests prove invalid edges, cycles, stale links, missing evidence, and early completion fail closed.
+        - Build and test commands pass from the repository root.
+        - No blocking drift remains in this kernel milestone.
+      brief:
+        job: Try to prove the kernel wrong.
+        use: The task checks, approved graphs, code, and evidence.
+        touch: Only verification evidence or a drift report.
+        dont: Fix the code. Trust the builder. Hide failure.
+        done: Accept with proof or report exact drift.
+
+    - id: repair-v2-003-001
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Make stale accepted dependencies block scheduler dispatch.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      authorized_at: '2026-07-27T21:04:42-04:00'
+      accepted_at: '2026-07-27T21:34:19-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-001/result.yaml
+      authorization:
+        actor: authenticated_project_owner
+        message_id: msg-authorize-repair-v2-003-001-20260727
+        quote: Authorize repair-v2-003-001 against intent-v3 and solution-v3.
+        exact_task_id: repair-v2-003-001
+        protected_baselines: [intent-v3, solution-v3]
+      repairs_drift: drift-v2-005-001
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-DATA-006, SOL-FEAT-006, SOL-FEAT-007]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-017, INT-022, INT-024]
+      dependencies: [V2-004]
+      task_contract_ref: specs/001-initial-product-intent/repairs/repair-v2-003-001.yaml
+      allowed_paths:
+        - packages/graph-kernel/src/execution/scheduler.ts
+        - tests/kernel/scheduler-contract.test.mjs
+      forbidden_changes:
+        - Change completeness or flywheel behavior.
+        - Add a graph, service, dependency, or product feature.
+        - Change approved baselines.
+        - Push, deploy, or change production.
+      acceptance_checks:
+        - A stale accepted dependency blocks its ready dependant.
+        - Direct and transitive stale dependency blockers are deterministic.
+        - Fresh accepted dependencies still permit the same ready dependant.
+        - Full local verification remains green.
+      retry_limit: 1
+      brief:
+        job: Stop new work when old required work is stale.
+        use: The drift report, current graphs, and scheduler rules.
+        touch: Only the scheduler and its test.
+        dont: Change the flywheel. Add features. Push or deploy.
+        done: Stale dependency blocks. Fresh dependency runs. Show proof.
+
+    - id: repair-v2-003-002
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Stop a ready task when any dependency ancestor is not accepted.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      authorized_at: '2026-07-27T21:45:01-04:00'
+      accepted_at: '2026-07-27T21:49:17-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-002/result.yaml
+      authorization:
+        actor: authenticated_project_owner
+        message_id: msg-authorize-repair-v2-003-002-20260727
+        quote: Authorize repair-v2-003-002 against intent-v3 and solution-v3.
+        exact_task_id: repair-v2-003-002
+        protected_baselines: [intent-v3, solution-v3]
+      repairs_drift: drift-v2-005-002
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-FEAT-006, SOL-FEAT-007, SOL-RULE-009]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-017, INT-022, INT-024, INT-025]
+      dependencies: [repair-v2-003-001]
+      task_contract_ref: specs/001-initial-product-intent/repairs/repair-v2-003-002.yaml
+      allowed_paths:
+        - packages/graph-kernel/src/execution/scheduler.ts
+        - tests/kernel/scheduler-contract.test.mjs
+        - tests/kernel/flywheel-contract.test.mjs
+      forbidden_changes:
+        - Change completeness or flywheel implementation behavior.
+        - Add a graph, service, dependency, or product feature.
+        - Change approved baselines.
+        - Push, deploy, or change production.
+      acceptance_checks:
+        - Every dependency ancestor must be accepted before a ready task can run.
+        - Direct and transitive unfinished ancestors block deterministically.
+        - The flywheel never executes through incomplete dependency closure.
+        - A fully accepted and current dependency closure remains runnable.
+        - Full local verification remains green.
+      retry_limit: 1
+      brief:
+        job: Do not run new work through unfinished old work.
+        use: The drift report, current graphs, scheduler, and flywheel checks.
+        touch: Only the scheduler and scheduler or flywheel tests.
+        dont: Change the flywheel code. Add features. Push or deploy.
+        done: Every old dependency is accepted before new work runs. Show proof.
+
+    - id: repair-v2-003-003
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Reject task lifecycle claims that bypass owner authorization.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      authorized_at: '2026-07-27T21:58:42-04:00'
+      accepted_at: '2026-07-27T22:03:39-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-003/result.yaml
+      authorization:
+        actor: authenticated_project_owner
+        message_id: msg-authorize-repair-v2-003-003-20260727
+        quote: Authorize repair-v2-003-003 against intent-v3 and solution-v3.
+        exact_task_id: repair-v2-003-003
+        protected_baselines: [intent-v3, solution-v3]
+      repairs_drift: drift-v2-005-003
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-FEAT-006, SOL-FEAT-007, SOL-RULE-009]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-017, INT-022, INT-024, INT-025, INT-028]
+      dependencies: [repair-v2-003-002]
+      task_contract_ref: specs/001-initial-product-intent/repairs/repair-v2-003-003.yaml
+      allowed_paths:
+        - packages/graph-kernel/src/execution/scheduler.ts
+        - tests/kernel/scheduler-contract.test.mjs
+        - tests/kernel/completeness-contract.test.mjs
+        - tests/kernel/flywheel-contract.test.mjs
+      forbidden_changes:
+        - Change completeness or flywheel implementation behavior.
+        - Add a graph, service, dependency, or product feature.
+        - Change approved baselines.
+        - Push, deploy, or change production.
+      acceptance_checks:
+        - Post-authorization lifecycle states require owner authorization.
+        - Unauthorized accepted dependencies cannot unlock downstream work.
+        - Unauthorized accepted work cannot make the factory complete.
+        - Pre-authorization, failed, and discarded states retain safe valid uses.
+        - Authorized accepted work still closes dependencies and completion.
+        - Full local verification remains green.
+      retry_limit: 1
+      brief:
+        job: Do not trust work that never had permission.
+        use: The drift report, scheduler rules, and completion checks.
+        touch: Only scheduler code and scheduler, completeness, or flywheel tests.
+        dont: Change the flywheel code. Add features. Push or deploy.
+        done: No permission means no running, no accepted dependency, and no complete. Show proof.
+
+    - id: repair-v2-004-001
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Bind factory completion to validated Intent, Solution, and Execution graph snapshots.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      authorized_at: '2026-07-27T22:14:31-04:00'
+      accepted_at: '2026-07-27T22:43:17-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-004-001/result.yaml
+      authorization:
+        actor: authenticated_project_owner
+        message_id: msg-authorize-repair-v2-004-001-20260727
+        quote: Authorize repair-v2-004-001 against intent-v3 and solution-v3.
+        exact_task_id: repair-v2-004-001
+        protected_baselines: [intent-v3, solution-v3]
+      scope_amendments:
+        - decision_id: scope-amendment-repair-v2-004-001-001
+          status: authorized
+          authorized_at: '2026-07-27T22:30:11-04:00'
+          message_id: msg-authorize-scope-amendment-repair-v2-004-001-001-20260727
+          protected_baselines: [intent-v3, solution-v3]
+          add_allowed_path: tests/kernel/completeness-contract.test.mjs
+          change: Rename three imports and calls from advanceFactory to the non-authoritative projection helper.
+      repairs_drift: drift-v2-005-004
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-SVC-003, SOL-FEAT-006, SOL-FEAT-007, SOL-FEAT-008, SOL-RULE-009]
+      traces_to_intent_nodes: [INT-011, INT-012, INT-014, INT-017, INT-022, INT-024, INT-025, INT-030]
+      dependencies: [repair-v2-003-003]
+      task_contract_ref: specs/001-initial-product-intent/repairs/repair-v2-004-001.yaml
+      allowed_paths:
+        - packages/graph-kernel/src/execution/factory.ts
+        - packages/graph-kernel/src/execution/flywheel.ts
+        - packages/graph-kernel/src/index.ts
+        - tests/kernel/flywheel-contract.test.mjs
+        - tests/kernel/flywheel-composition-contract.test.mjs
+        - tests/kernel/completeness-fixtures.mjs
+        - tests/kernel/metamodel-fixtures.mjs
+        - tests/kernel/completeness-contract.test.mjs
+      forbidden_changes:
+        - Change scheduler, completeness, or graph-validator semantics.
+        - Add a graph, service, database, dependency, or product feature.
+        - Change approved baselines.
+        - Push, deploy, or change production.
+      acceptance_checks:
+        - Authoritative advance requires current Intent, Solution, and Execution snapshots.
+        - Graph validation runs before closure or completion.
+        - Closure node, trace, task, dependency, authority, and baseline facts bind to the snapshots.
+        - Missing, corrupt, stale, omitted, or invented graph facts block.
+        - A real matching graph can complete.
+        - Projection-only evaluation remains a non-authoritative pure helper.
+        - Full local verification remains green.
+      retry_limit: 1
+      brief:
+        job: Check the real graphs before saying done.
+        use: The graph validator, current snapshots, baseline refs, and closure state.
+        touch: Only the composed factory boundary, exports, fixtures, and its tests.
+        dont: Add features. Change graph rules. Push or deploy.
+        done: Fake graph or fake projection blocks. Real matching graph can complete. Show proof.
+
+    - id: repair-v2-002-001
+      type: Repair
+      role_ref: SOL-ROLE-003
+      objective: Recompute every graph snapshot hash from canonical graph bytes before accepting the snapshot or using it as factory authority.
+      status: accepted
+      owner_authorization: authorized
+      dispatchable: false
+      proposed_at: '2026-07-27T22:50:51-04:00'
+      authorized_at: '2026-07-27T22:55:09-04:00'
+      accepted_at: '2026-07-27T23:19:04-04:00'
+      evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-002-001/result.yaml
+      authorization:
+        actor: authenticated_project_owner
+        message_id: msg-authorize-repair-v2-002-001-20260727
+        quote: Authorize repair-v2-002-001 against intent-v3 and solution-v3.
+        exact_task_id: repair-v2-002-001
+        protected_baselines: [intent-v3, solution-v3]
+        repair_policy: absolutely_necessary_only
+      scope_amendments:
+        - decision_id: scope-amendment-repair-v2-002-001-001
+          status: authorized
+          proposed_at: '2026-07-27T22:56:52-04:00'
+          authorized_at: '2026-07-27T23:01:08-04:00'
+          actor: authenticated_project_owner
+          message_id: msg-authorize-scope-amendment-repair-v2-002-001-001-20260727
+          quote: Authorize scope-amendment-repair-v2-002-001-001 against intent-v3 and solution-v3.
+          protected_baselines: [intent-v3, solution-v3]
+          add_allowed_paths:
+            - specs/001-initial-product-intent/contracts/graph-kernel.md
+            - specs/001-initial-product-intent/data-model.md
+          change: Omit local self-reference snapshot hashes from canonical snapshot bytes while retaining every nonlocal reference hash.
+          implementation_started_before_authorization: false
+      authorization_required:
+        actor: authenticated_project_owner
+        exact_task_id: repair-v2-002-001
+        protected_baselines: [intent-v3, solution-v3]
+      repairs_drift: drift-v2-005-005
+      satisfies_solution_nodes: [SOL-SVC-001, SOL-DATA-001, SOL-DATA-004, SOL-RULE-003, SOL-RULE-008, SOL-FEAT-008]
+      traces_to_intent_nodes: [INT-005, INT-006, INT-010, INT-011, INT-012, INT-014, INT-022]
+      dependencies: [repair-v2-004-001]
+      task_contract_ref: specs/001-initial-product-intent/repairs/repair-v2-002-001.yaml
+      allowed_paths:
+        - packages/graph-kernel/src/hash.ts
+        - packages/graph-kernel/src/validate.ts
+        - packages/graph-kernel/src/index.ts
+        - packages/graph-kernel/package.json
+        - package-lock.json
+        - tests/kernel/metamodel-fixtures.mjs
+        - tests/kernel/metamodel-contract.test.mjs
+        - tests/kernel/metamodel.typecheck.ts
+        - tests/kernel/flywheel-composition-contract.test.mjs
+        - specs/001-initial-product-intent/contracts/graph-kernel.md
+        - specs/001-initial-product-intent/data-model.md
+      forbidden_changes:
+        - Change graph grammar, scheduler, or completeness semantics.
+        - Add a graph, service, database, runtime integration, runtime dependency, or product feature.
+        - Change approved baselines.
+        - Push, deploy, or change production.
+      acceptance_checks:
+        - Canonical GraphSnapshot bytes deterministically produce the declared SHA-256 digest.
+        - Every current and source snapshot hash is recomputed before semantic validation.
+        - Stale node, edge, cross-link, source, and baseline hashes block.
+        - Equivalent set order stays valid and evaluation never mutates input.
+        - Real matching graphs still schedule and complete.
+        - Full local verification remains green.
+      retry_limit: 1
+      brief:
+        job: Make the graph hash prove the graph words.
+        use: The hash contract, current snapshots, validator, and factory.
+        touch: Only snapshot hashing, validation, exports, fixtures, and their tests.
+        dont: Change graph rules. Add features. Change baselines. Push or deploy.
+        done: Change one graph fact without a new hash and it blocks. Real matching graphs still work. Show proof.
+  edges:
+    - { id: V2-E001, type: DEPENDS_ON, from: V2-002, to: V2-001 }
+    - { id: V2-E002, type: DEPENDS_ON, from: V2-003, to: V2-002 }
+    - { id: V2-E003, type: DEPENDS_ON, from: V2-004, to: V2-002 }
+    - { id: V2-E004, type: DEPENDS_ON, from: V2-004, to: V2-003 }
+    - { id: V2-E005, type: DEPENDS_ON, from: V2-005, to: V2-004 }
+    - { id: V2-E006, type: DEPENDS_ON, from: repair-v2-003-001, to: V2-004 }
+    - { id: V2-E007, type: DEPENDS_ON, from: V2-005, to: repair-v2-003-001 }
+    - { id: V2-E008, type: DEPENDS_ON, from: repair-v2-003-002, to: repair-v2-003-001 }
+    - { id: V2-E009, type: DEPENDS_ON, from: V2-005, to: repair-v2-003-002 }
+    - { id: V2-E010, type: DEPENDS_ON, from: repair-v2-003-003, to: repair-v2-003-002 }
+    - { id: V2-E011, type: DEPENDS_ON, from: V2-005, to: repair-v2-003-003 }
+    - { id: V2-E012, type: DEPENDS_ON, from: repair-v2-004-001, to: repair-v2-003-003 }
+    - { id: V2-E013, type: DEPENDS_ON, from: V2-005, to: repair-v2-004-001 }
+    - { id: V2-E014, type: DEPENDS_ON, from: repair-v2-002-001, to: repair-v2-004-001 }
+    - { id: V2-E015, type: DEPENDS_ON, from: V2-005, to: repair-v2-002-001 }
+completion_contract:
+  complete_when_all_empty:
+    - uncovered_required_intent
+    - uncovered_required_solution
+    - unaccepted_required_tasks
+    - missing_required_evidence
+    - blocking_drift
+    - stale_work
+    - failed_system_checks
+  never_complete_when:
+    - a blocking question or owner decision is unresolved
+    - the approved baseline hashes do not match
+    - the project is incomplete but no next action exists
+flywheel_order:
+  - Validate current baseline hashes and graph compatibility.
+  - Compute trace and evidence closure.
+  - Route stale work to impact analysis.
+  - Route produced work to independent checking.
+  - Route drift to owner repair authorization or an authorized Repair task.
+  - Select one ready task by stable topological order and task ID.
+  - Return COMPLETE only when the completion report has no gaps.
+  - Otherwise emit a MissingWorkReport and require recompilation or an owner decision.
+current:
+  ready_tasks: []
+  active_tasks: []
+  accepted_tasks: [T001, V2-001, V2-002, V2-003, V2-004, V2-005, repair-v2-003-001, repair-v2-003-002, repair-v2-003-003, repair-v2-004-001, repair-v2-002-001]
+  proposed_repairs: []
+  blocked_repairs: []
+  blocking_findings: []
+  pending_owner_decisions: []
+  resolved_findings: [drift-v2-005-001, drift-v2-005-002, drift-v2-005-003, drift-v2-005-004, drift-v2-005-005]
+  milestone_complete: true
+  project_complete: false

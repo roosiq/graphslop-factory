@@ -1,0 +1,90 @@
+schema_version: 1
+drift_id: drift-v2-005-004
+status: resolved
+severity: important
+type: integration_drift
+detected_at: '2026-07-27T22:09:27-04:00'
+detected_by:
+  task_id: V2-005
+  role: Check
+  worker: /root/v2_005_integrated_check
+resolved_at: '2026-07-27T22:43:17-04:00'
+resolved_by:
+  task_id: repair-v2-004-001
+  evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-004-001/result.yaml
+  independent_verifier: /root/v2_004_check
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+affected_tasks: [V2-002, V2-004]
+expected:
+  statement: >-
+    The factory flywheel must validate the exact current Intent, Solution, and Execution
+    snapshots and their approved baseline bindings before it computes closure or returns
+    COMPLETE. Its required IDs, traces, and task facts must be bound to those validated
+    snapshots; a standalone caller must not be able to supply an unrelated normalized
+    projection and receive a completion decision.
+  sources:
+    - specs/001-initial-product-intent/execution-v2.yaml#flywheel_order
+    - specs/001-initial-product-intent/contracts/graph-kernel.md#authority
+    - specs/001-initial-product-intent/contracts/graph-kernel.md#snapshot-rules
+    - V2-004-AC-01-complete-requires-full-intent-to-solution-to-execution-to-evidence-closure
+observed:
+  statement: >-
+    validateGraphSnapshots validates GraphValidationInput only as a separate exported pure
+    function. advanceFactory imports neither it nor GraphValidationInput, accepts only the
+    denormalized CompletenessInput projection, and rejects snapshots and approvedBaselines
+    as unknown keys. A complete-looking projection with no GraphSnapshot values at all
+    returns COMPLETE, so malformed, stale, or unrelated graph snapshots cannot influence
+    the flywheel decision.
+  files:
+    - packages/graph-kernel/src/validate.ts
+    - packages/graph-kernel/src/execution/completeness.ts
+    - packages/graph-kernel/src/execution/flywheel.ts
+  call_site_search: >-
+    rg -n "validateGraphSnapshots\\(|validateGraphSet\\(|validateSnapshotSet\\(|advanceFactory\\("
+    --glob '!node_modules/**' --glob '!dist/**' . finds validation calls only in the
+    metamodel test and advanceFactory calls only in completeness/flywheel tests; no composed
+    factory entry point exists.
+reproduction:
+  command: >-
+    node --input-type=module -e "import { advanceFactory, validateGraphSnapshots } from './packages/graph-kernel/dist/index.js'; import { completeInput } from './tests/kernel/completeness-fixtures.mjs'; import { validGraphValidationInput } from './tests/kernel/metamodel-fixtures.mjs'; const projection=completeInput(); const graphs=validGraphValidationInput(); graphs.snapshots[1].nodes[0].type='Persona'; const suppliedGraphs=advanceFactory({...projection,...graphs}); console.log({projectionOnlyAction:advanceFactory(projection).action,projectionHasSnapshots:Object.hasOwn(projection,'snapshots'),corruptGraphValidation:validateGraphSnapshots(graphs).valid,suppliedGraphsAction:suppliedGraphs.action,suppliedGraphsIssues:suppliedGraphs.completeness.gaps.invalidInputIssues.map((entry)=>entry.code)});"
+  result:
+    projection_only_action: complete
+    projection_has_snapshots: false
+    corrupt_graph_validation_valid: false
+    corrupt_graph_validation_issues: [unknown_node_type, invalid_edge_endpoints]
+    supplied_graphs_action: block_invalid_state
+    supplied_graphs_issues: [invalid_completeness_input]
+impact:
+  statement: >-
+    The component that can declare project completion is not tied to the component that
+    enforces the graph grammar, exact cross-graph links, and approved snapshot hashes. A
+    caller can fabricate a self-consistent closure projection with arbitrary IDs and still
+    receive COMPLETE, defeating the required graph-to-execution traceability boundary.
+recommended_repair:
+  type: Repair
+  instruction: >-
+    Add one fail-closed composed factory entry point for external callers. It must receive
+    the exact current graph snapshots and approved baseline refs, call validateGraphSnapshots
+    first, and bind all closure IDs and cross-graph trace facts to those same validated
+    snapshot/node/link refs before delegating to the existing pure scheduler/completeness
+    logic. Invalid grammar, missing current snapshots, baseline mismatch, or any projection
+    fact not derivable from the validated graphs must return block_invalid_state and never
+    COMPLETE. Keep the existing pure helpers if useful, but do not expose them as the sole
+    completion authority. Add graph-corruption, arbitrary-projection, valid-composed-path,
+    deterministic, and non-mutation regressions.
+authorization:
+  repair_authorized: true
+  exact_task_id: repair-v2-004-001
+  protected_baselines: [intent-v3, solution-v3]
+  owner_message_id: msg-authorize-repair-v2-004-001-20260727
+  scope_amendment:
+    decision_id: scope-amendment-repair-v2-004-001-001
+    owner_message_id: msg-authorize-scope-amendment-repair-v2-004-001-001-20260727
+    protected_baselines: [intent-v3, solution-v3]
+  no_code_changed_by_verifier: true

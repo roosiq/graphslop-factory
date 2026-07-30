@@ -1,7 +1,14 @@
 {
   "name": "@graphslop/workspace",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Turn rough software ideas into approved intent, solution, and execution graphs, then export a portable build pack.",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roosiq/graphslop-factory.git"
+  },
+  "homepage": "https://github.com/roosiq/graphslop-factory#readme",
   "type": "module",
   "packageManager": "npm@11.11.0",
   "engines": {
@@ -25,10 +32,28 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run typecheck",
-    "typecheck": "if find apps packages -type f \\( -name '*.ts' -o -name '*.tsx' \\) -not -path '*/node_modules/*' -not -path '*/dist/*' -print -quit | grep -q .; then tsc --project tsconfig.json; else echo 'No TypeScript workspace sources to check.'; fi"
+    "dev": "npm run dev --workspace @graphslop/control-plane",
+    "start": "npm run start --workspace @graphslop/control-plane",
+    "self-host": "npm run build --workspace @graphslop/control-plane && node --env-file-if-exists=.env scripts/start-local.mjs",
+    "self-host:fast": "node --env-file-if-exists=.env scripts/start-local.mjs",
+    "hosted:model-worker": "node --env-file-if-exists=.env scripts/run-hosted-model-worker.mjs",
+    "build": "npm run build --workspaces --if-present && npm run typecheck",
+    "typecheck": "tsc --project tsconfig.json && npm run typecheck --workspace @graphslop/edge",
+    "test": "npm run test --workspaces --if-present",
+    "test:ui": "vitest run tests/ui/model.test.ts",
+    "test:e2e": "npm run build --workspace @graphslop/control-plane && playwright test tests/e2e/owner-workspace.spec.ts",
+    "export:pack": "npm run build --workspace @graphslop/build-pack && node packages/build-pack/dist/cli.js",
+    "ci": "npm run build && npm run test && npm run test:ui && npm run test:e2e"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.62.0",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.4",
+    "typescript": "5.9.3",
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
   }
 }

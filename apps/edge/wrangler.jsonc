@@ -1,0 +1,77 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "graphslop-app",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "graphslop.com/*",
+      "zone_name": "graphslop.com"
+    },
+    {
+      "pattern": "www.graphslop.com",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "../control-plane/dist/web",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_ORIGIN": "https://graphslop.com"
+  },
+  "secrets": {
+    "required": [
+      "MODEL_RUNNER_TOKEN"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "graphslop-app",
+      "database_id": "429f880e-d6f7-4e90-ab2c-58a9dcc4d11d",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PROJECTS",
+        "class_name": "ProjectWorkbench"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ProjectWorkbench"]
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUILD_PACKS",
+      "bucket_name": "graphslop-build-packs"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "MODEL_JOBS",
+        "queue": "graphslop-model-jobs"
+      }
+    ]
+  },
+  "triggers": {
+    "crons": ["17 4 * * *"]
+  }
+}

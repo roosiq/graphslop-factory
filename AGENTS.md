@@ -1,14 +1,8 @@
 # Graphslop Project Rules
 
-## Use Graphslop, Not Spec Kit
+## Use Graphslop's Own Graphs
 
-Do not run Spec Kit commands or use `.specify` as the workflow for this repository.
-
-Do not create Spec Kit plans, research files, checklists, quickstarts, or task files.
-
-Preserve existing `.specify` files as history unless the owner explicitly asks to remove them.
-
-The active authority is Graphslop's own versioned state:
+The active authority is Graphslop's versioned state:
 
 ```text
 Intent Graph
@@ -19,8 +13,7 @@ Intent Graph
   → evidence, drift, and repair
 ```
 
-Use the versioned Intent, Solution, Execution, impact, evidence, and drift artifacts already in
-this repository until the application can persist the same records under `.factory/`.
+Persist project memory and exported build packs under `.factory/`.
 
 ## Keep Agent Language Caveman-Simple
 

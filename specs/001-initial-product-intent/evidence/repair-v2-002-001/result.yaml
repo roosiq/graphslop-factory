@@ -1,0 +1,68 @@
+schema_version: 1
+task_id: repair-v2-002-001
+status: accepted
+accepted_at: '2026-07-27T23:19:04-04:00'
+repairs_drift: drift-v2-005-005
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-002-001-20260727
+  quote: Authorize repair-v2-002-001 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-002-001
+  repair_policy: absolutely_necessary_only
+scope_amendments:
+  - decision_id: scope-amendment-repair-v2-002-001-001
+    actor: authenticated_project_owner
+    message_id: msg-authorize-scope-amendment-repair-v2-002-001-001-20260727
+    quote: Authorize scope-amendment-repair-v2-002-001-001 against intent-v3 and solution-v3.
+    authorized_at: '2026-07-27T23:01:08-04:00'
+    implementation_started_before_authorization: false
+    change: Omit only local self-reference snapshot hashes from canonical snapshot bytes.
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/hash.ts, sha256: 69d96df6a484b36e936ae760a60ab16ded6367f1a2a22d26387e5e5e59b4cc00 }
+  - { path: packages/graph-kernel/src/validate.ts, sha256: 6e07b793b26ae69a25ca06bb75b907b3b585dd52497855b10b3f761d93ce10b9 }
+  - { path: packages/graph-kernel/src/index.ts, sha256: 6e168627c4ad2162cc5924bbdee2b49f98205f4ee8b6ec1cd873ebf390ea3e36 }
+  - { path: tests/kernel/metamodel-fixtures.mjs, sha256: 05a3208c2ac926efce2d7417ca2e4f9072cc3a61c53074283a9f676d0a95044e }
+  - { path: tests/kernel/metamodel-contract.test.mjs, sha256: bef829ddd08ff570a609f2e76674588088f94dd1a669bbe499c3bae03cd40f02 }
+  - { path: tests/kernel/flywheel-composition-contract.test.mjs, sha256: f3923e270f20b3e4bcc78fc50da702a06443d419547434f3d03559c0d98c2afb }
+  - { path: specs/001-initial-product-intent/contracts/graph-kernel.md, sha256: 1e1bcf22a34b20ab58c44a2ba857b0cad5b2ed4d3ae564ff5b70817af8f02a3a }
+  - { path: specs/001-initial-product-intent/data-model.md, sha256: 33900a6b1d25899622255cd1a6d19fc2d4dfe508e9e30c5f8c4b4033251cfd48 }
+acceptance_checks:
+  - { id: REPAIR-V2-002-001-AC-01, outcome: pass, evidence: Canonical bytes omit the top-level digest and authorized local self-reference digest fields, sort graph sets, reject ill-formed Unicode, and use Node SHA-256 over UTF-8. }
+  - { id: REPAIR-V2-002-001-AC-02, outcome: pass, evidence: Every parsed active and current-source snapshot is hash-checked before semantic validation, including a source duplicating an active declared identity. }
+  - { id: REPAIR-V2-002-001-AC-03, outcome: pass, evidence: Stale node, edge, cross-link, ordinary source, and duplicate current-source content all block validation and authoritative completion. }
+  - { id: REPAIR-V2-002-001-AC-04, outcome: pass, evidence: Nonlocal reference digests remain canonical content and baseline or cross-graph bindings cannot bypass recomputed snapshot integrity. }
+  - { id: REPAIR-V2-002-001-AC-05, outcome: pass, evidence: Equivalent set and object-key ordering is digest-stable, while material values and external reference hashes change the digest. }
+  - { id: REPAIR-V2-002-001-AC-06, outcome: pass, evidence: Hashing, validation, and factory evaluation are deterministic and non-mutating. }
+  - { id: REPAIR-V2-002-001-AC-07, outcome: pass, evidence: Contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass. }
+commands:
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 66 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+independent_probes:
+  - Node SHA-256 comparison against canonical graph bytes
+  - stale node, edge, cross-link, source, and duplicate-current-source content
+  - local self-reference invariance and external-reference sensitivity
+  - equivalent graph-set and object-key ordering
+  - malformed Unicode values and object keys
+  - authoritative factory fail-closed result
+  - deterministic non-mutating evaluation
+independence:
+  implementer: /root/v2_002_hash_repair
+  specification_verifier: /root/v2_002_hash_spec_check
+  code_quality_verifier: /root/v2_002_hash_quality_check
+  verifiers_did_not_modify_implementation_or_tests: true
+verification_cycles:
+  - { outcome: reject, verifier: /root/v2_002_hash_spec_check, findings: [duplicate_current_source_skipped_before_hash_verification] }
+  - { outcome: reject, verifier: /root/v2_002_hash_quality_check, findings: [ill_formed_unicode_not_rejected] }
+  - { outcome: accept, verifier: /root/v2_002_hash_spec_check, findings: [] }
+  - { outcome: accept, verifier: /root/v2_002_hash_quality_check, findings: [] }
+drift_closure:
+  drift_id: drift-v2-005-005
+  outcome: resolved
+unresolved_issues: []

@@ -1,0 +1,65 @@
+schema_version: 1
+drift_id: drift-v2-005-003
+status: resolved
+severity: important
+type: authorization_drift
+detected_at: '2026-07-27T21:54:00-04:00'
+detected_by:
+  task_id: V2-005
+  role: Check
+  worker: /root/v2_005_integrated_check
+resolved_at: '2026-07-27T22:03:39-04:00'
+resolved_by:
+  task_id: repair-v2-003-003
+  evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-003/result.yaml
+  independent_verifier: /root/v2_004_check
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+affected_tasks: [V2-003, V2-004]
+expected:
+  statement: A task with ownerAuthorization not_authorized cannot satisfy a dependency closure or the completion contract, even if its status is accepted and has passing Check evidence. Authorization is an exact machine authority boundary and must not be bypassed by claiming terminal status.
+  sources:
+    - specs/001-initial-product-intent/execution-v2.yaml
+    - solution-v3-protected-assertion-exact-task-lease-runner-policy-and-narrowest-deny
+    - scheduler-owner-authorization-is-explicit
+observed:
+  statement: dependencyClosureState treats every accepted dependency as valid once its baselines match. It does not inspect the accepted dependency's ownerAuthorization. Completeness also treats an unauthorized accepted required task as complete when its evidence otherwise closes. Both the public scheduler and advanceFactory select a ready dependant after an unauthorized accepted dependency, and advanceFactory can return complete for an unauthorized accepted project.
+  files:
+    - packages/graph-kernel/src/execution/scheduler.ts
+    - packages/graph-kernel/src/execution/completeness.ts
+    - packages/graph-kernel/src/execution/flywheel.ts
+reproduction:
+  command: >-
+    node --input-type=module -e "import { scheduleExecutionTasks } from './packages/graph-kernel/dist/index.js'; import { task } from './tests/kernel/completeness-fixtures.mjs'; console.log(scheduleExecutionTasks({tasks:[task('unauthorized-accepted',{status:'accepted',ownerAuthorization:'not_authorized'}),task('candidate',{status:'ready',dependencies:['unauthorized-accepted']})],currentIntentBaseline:{baselineId:'intent-v1',contentHash:'a'.repeat(64)},currentSolutionBaseline:{baselineId:'solution-v1',contentHash:'b'.repeat(64)}}));"
+  result:
+    scheduler_selected_task: candidate
+    scheduler_blockers: []
+  dependant_integrated_result:
+    completeness_valid: true
+    flywheel_action: execute_task
+    scheduler_selected_task: candidate
+  early_completion:
+    setup: An otherwise valid completeInput with its sole accepted task changed to ownerAuthorization not_authorized.
+    command: >-
+      node --input-type=module -e "import { evaluateCompleteness, advanceFactory } from './packages/graph-kernel/dist/index.js'; import { completeInput } from './tests/kernel/completeness-fixtures.mjs'; const input=completeInput(); input.tasks[0].ownerAuthorization='not_authorized'; console.log({report:evaluateCompleteness(input),advance:advanceFactory(input)});"
+    result:
+      completeness_valid: true
+      completeness_complete: true
+      flywheel_action: complete
+impact:
+  statement: Unapproved or forged work can be declared accepted and become an authority source for later dispatch or final project completion. This violates the protected task-authorization boundary and permits execution drift without an owner decision.
+recommended_repair:
+  type: Repair
+  instruction: >-
+    Require every accepted dependency and every accepted required task to retain explicit authorized owner authority, or model immutable dispatch authorization separately and bind accepted evidence to it. Report unauthorized accepted ancestors and terminal tasks deterministically, prevent selection, and make advanceFactory return missing_work or block_invalid_state rather than complete. Add direct, transitive, early-completion, and non-mutation regression tests.
+authorization:
+  repair_authorized: true
+  exact_task_id: repair-v2-003-003
+  protected_baselines: [intent-v3, solution-v3]
+  owner_message_id: msg-authorize-repair-v2-003-003-20260727
+  no_code_changed_by_verifier: true

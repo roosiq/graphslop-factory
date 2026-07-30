@@ -1,0 +1,44 @@
+schema_version: 1
+task_id: V2-004
+status: accepted
+accepted_at: '2026-07-27T20:48:06-04:00'
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/completeness.ts, sha256: 3b241200458e3302d4c4ab97f4239942f5b4bdc59449056e75edffe6b5a2b626 }
+  - { path: packages/graph-kernel/src/execution/flywheel.ts, sha256: 844a47b9c91cb9577b8e87682e2b89a12b421cec70eca4540d4dd276cac58310 }
+  - { path: packages/graph-kernel/src/index.ts, sha256: b0bc33ccde017ea4b844f1e57f1a8662698ab4903c16a3d5be7e94e3f1abd57c }
+  - { path: packages/graph-kernel/package.json, sha256: 9e2400e95b4fe92922040aee7e557fee7745e080570f4beb0862f22a7921f621 }
+  - { path: tests/kernel/completeness-fixtures.mjs, sha256: a700def3935b8a5e58bfb6746106c926806e2445950ebd19213b1f51898f9d7e }
+  - { path: tests/kernel/completeness-contract.test.mjs, sha256: 31b404691cdb4017f91f278c9587d56d22e50982434d0853f40cb7595f1309a5 }
+  - { path: tests/kernel/flywheel-contract.test.mjs, sha256: 131a31f433c9e5d8b8d18fde7add9d394254465270fce19c437f30a455aed845 }
+acceptance_checks:
+  - { id: V2-004-AC-01, outcome: pass, evidence: Completion requires a continuous per-node Intent-to-Solution-to-Execution-to-independent-evidence path, including transitive support-to-product closure. }
+  - { id: V2-004-AC-02, outcome: pass, evidence: Required dependency closure, exact compiled baselines, evidence, producer-checker separation, system checks, decisions, and drift all fail closed. }
+  - { id: V2-004-AC-03, outcome: pass, evidence: Produced work routes to independent verification and active work routes to a pure wait action. }
+  - { id: V2-004-AC-04, outcome: pass, evidence: Blocking drift routes by one shared priority to a bounded Repair proposal, explicit owner authorization, or a scheduler-selected authorized Repair. }
+  - { id: V2-004-AC-05, outcome: pass, evidence: Missing Solution-to-Intent and Execution-to-Solution links route to the correct compiler without a fixed-point loop. }
+  - { id: V2-004-AC-06, outcome: pass, evidence: Exactly one deterministic next action is returned and input is never mutated. }
+  - { id: V2-004-AC-07, outcome: pass, evidence: Incomplete or invalid work never reports complete and retains a structured MissingWorkReport. }
+commands:
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 49 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+independence:
+  implementer: /root/v2_004_build
+  repair_implementer: /root/v2_004_build
+  verifier: /root/v2_004_check
+  verifier_did_not_modify_implementation: true
+verification_cycles:
+  - outcome: reject
+    findings: [required_task_without_solution_trace, stale_evidence_reuse, unscoped_evidence, active_work_lost, repair_proposal_missing]
+  - outcome: reject
+    findings: [implementation_support_forced_to_direct_intent, repair_route_report_mismatch]
+  - outcome: reject
+    findings: [mixed_drift_priority_mismatch]
+  - outcome: accept
+    findings: []
+unresolved_issues: []

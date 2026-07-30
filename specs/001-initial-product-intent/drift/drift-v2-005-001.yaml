@@ -1,0 +1,53 @@
+schema_version: 1
+drift_id: drift-v2-005-001
+status: resolved
+severity: important
+type: constraint_drift
+detected_at: '2026-07-27T20:58:00-04:00'
+detected_by:
+  task_id: V2-005
+  role: Check
+  worker: /root/v2_005_integrated_check
+resolved_at: '2026-07-27T21:34:19-04:00'
+resolved_by:
+  task_id: repair-v2-003-001
+  evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-001/result.yaml
+  independent_verifier: /root/v2_004_check
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+task_id: V2-003
+expected:
+  statement: A scheduler using the full Execution graph and current baseline hashes must not select a ready dependant when an accepted dependency is stale. Stale baselines are a protected dispatch boundary, not merely a property of the candidate task.
+  sources:
+    - specs/001-initial-product-intent/execution-v2.yaml
+    - protected_solution_assertion_exact_task_and_baselines
+observed:
+  statement: scheduleExecutionTasks checks baseline equality only for ready or authorized candidates. It treats an accepted dependency with a stale protected baseline as satisfied and selects its current-baseline dependant without a stale or dependency blocker.
+  file: packages/graph-kernel/src/execution/scheduler.ts
+  locations:
+    - staleTaskIds derives from eligible tasks only
+    - blockedDependencyTaskIds treats accepted status as sufficient
+reproduction:
+  command: >-
+    node --input-type=module -e "import { scheduleExecutionTasks } from './packages/graph-kernel/dist/index.js'; import { completeInput, task } from './tests/kernel/completeness-fixtures.mjs'; const input=completeInput(); input.tasks[0].protectedSolutionBaseline={baselineId:'solution-v0',contentHash:'b'.repeat(64)}; input.tasks.push(task('new-step',{status:'ready',dependencies:['task-alpha']})); console.log(scheduleExecutionTasks({tasks:input.tasks,currentIntentBaseline:input.currentIntentBaseline,currentSolutionBaseline:input.currentSolutionBaseline}));"
+  result:
+    selectedTaskId: new-step
+    dispatchableTaskIds: [new-step]
+    blockers: []
+impact:
+  statement: A caller of the exported scheduler can dispatch work that relies on an accepted result from an obsolete approved baseline. advanceFactory currently catches this through completeness evaluation, but the scheduler is a public safety boundary and does not fail closed on its own input.
+recommended_repair:
+  type: Repair
+  instruction: >-
+    Evaluate baseline freshness for every non-discarded task required to satisfy a candidate's dependency closure. A stale accepted dependency must either make the candidate non-dispatchable with a deterministic stale/dependency blocker, or invalidate the scheduler input. Add a direct scheduler regression test and preserve the existing flywheel impact-analysis behavior.
+authorization:
+  repair_authorized: true
+  exact_task_id: repair-v2-003-001
+  protected_baselines: [intent-v3, solution-v3]
+  owner_message_id: msg-authorize-repair-v2-003-001-20260727
+  no_code_changed_by_verifier: true

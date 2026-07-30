@@ -1,0 +1,61 @@
+schema_version: 1
+task_id: P3-001
+type: Implement
+status: accepted
+accepted_at: '2026-07-27T23:49:09-04:00'
+project_complete: false
+deployment_status: not_authorized
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+
+changed_files:
+  - { path: package.json, sha256: 537c6e3e05bf5b0761e9e0ff2ea87e676d5b0485ce642d33fa77eebe6ea87434 }
+  - { path: package-lock.json, sha256: 19b2ea6c1783bd55a8d3b9d73443c875521c1ad4a06340518684ac064782527b }
+  - { path: tsconfig.json, sha256: 77d391a2106a67ffb80e6ad9e9d39a8cd6fa2f0700760c7b95397417092cc524 }
+  - { path: .gitignore, sha256: 3c3d8ee71c7cb202a6b724b6c42b8e104651dfa767292c29592ae5e4679befbe }
+  - { path: apps/control-plane/package.json, sha256: 520441c6bfbc0e85ee70591388274a4f3a1055f25f1a51c6a3e517fc2b07cb5f }
+  - { path: apps/control-plane/index.html, sha256: c87d8b71bda890f93632059464d5068018b6048925038672b9a0ebd2d361a8ef }
+  - { path: apps/runner/package.json, sha256: a138110585d5972a0aa7f32cf5255eb85097aed4432c9d082674f8ff81f5418e }
+  - { path: packages/codex-adapter/package.json, sha256: 479ccfa00d0b6bc6444293ab5af02635781fce330211d59816726692b2e96b33 }
+  - { path: packages/control-state/package.json, sha256: f54796e59fe5cc438ff0cf501e254cf253def92dec951cea0d9f862b24752cc7 }
+  - { path: packages/file-store/package.json, sha256: 03b936efee405ff9f3c840b217594186ca679f5486ecc61fc915d00eaf0b2778 }
+  - { path: vite.config.ts, sha256: efd5952d59c7b239a390fb094d525430ccb9a1b4f4f229b5e891bac32315f642 }
+  - { path: vitest.config.ts, sha256: b08d8b5dc98f33b0bd26f07c7113f095c4859b8a3557e22b0a00c59315d3704c }
+  - { path: playwright.config.ts, sha256: 63cd89d366c6e0e9234385f95af22cf4580d5202be605bc73b081439a2725df9 }
+
+acceptance_checks:
+  - { check: npm ci succeeds, outcome: pass }
+  - { check: Root dev start build typecheck test and ci commands resolve, outcome: pass }
+  - { check: Workspace dependencies point from apps to packages or packages to packages, outcome: pass }
+  - { check: Default tests make no model push pull-request or deploy call, outcome: pass }
+
+verification:
+  - { command: npm ci, outcome: pass, observation: 70 packages installed }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: npm run test, outcome: pass, observation: 74 of 74 tests passed }
+  - { command: npm run build, outcome: pass }
+  - { command: npm run ci, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm run dev plus loopback curl, outcome: pass, observation: served 127.0.0.1:5173 then stopped }
+  - { command: npm run start plus loopback curl, outcome: pass, observation: served 127.0.0.1:4173 then stopped }
+
+review:
+  specification:
+    verifier: /root/p3_001_spec_review
+    outcome: accept
+  code_quality:
+    verifier: /root/p3_001_quality_review
+    outcome: accept_after_one_necessary_repair
+    repair: Updated @hono/node-server from 1.19.6 to 1.19.17 to remove high-severity path-bypass advisories.
+
+known_nonblocking_risk:
+  - id: hono-windows-serve-static
+    severity: moderate
+    disposition: accepted_for_current_scope
+    reason: The advisory is Windows-only and requires serve-static; the approved target is local Linux and this task adds no serve-static implementation.
+
+state_note: >-
+  P3-001 establishes product commands and dependencies only. It does not accept
+  product behavior, authorize remote operations, or complete the project.

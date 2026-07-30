@@ -1,0 +1,58 @@
+schema_version: 1
+drift_id: drift-v2-005-002
+status: resolved
+severity: important
+type: execution_order_drift
+detected_at: '2026-07-27T21:37:04-04:00'
+detected_by:
+  task_id: V2-005
+  role: Check
+  worker: /root/v2_005_integrated_check
+resolved_at: '2026-07-27T21:49:17-04:00'
+resolved_by:
+  task_id: repair-v2-003-002
+  evidence_ref: specs/001-initial-product-intent/evidence/repair-v2-003-002/result.yaml
+  independent_verifier: /root/v2_004_check
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+affected_tasks: [V2-003, V2-004]
+expected:
+  statement: A task may be selected only when every task in its dependency closure is accepted. An accepted task whose own dependency is proposed, blocked, failed, discarded, or otherwise unaccepted is invalid execution state and must not satisfy a downstream task.
+  sources:
+    - specs/001-initial-product-intent/execution-v2.yaml
+    - V2-003-AC-01-dependencies-always-run-before-dependants
+    - V2-004-AC-02-required-dependency-closure-fails-closed
+observed:
+  statement: The scheduler looks only at a candidate's direct dependency status. It accepts an internally inconsistent accepted intermediary as a sufficient dependency even when that intermediary depends on unaccepted work. Completeness marks the upstream task unaccepted but advanceFactory still chooses the downstream candidate before the missing-work path.
+  files:
+    - packages/graph-kernel/src/execution/scheduler.ts
+    - packages/graph-kernel/src/execution/flywheel.ts
+reproduction:
+  setup:
+    - task-alpha: proposed
+    - accepted-middle: accepted and depends_on task-alpha
+    - candidate: ready and depends_on accepted-middle
+  command: >-
+    node --input-type=module -e "import { advanceFactory } from './packages/graph-kernel/dist/index.js'; import { completeInput, task } from './tests/kernel/completeness-fixtures.mjs'; const input=completeInput(); input.tasks[0].status='proposed'; input.tasks.push(task('accepted-middle',{status:'accepted',dependencies:['task-alpha']}),task('candidate',{status:'ready',dependencies:['accepted-middle']})); input.requiredTaskIds.push('accepted-middle','candidate'); input.taskProducers.push({taskId:'accepted-middle',producerId:'middle-builder'},{taskId:'candidate',producerId:'candidate-builder'}); input.taskToSolutionTraces.push({taskId:'accepted-middle',solutionId:'solution-alpha'},{taskId:'candidate',solutionId:'solution-alpha'}); input.evidence.push({...input.evidence[0],id:'evidence-middle',taskId:'accepted-middle',producerId:'middle-builder',provenanceId:'middle-checker'}); console.log(advanceFactory(input));"
+  result:
+    completeness_valid: true
+    unaccepted_required_tasks: [candidate, task-alpha]
+    scheduler_selected_task: candidate
+    flywheel_action: execute_task
+impact:
+  statement: Corrupt or out-of-order Execution state can make the factory dispatch new work even though an upstream dependency has not been accepted. This allows work to bypass the approved execution order and defeats the intended completeness gate.
+recommended_repair:
+  type: Repair
+  instruction: >-
+    Validate dependency lifecycle closure before scheduling or completion routing. For every ready or authorized candidate, recursively require all dependencies to be accepted and current; detect accepted tasks with any non-accepted ancestor as invalid state or dependency_blocked. Ensure advanceFactory returns block_invalid_state or missing_work rather than execute_task. Add direct, transitive, and deterministic regression tests.
+authorization:
+  repair_authorized: true
+  exact_task_id: repair-v2-003-002
+  protected_baselines: [intent-v3, solution-v3]
+  owner_message_id: msg-authorize-repair-v2-003-002-20260727
+  no_code_changed_by_verifier: true

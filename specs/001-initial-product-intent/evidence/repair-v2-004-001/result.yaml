@@ -1,0 +1,77 @@
+schema_version: 1
+task_id: repair-v2-004-001
+status: accepted
+accepted_at: '2026-07-27T22:43:17-04:00'
+repairs_drift: drift-v2-005-004
+authorization:
+  actor: authenticated_project_owner
+  message_id: msg-authorize-repair-v2-004-001-20260727
+  quote: Authorize repair-v2-004-001 against intent-v3 and solution-v3.
+  exact_task_id: repair-v2-004-001
+scope_amendments:
+  - decision_id: scope-amendment-repair-v2-004-001-001
+    actor: authenticated_project_owner
+    message_id: msg-authorize-scope-amendment-repair-v2-004-001-001-20260727
+    quote: Authorize scope-amendment-repair-v2-004-001-001 against intent-v3 and solution-v3.
+    authorized_at: '2026-07-27T22:30:11-04:00'
+    add_allowed_path: tests/kernel/completeness-contract.test.mjs
+    implementation_started_before_authorization: false
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727 }
+base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+changed_files:
+  - { path: packages/graph-kernel/src/execution/factory.ts, sha256: ef4994dcabd6f7e9ec6c8b7726c37b1d2c7327a4289f5dd6f3e55f3cb6dbedb9 }
+  - { path: packages/graph-kernel/src/execution/flywheel.ts, sha256: 31f3d0da2c6923e593a8c0123962889ead51b1a9762e477a0e8817876a0b3466 }
+  - { path: packages/graph-kernel/src/index.ts, sha256: 46eb528aa1be2efa9f10f6c03b966c72f5102f57bc586833a4c9ea81b718a796 }
+  - { path: tests/kernel/flywheel-contract.test.mjs, sha256: 5d059f91a0c8005f2c41045011cb61d64a79d362c3893630205bdd347274718d }
+  - { path: tests/kernel/flywheel-composition-contract.test.mjs, sha256: c313188dca88a12eb82b68e8bb5e1a6e54998250f8a60b228bb6ae15a490401f }
+  - { path: tests/kernel/completeness-fixtures.mjs, sha256: b172df138dea8814fd667910d7df33c85b98b45ed34fd2c38eea9b88dab2be00 }
+  - { path: tests/kernel/metamodel-fixtures.mjs, sha256: 8d1d543e261083add389a2b5cb23c5aad2bd76959d7258eefe987f7ae7a55b8c }
+  - { path: tests/kernel/completeness-contract.test.mjs, sha256: 8383269789b9b0321e8712a1a586b4070e978033add67329d29e75cb5012347a }
+acceptance_checks:
+  - id: REPAIR-V2-004-001-AC-01
+    outcome: pass
+    evidence: The public advanceFactory requires graphValidation and closure, exactly one current snapshot of each graph kind, and exact approved Intent and Solution baseline references.
+  - id: REPAIR-V2-004-001-AC-02
+    outcome: pass
+    evidence: Graph validation runs before closure evaluation; malformed or corrupt snapshots deterministically return block_invalid_state.
+  - id: REPAIR-V2-004-001-AC-03
+    outcome: pass
+    evidence: Required IDs, scopes, support links, cross-graph traces, tasks, producers, dependencies, lifecycle, owner authority, and protected baselines are derived from and compared with the supplied snapshots.
+  - id: REPAIR-V2-004-001-AC-04
+    outcome: pass
+    evidence: Projection-only, missing, duplicate, corrupt, stale, baseline-mismatched, omitted, extra, and invented graph facts never return complete.
+  - id: REPAIR-V2-004-001-AC-05
+    outcome: pass
+    evidence: A valid graph-backed closure can return execute_task or complete through the existing pure projection flywheel.
+  - id: REPAIR-V2-004-001-AC-06
+    outcome: pass
+    evidence: The lower-level evaluator is exported only as advanceProjection and is explicitly non-authoritative.
+  - id: REPAIR-V2-004-001-AC-07
+    outcome: pass
+    evidence: Contracts, graph-kernel, root typecheck, diff check, and dependency-tree checks pass.
+commands:
+  - { command: npm --workspace @graphslop/contracts run verify, outcome: pass, observation: 8 tests }
+  - { command: npm --workspace @graphslop/graph-kernel run verify, outcome: pass, observation: 61 tests }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: npm ls --all, outcome: pass }
+independent_probes:
+  - projection-only and corrupt-graph rejection
+  - missing, duplicate, malformed, stale, and baseline-mismatched snapshot rejection
+  - validation-before-closure precedence
+  - seventeen forged graph-derived closure facts
+  - omitted and extra Execution nodes and trace links
+  - equivalent fact reordering
+  - validated current source snapshots
+  - graph-backed ready task versus closure-only ready claim
+  - valid deterministic and non-mutating completion
+independence:
+  implementer: /root/v2_004_repair
+  verifier: /root/v2_004_check
+  verifier_did_not_modify_implementation_or_tests: true
+drift_closure:
+  drift_id: drift-v2-005-004
+  outcome: resolved
+unresolved_issues: []

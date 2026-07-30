@@ -1,7 +1,7 @@
 schema_version: 1
 impact_id: impact-intent-v3
 project_id: graphslop
-status: awaiting_solution_v3_approval
+status: successor_compiled
 created_at: '2026-07-27T18:35:38-04:00'
 change:
   prior_baseline:
@@ -35,11 +35,11 @@ solution_impact:
     added_roles: 9
     disposition: withdrawn
     reason: It exposes repeated machine policy as a large team model and conflicts with the proposed plain-language constraint.
-  proposed_successor:
+  approved_successor:
     id: solution-v3
-    artifact: specs/001-initial-product-intent/solution-v3.proposed.yaml
-    sha256: 578e7d265921d435cc9265d104241ad650933a453e9a9617e23a6993f330541b
-    status: proposed
+    artifact: specs/001-initial-product-intent/solution-v3.yaml
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+    status: approved
     base_node_count: 72
     added_node_count: 10
     removed_node_count: 0
@@ -55,9 +55,25 @@ solution_impact:
     new_databases: []
 execution_impact:
   current_execution:
-    id: execution-v1
-    status: paused_for_successor_solution
-    dispatchable_tasks: []
+    id: execution-v3
+    status: executing
+    artifact: specs/001-initial-product-intent/execution-v3.yaml
+    dispatchable_tasks: [P3-001]
+    prior_kernel_execution: execution-v2
+    accepted_kernel_tasks:
+      - V2-001
+      - V2-002
+      - V2-003
+      - V2-004
+      - V2-005
+      - repair-v2-003-001
+      - repair-v2-003-002
+      - repair-v2-003-003
+      - repair-v2-004-001
+      - repair-v2-002-001
+    milestone_evidence: specs/001-initial-product-intent/evidence/V2-005/result.yaml
+    kernel_milestone_complete: true
+    full_project_complete: false
   accepted_unaffected:
     - task_id: T001
       evidence_reusable: true
@@ -79,14 +95,16 @@ execution_impact:
 repair_impact:
   - existing_repair: repair-t002-001
     disposition: retain_historical_non_dispatchable
-    successor_action: Reissue with intent-v3 and solution-v3 hashes only after solution-v3 approval and exact owner authorization.
+    successor_action: Retain for later toolchain work. It is not required by the current kernel milestone.
   - existing_repair: repair-t003-001
     disposition: retain_historical_non_dispatchable
-    successor_action: Reissue with intent-v3 and solution-v3 hashes only after solution-v3 approval and exact owner authorization.
+    successor_action: Reissued as V2-001 with intent-v3 and solution-v3 hashes under exact owner authorization.
 gates:
   intent_v3_approved: true
   solution_v3_generation_allowed: true
-  solution_v3_approved: false
-  execution_recompile_allowed: false
-  task_dispatch_allowed: false
-  next_required_action: Display the compact solution-v3 delta and obtain explicit owner approval.
+  solution_v3_approved: true
+  execution_recompile_allowed: true
+  task_dispatch_allowed: true
+  kernel_milestone_accepted: true
+  full_project_complete: false
+  next_required_action: Execute P3-001, then follow the deterministic execution-v3 dependency order.

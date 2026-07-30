@@ -1,0 +1,118 @@
+schema_version: 1
+task_id: P3-007
+type: Verify
+status: accepted
+accepted_at: '2026-07-28T09:01:16-04:00'
+project_complete: true
+completion_scope: local_product
+deployment_status: not_authorized
+repository_status:
+  branch: 001-initial-product-intent
+  base_commit: 4663f8937cda1a643feccb4fad1d2d6dfaa178b2
+  product_changes: local_uncommitted_worktree
+  pushed: false
+  pull_request_created: false
+  merged: false
+  deployed: false
+
+protected_baselines:
+  intent: { id: intent-v3, sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a, outcome: exact_match }
+  solution: { id: solution-v3, sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727, outcome: exact_match }
+accepted_kernel:
+  evidence: specs/001-initial-product-intent/evidence/V2-005/result.yaml
+  sha256: 0abbf404186ecf1d7617c5f7cbfe86e54eab4cbd8f04bef33b370bcdb820714b
+  outcome: exact_match
+
+task_evidence:
+  - { task_id: P3-001, sha256: 63c141aab8659708e5eb2fc5425b6ba64f81fd673d6455103fe68c8d80441405 }
+  - { task_id: P3-002, sha256: d684870794f02fdb5b390b30afa9aaeb1c3114e53fb780da387bc7cdd6ed70dd }
+  - { task_id: P3-003, sha256: b33845c90410f73b1686c8acea0201cd52f4bbc3f74107d9e130efea6a7593d9 }
+  - { task_id: P3-004, sha256: 8d59414de195230f5ded3da86f7dead31b217b885344f3cd8249f0e7403f3a41 }
+  - { task_id: P3-005, sha256: a590169cb4c3333e709d878e0da6848d083ba62e72f66c02fa51738c8ae74dfd }
+  - { task_id: P3-006, sha256: 8b9cff366c349264c0ad873e609270f9710d59716972093d1720344750491aa1 }
+
+fresh_verification:
+  - { command: npm ci, outcome: pass, observation: 70 packages installed and 79 packages audited }
+  - { command: npm run typecheck, outcome: pass }
+  - { command: npm test, outcome: pass, observation: 150 unit contract state factory runner and integration tests passed }
+  - { command: npm run test:ui, outcome: pass, observation: 3 UI projection tests passed }
+  - { command: npm run build, outcome: pass, observation: production client and server build completed }
+  - { command: npm run test:e2e, outcome: pass, observation: 5 real-browser tests passed }
+  - { command: npm run ci, outcome: pass, observation: complete typecheck test UI build and browser pipeline passed independently }
+  - { command: npm ls --all, outcome: pass }
+  - { command: git diff --check, outcome: pass }
+  - { command: solution-to-execution coverage script, outcome: pass, observation: 82 of 82 unique Solution nodes covered with no missing unknown or duplicate nodes }
+  - { command: P3-006 implementation hash recomputation, outcome: pass, observation: 12 of 12 final product file hashes match accepted evidence }
+  - { command: credential pattern inspection, outcome: pass, observation: no live credential found; matches are test fixtures and redaction code }
+
+browser_acceptance:
+  engine: Playwright Chromium
+  gstack_used: false
+  scenarios:
+    - Sole owner claims the loopback factory and a second tab recovers the authenticated session.
+    - Caveman input produces Intent state and one blocking question; stale-tab authority fails closed.
+    - Exact Intent and Solution projections are reviewed and frozen before Execution compilation.
+    - Intent, Solution, Execution, dependencies, cross-graph traces, input messages, and completeness flywheel are visible.
+    - One bounded Build produces real Git candidate evidence; independent Check reports exact drift.
+    - Owner authorizes the exact one-attempt repair; repaired work is independently accepted.
+    - Accepted local checkpoint chain survives restart and produces a real-diff pull-request preview with no remote action.
+    - Checkpoint-ref tamper removes readiness and disables pull-request preview.
+    - Axe reports zero violations; console errors and failed network requests are empty.
+  viewports:
+    - { width: 320, height: 800, overflow: none, keyboard_focus: pass }
+    - { width: 360, height: 800, overflow: none, keyboard_focus: pass }
+    - { width: 768, height: 800, overflow: none, keyboard_focus: pass }
+    - { width: 1280, height: 800, overflow: none, keyboard_focus: pass }
+
+authority_and_failure_checks:
+  - { boundary: graph_and_baseline_hashes, outcome: fail_closed }
+  - { boundary: stale_forged_duplicate_and_concurrent_leases, outcome: fail_closed }
+  - { boundary: realpath_symlink_rename_delete_and_allowed_path_fence, outcome: fail_closed }
+  - { boundary: shell_remote_git_publish_network_and_undeclared_commands, outcome: fail_closed }
+  - { boundary: producer_self_acceptance_and_forged_check_identity, outcome: fail_closed }
+  - { boundary: evidence_redaction_candidate_seal_and_evidence_tamper, outcome: fail_closed }
+  - { boundary: crash_lock_state_head_checkpoint_ref_and_artifact_recovery, outcome: fail_closed }
+  - { boundary: repair_scope_attempt_replay_and_missing_owner_authority, outcome: fail_closed }
+  - { boundary: missing_live_Codex_worker_configuration, outcome: fail_closed }
+  - { boundary: push_pull_request_merge_deploy_and_release, outcome: unavailable_by_design }
+
+solution_acceptance:
+  materialized_solution_nodes: 82
+  execution_covered_nodes: 82
+  missing_nodes: []
+  unknown_nodes: []
+  product_test_behaviors:
+    SOL-TEST-001: factory and browser intake evidence
+    SOL-TEST-002: append-only correction tests
+    SOL-TEST-003: exactly-one-question tests and browser flow
+    SOL-TEST-004: exact projection and baseline hash tests
+    SOL-TEST-005: kernel trace closure and 82-node coverage check
+    SOL-TEST-006: scheduler runner lease and API authority tests
+    SOL-TEST-007: realpath worktree candidate-seal and file-fence tests
+    SOL-TEST-008: independent authenticated Check tests
+    SOL-TEST-009: signed drift exact repair and browser flow
+    SOL-TEST-010: dependency-descendant baseline impact tests
+    SOL-TEST-011: durable evidence real-diff preview and no-remote tests
+    SOL-TEST-012: complete ordinary-language browser journey and accessibility
+    SOL-TEST-013: four distinct Role cards and zero required Personas
+    SOL-TEST-014: JOB USE TOUCH DON'T DONE cards plus machine-enforced independence
+
+dependency_audit:
+  high: 0
+  critical: 0
+  moderate: 1
+  disposition: nonblocking_for_approved_scope
+  finding: '@hono/node-server serve-static encoded-backslash traversal on Windows before 2.0.5'
+  reason: Approved deployment target is the owner Linux workstation; the advisory is Windows-only. Upgrading is a semver-major change and is not an absolutely necessary repair for this baseline.
+
+drift:
+  blocking: []
+  important: []
+  optional_hardening_promoted_to_drift: false
+
+completion_statement: >-
+  The complete local Graphslop product matches intent-v3 and solution-v3.
+  Caveman intake compiles through approved Intent, Solution, and Execution graphs
+  into one bounded Build, independent Check, exact drift, owner-authorized repair,
+  durable accepted local Git evidence, and a reviewable real-diff pull-request
+  preview. No push, pull request, merge, deployment, domain, or traffic action occurred.

@@ -68,7 +68,7 @@ filters, visited sets, maximum depth and result bounds, and stable lexical ID or
 
 ## Hash Contract
 
-1. Validate the object with `contentHash` omitted.
+1. Validate the object with top-level `contentHash` omitted; omit `snapshotContentHash` only from NodeRefs that name that enclosing snapshot.
 2. Sort set-like collections by documented stable keys.
 3. RFC 8785 canonicalize.
 4. SHA-256 hash UTF-8 bytes.
