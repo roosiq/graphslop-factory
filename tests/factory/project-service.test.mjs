@@ -598,21 +598,31 @@ test('owner graph edits version nodes and persist explicit relationships', async
   assert.equal(changedGoal.version, 2);
   assert.equal(changedGoal.status, 'confirmed');
   assert.equal(updated.corrections.length, 1);
+  const updatedAgain = service.editIntentGraph({
+    action: 'update-node',
+    nodeId: changedGoal.id,
+    type: 'Goal',
+    statement: 'Make a focused neighborhood text tool',
+  });
+  const changedAgainGoal = updatedAgain.intentGraph.nodes.find((node) => node.stableId === goal.stableId);
+  assert.equal(changedAgainGoal.version, 3);
+  assert.equal(changedAgainGoal.status, 'confirmed');
+  assert.equal(updatedAgain.corrections.length, 2);
   const connected = service.editIntentGraph({
     action: 'connect',
-    sourceNodeId: changedGoal.id,
+    sourceNodeId: changedAgainGoal.id,
     targetNodeId: input.id,
     edgeType: 'DEPENDS_ON',
   });
   assert.equal(connected.intentGraph.edges.length, 1);
-  assert.equal(connected.intentGraph.edges[0].sourceNodeRef.nodeId, changedGoal.id);
+  assert.equal(connected.intentGraph.edges[0].sourceNodeRef.nodeId, changedAgainGoal.id);
   assert.equal(connected.intentGraph.edges[0].targetNodeRef.nodeId, input.id);
   const removed = service.editIntentGraph({
     action: 'delete-edge',
     edgeId: connected.intentGraph.edges[0].id,
   });
   assert.equal(removed.intentGraph.edges.length, 0);
-  assert.equal(removed.intentGraph.revision, discovered.intentGraph.revision + 4);
+  assert.equal(removed.intentGraph.revision, discovered.intentGraph.revision + 5);
 });
 
 test('owner approval binds exact graph and projection, then proposals retain complete trace links', async () => {

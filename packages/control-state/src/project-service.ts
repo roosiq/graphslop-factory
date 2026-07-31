@@ -8,6 +8,7 @@ import {
   SolutionProposalOutputSchema,
   type ApprovalRecord,
   type ApprovedBaseline,
+  type CorrectionRecord,
   type GraphNode,
   type GraphSnapshot,
   type IntentNodeDraft,
@@ -128,6 +129,21 @@ function freeze<T>(value: T): Readonly<T> {
     Object.freeze(value);
   }
   return value;
+}
+
+function correctionChain(
+  corrections: ProjectConversationState['corrections'],
+): CorrectionRecord[] {
+  return corrections.map((entry) => ({
+    correctionId: entry.correctionId,
+    nodeId: entry.nodeId,
+    priorVersion: entry.priorVersion,
+    nextVersion: entry.nextVersion,
+    sourceMessageId: entry.sourceMessageId,
+    rawContent: entry.rawContent,
+    normalizedContent: entry.normalizedContent,
+    createdAt: entry.createdAt,
+  }));
 }
 
 function snapshotWithHash(value: Omit<GraphSnapshot, 'contentHash'>): GraphSnapshot {
@@ -540,16 +556,7 @@ export class ProjectService {
         normalizedContent: correction.statement,
         createdAt: now,
       };
-      appendCorrection(corrections.map((entry) => ({
-        correctionId: entry.correctionId,
-        nodeId: entry.nodeId,
-        priorVersion: entry.priorVersion,
-        nextVersion: entry.nextVersion,
-        sourceMessageId: entry.sourceMessageId,
-        rawContent: entry.rawContent,
-        normalizedContent: entry.normalizedContent,
-        createdAt: entry.createdAt,
-      })), baseCorrection);
+      appendCorrection(correctionChain(corrections), baseCorrection);
       corrections.push({
         ...baseCorrection,
         priorStatement: prior.statementOrName,
@@ -1041,7 +1048,7 @@ export class ProjectService {
         normalizedContent: statement,
         createdAt: now,
       };
-      appendCorrection(corrections, correction);
+      appendCorrection(correctionChain(corrections), correction);
       corrections.push({
         ...correction,
         priorStatement: prior.statementOrName,
