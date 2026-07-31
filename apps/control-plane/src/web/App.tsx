@@ -784,7 +784,7 @@ function OverviewPage({
       : requirementsAction === 'approve-intent'
         ? { title: 'Approve the requirements', detail: 'Confirm the product needs before Dun creates a solution.', label: 'Review requirements', page: 'build' as PageKey }
         : requirementsAction === 'review-intent'
-          ? { title: 'Review the requirements', detail: 'Check the captured needs and relationships before approval.', label: 'Open requirements', page: 'graph' as PageKey }
+          ? { title: 'Review the requirements', detail: 'Check the captured needs and relationships before approval.', label: 'Review requirements', command: 'review-intent' }
           : requirementsAction === 'submit-message' && baselines.length === 0
             ? { title: 'Continue the requirements', detail: `${requirements.length} captured. Add the missing detail that will move the project to review.`, label: 'Continue requirements', page: 'intake' as PageKey }
           : has('propose-solution')
