@@ -28,6 +28,7 @@ import {
   HmacCheckDriftReceiptAuthority,
 } from '../../apps/control-plane/src/services/durable-authority.js';
 import { ProductionControlAdapter } from '../../apps/control-plane/src/services/production.js';
+import { nextProjectQuestion, unresolvedQuestionNodes } from '../../apps/control-plane/src/web/progress.js';
 import { LOOPBACK_HOST, MemoryControlAdapter, startControlPlane } from '../../apps/control-plane/src/server.js';
 
 const hash = 'a'.repeat(64);
@@ -52,6 +53,42 @@ const envelope = {
   },
   input: { content: 'Need app.' },
 };
+
+test('project progress recovers an unresolved graph question when the active pointer is missing', () => {
+  const project = {
+    currentQuestion: null,
+    intentGraph: {
+      nodes: [
+        { id: 'goal-1', type: 'Goal', statementOrName: 'Make a useful app', status: 'confirmed' },
+        { id: 'question-1', type: 'Question', statementOrName: 'Who should use it?', status: 'unresolved', attributes: { category: 'User' } },
+      ],
+    },
+  };
+  expect(unresolvedQuestionNodes(project)).toHaveLength(1);
+  expect(nextProjectQuestion(project)).toEqual({
+    questionId: 'question-1',
+    text: 'Who should use it?',
+    category: 'User',
+    source: 'graph',
+  });
+});
+
+test('project progress prefers the active question and ignores settled graph questions', () => {
+  const project = {
+    currentQuestion: { questionId: 'active-question', text: 'What should the result show?', category: 'Output' },
+    intentGraph: {
+      nodes: [
+        { id: 'question-1', type: 'Question', statementOrName: 'Old question', status: 'confirmed' },
+      ],
+    },
+  };
+  expect(unresolvedQuestionNodes(project)).toHaveLength(0);
+  expect(nextProjectQuestion(project)).toMatchObject({
+    questionId: 'active-question',
+    text: 'What should the result show?',
+    source: 'active',
+  });
+});
 
 test('dependency release requires the exact independently verified handoff', () => {
   const edge = {

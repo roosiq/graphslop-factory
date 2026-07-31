@@ -30,6 +30,7 @@ import {
 } from './api.js';
 import { demoProject } from './demo.js';
 import { asList, asRecord, display, graphNodes, lifecycleLabel, stringList } from './model.js';
+import { nextProjectQuestion, unresolvedQuestionNodes } from './progress.js';
 
 const api = new OwnerApi();
 const demoMode = import.meta.env.VITE_REMOTE_DEMO === '1';
@@ -495,9 +496,12 @@ function Conversation({
   const [answer, setAnswer] = useState('');
   const [newType, setNewType] = useState('Behavior');
   const [newStatement, setNewStatement] = useState('');
-  const question = asRecord(project.currentQuestion);
+  const question = nextProjectQuestion(project);
   const messages = asList(project.messages);
   const editBinding = bindingFor(bindings, 'edit-intent-graph');
+  const resolveBinding = bindingFor(bindings, 'resolve-question');
+  const submitBinding = bindingFor(bindings, 'submit-message');
+  const canAnswerQuestion = question?.source === 'active' ? Boolean(resolveBinding) : Boolean(submitBinding);
   async function send(event: FormEvent) {
     event.preventDefault();
     if (!message.trim()) return;
@@ -505,11 +509,20 @@ function Conversation({
     setMessage('');
   }
   async function reply(disposition: 'answered' | 'deferred') {
-    await run('resolve-question', {
-      questionId: question.questionId,
-      disposition,
-      content: answer.trim() || 'Decision deferred.',
-    });
+    if (!question) return;
+    if (question.source === 'active') {
+      await run('resolve-question', {
+        questionId: question.questionId,
+        disposition,
+        content: answer.trim() || 'Decision deferred.',
+      });
+    } else {
+      await run('submit-message', {
+        content: disposition === 'deferred'
+          ? `Decide later: ${question.text}`
+          : `Question: ${question.text}\nAnswer: ${answer.trim()}`,
+      });
+    }
     setAnswer('');
   }
   return <aside className="conversation-panel" aria-label="Requirements conversation">
@@ -531,14 +544,14 @@ function Conversation({
       {messages.slice(-6).map((item) => <article className="owner-message" key={item.messageId}>
         <small>{item.actor === 'owner' ? 'You' : 'Dun'}</small><p>{display(item.content)}</p>
       </article>)}
-      {question.questionId && <article className="model-question">
+      {question?.questionId && <article className="model-question">
         <small>Dun asks · {display(question.category)}</small>
         <p>{display(question.text)}</p>
         <textarea aria-label="Answer Dun" rows={3} value={answer} onChange={(event) => setAnswer(event.target.value)}
-          placeholder="Answer in your own words…" disabled={!bindingFor(bindings, 'resolve-question') || busy} />
+          placeholder="Answer in your own words…" disabled={!canAnswerQuestion || busy} />
         <div className="button-row">
-          <button className="primary" disabled={!answer.trim() || busy} onClick={() => void reply('answered')}>Answer</button>
-          <button disabled={busy} onClick={() => void reply('deferred')}>Decide later</button>
+          <button className="primary" disabled={!answer.trim() || !canAnswerQuestion || busy} onClick={() => void reply('answered')}>Answer</button>
+          <button disabled={!canAnswerQuestion || busy} onClick={() => void reply('deferred')}>Decide later</button>
         </div>
       </article>}
     </div>
@@ -746,16 +759,29 @@ function OverviewPage({
   const intent = graphNodes(project, 'intent');
   const solution = graphNodes(project, 'solution');
   const execution = graphNodes(project, 'execution');
-  const questions = intent.filter((node) => node.type === 'Question' && !['confirmed', 'superseded'].includes(String(node.status))).length
-    + (project.currentQuestion?.questionId ? 1 : 0);
+  const requirements = intent.filter((node) => node.type !== 'Question');
+  const unresolvedQuestions = unresolvedQuestionNodes(project);
+  const projectQuestion = nextProjectQuestion(project);
+  const questions = new Set([
+    ...unresolvedQuestions.map((node) => String(node.stableId ?? node.id)),
+    ...(project.currentQuestion?.questionId
+      && !unresolvedQuestions.some((node) => node.stableId === project.currentQuestion.questionId || node.id === project.currentQuestion.questionId)
+      ? [String(project.currentQuestion.questionId)]
+      : []),
+  ]).size;
   const baselines = asList(project.approvedBaselines);
   const lifecycle = String(project.project?.lifecycleState ?? 'CAPTURE');
   const buildPackReady = ['EXECUTION', 'VERIFICATION', 'REPAIR', 'COMPLETE'].includes(lifecycle);
   const has = (command: OwnerCommand) => Boolean(bindingFor(bindings, command));
-  const nextStep: ProjectNextStep = project.currentQuestion?.questionId && has('resolve-question')
-    ? { title: 'Answer Dun’s question', detail: 'One answer will resolve the next important requirement.', label: 'Answer question', page: 'intake' as PageKey }
-    : intent.length === 0 || (has('submit-message') && baselines.length === 0)
+  const questionCanBeAnswered = projectQuestion?.source === 'active'
+    ? has('resolve-question')
+    : Boolean(projectQuestion) && has('submit-message');
+  const nextStep: ProjectNextStep = projectQuestion && questionCanBeAnswered
+    ? { title: 'Answer this question', detail: display(projectQuestion.text), label: 'Answer question', page: 'intake' as PageKey }
+    : requirements.length === 0
       ? { title: 'Describe what you want to build', detail: 'Start rough. Dun will record the requirements and ask what matters.', label: 'Add requirements', page: 'intake' as PageKey }
+      : has('submit-message') && baselines.length === 0
+        ? { title: 'Continue the requirements', detail: `${requirements.length} captured. Add the missing detail that will move the project to review.`, label: 'Continue requirements', page: 'intake' as PageKey }
       : has('approve-intent')
         ? { title: 'Approve the requirements', detail: 'Confirm the product needs before Dun creates a solution.', label: 'Review requirements', page: 'build' as PageKey }
         : has('review-intent')
@@ -803,7 +829,11 @@ function OverviewPage({
           : <PageLink page={nextStep.page} go={go} className="primary-link">{nextStep.label}<span>→</span></PageLink>}
     </section>
     <section className="metric-grid" aria-label="Project metrics">
-      <article><small>requirements</small><strong>{intent.filter((node) => node.type !== 'Question').length}</strong><span>{questions ? `${questions} open question${questions === 1 ? '' : 's'}` : 'No blocking questions'}</span></article>
+      <article><small>requirements</small><strong>{requirements.length}</strong><span>{questions
+        ? baselines.some((item) => item.graphKind === 'intent')
+          ? `${questions} deferred decision${questions === 1 ? '' : 's'}`
+          : `${questions} question${questions === 1 ? '' : 's'} to answer`
+        : 'No blocking questions'}</span></article>
       <article><small>solution</small><strong>{solution.length}</strong><span>{baselines.some((item) => item.graphKind === 'solution') ? 'Baseline approved' : 'Approval required'}</span></article>
       <article><small>tasks</small><strong>{execution.length}</strong><span>{buildPackReady ? 'Compiled and ready' : execution.length ? 'Planned, not compiled' : 'No tasks yet'}</span></article>
       <article><small>relationships</small><strong>{edges.length}</strong><span>{nodes.length} graph nodes</span></article>
