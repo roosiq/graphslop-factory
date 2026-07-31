@@ -36,13 +36,13 @@ function ref(kind, id, contentHash) {
   };
 }
 
-function baseline(kind, contentHash) {
+function baseline(kind, contentHash, nodeIds = [`${kind}-node`]) {
   const id = `${kind}-v1`;
   return {
     schemaVersion: '1.0.0', baselineId: id, graphKind: kind, projectId: 'portable-project',
     status: 'approved', snapshotId: `${kind}-snapshot`, snapshotContentHash: contentHash,
     projectionId: `${kind}-projection`, projectionContentHash: hash(kind === 'intent' ? 'd' : 'e'),
-    nodeVersions: [{ nodeId: `${kind}-node`, version: 1 }], protectedAssertions: [],
+    nodeVersions: nodeIds.map((nodeId) => ({ nodeId, version: 1 })), protectedAssertions: [],
     unresolvedNonBlocking: [], createdAt: timestamp, supersedesBaselineId: null,
     approvalRecord: {
       approvalId: `${kind}-approval`, actorId: 'owner', actorKind: 'authenticated_project_owner',
@@ -129,7 +129,10 @@ function fixtureState() {
     ], [], solutionHash),
     executionGraph: snapshot('execution', [plan, build, verify], [dependency, verificationDependency], executionHash),
     corrections: [], currentQuestion: null, questionResolutions: [], projections: [],
-    approvedBaselines: [baseline('intent', intentHash), baseline('solution', solutionHash)],
+    approvedBaselines: [
+      baseline('intent', intentHash, ['intent-node', 'constraint-node', 'exclusion-node']),
+      baseline('solution', solutionHash, ['solution-node', 'role-node', 'reviewer-node']),
+    ],
   };
 }
 
@@ -152,7 +155,10 @@ async function setupRepository(state = fixtureState()) {
 }
 
 async function controller(root, ...args) {
-  return exec('python3', [join(root, '.factory', 'factory.py'), ...args], { cwd: root });
+  return exec('python3', [join(root, '.factory', 'factory.py'), ...args], {
+    cwd: root,
+    env: { ...process.env, GRAPHSLOP_STATE_ROOT: `${root}-authority` },
+  });
 }
 
 test('exports a self-contained build pack with drop-in harness adapters', async () => {
@@ -220,6 +226,173 @@ test('creates the same portable files without requiring a filesystem', () => {
   assert.equal(JSON.parse(files['execution.json']).tasks.length, 3);
   assert.match(files['tasks/task-build.md'], /## DON'T/);
   assert.match(harnessFiles['.cursor/agents/graphslop-role-node.md'], /Portable feature engineer/);
+});
+
+test('exports handoff contracts and records a baseline-bound realized run graph', async () => {
+  const state = fixtureState();
+  const handoff = {
+    key: 'approved-plan',
+    type: 'documentation',
+    description: 'The bounded plan consumed by implementation.',
+    paths: ['docs/plan.md'],
+    requiredEvidence: ['file_hash', 'independent_check'],
+  };
+  state.executionGraph.edges[0].attributes = {
+    kind: 'feature_handoff',
+    artifacts: [handoff],
+  };
+  const root = await setupRepository(state);
+  try {
+    const execution = JSON.parse(await readFile(join(root, '.factory', 'execution.json'), 'utf8'));
+    assert.deepEqual(execution.tasks.find((task) => task.id === 'task-build').requiredArtifacts, [handoff]);
+    assert.deepEqual(execution.tasks.find((task) => task.id === 'task-plan').producedArtifacts, [handoff]);
+    assert.deepEqual(execution.dependencyEdges[0], {
+      id: 'dependency-one',
+      type: 'DEPENDS_ON',
+      kind: 'feature_handoff',
+      sourceTaskId: 'task-build',
+      targetTaskId: 'task-plan',
+      artifacts: [handoff],
+    });
+    const initialRuntime = JSON.parse(await readFile(join(root, '.factory', 'runtime.json'), 'utf8'));
+    assert.equal(initialRuntime.schemaVersion, '1.2.0');
+    assert.equal(initialRuntime.projectionKind, 'execution_run');
+    assert.equal(initialRuntime.runId, `run-${execution.executionHash.slice(0, 24)}`);
+    assert.deepEqual(initialRuntime.intentBaseline, execution.intentBaseline);
+    assert.deepEqual(initialRuntime.solutionBaseline, execution.solutionBaseline);
+    assert.equal(initialRuntime.nodes['task-plan'].attempt, 0);
+    assert.equal(initialRuntime.edges[0].status, 'pending');
+
+    const worker = 'codex:role-node:handoff-run';
+    await controller(root, 'claim', 'task-plan', '--worker', worker);
+    await mkdir(join(root, 'docs'));
+    await writeFile(join(root, 'docs', 'plan.md'), '# Approved plan\n');
+    await controller(root, 'check', 'task-plan', '--worker', worker);
+    await controller(root, 'accept', 'task-plan', '--worker', worker);
+    const runtime = JSON.parse(await readFile(join(root, '.factory', 'runtime.json'), 'utf8'));
+    assert.equal(runtime.nodes['task-plan'].attempt, 1);
+    assert.equal(runtime.nodes['task-plan'].workerId, worker);
+    assert.deepEqual(runtime.nodes['task-plan'].evidenceRefs, ['.factory/evidence/task-plan.json']);
+    assert.deepEqual(runtime.events.map((event) => event.type), ['claim', 'check', 'accept']);
+    assert.ok(runtime.events.every((event) => event.workerId === worker && event.timestamp));
+    assert.equal(runtime.edges[0].status, 'satisfied');
+    assert.deepEqual(runtime.edges[0].satisfiedArtifactKeys, ['approved-plan']);
+    assert.equal(runtime.edges[0].evidenceRefs.length, 2);
+    assert.equal(runtime.nodes['task-plan'].producedArtifacts[0].evidenceRefs.length, 2);
+    assert.deepEqual(
+      runtime.nodes['task-plan'].producedArtifacts[0].evidenceRefs.map((ref) => ref.kind).sort(),
+      ['acceptance_command', 'file_hash'],
+    );
+    assert.match((await controller(root, 'next')).stdout, /task-build/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('does not release a dependent task when handoff artifact evidence is missing', async () => {
+  const state = fixtureState();
+  state.executionGraph.edges[0].attributes = {
+    kind: 'feature_handoff',
+    artifacts: [{
+      key: 'approved-plan',
+      type: 'documentation',
+      description: 'The plan required by implementation.',
+      paths: ['docs/plan.md'],
+      requiredEvidence: ['file_hash'],
+    }],
+  };
+  const root = await setupRepository(state);
+  try {
+    const worker = 'codex:role-node:missing-evidence-run';
+    await controller(root, 'claim', 'task-plan', '--worker', worker);
+    await mkdir(join(root, 'docs'));
+    await writeFile(join(root, 'docs', 'plan.md'), '# Approved plan\n');
+    await controller(root, 'check', 'task-plan', '--worker', worker);
+    const runtimePath = join(root, '.factory', 'runtime.json');
+    const evidencePath = join(root, '.factory', 'evidence', 'task-plan.json');
+    const evidence = JSON.parse(await readFile(evidencePath, 'utf8'));
+    evidence.producedArtifacts = [];
+    await writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
+    await assert.rejects(
+      () => controller(root, 'accept', 'task-plan', '--worker', worker),
+      (error) => error.stderr.includes('Checked evidence is missing or changed'),
+    );
+    const blocked = JSON.parse(await readFile(runtimePath, 'utf8'));
+    assert.equal(blocked.nodes['task-plan'].status, 'running');
+    assert.equal(blocked.edges[0].status, 'blocked');
+    assert.deepEqual(blocked.edges[0].blockedArtifactKeys, ['approved-plan']);
+    const status = JSON.parse((await controller(root, 'status')).stdout);
+    assert.deepEqual(status.next, []);
+    await assert.rejects(
+      () => controller(root, 'claim', 'task-build', '--worker', 'codex:role-node:blocked-run'),
+      (error) => error.stderr.includes('blocked by dependencies'),
+    );
+    await controller(root, 'check', 'task-plan', '--worker', worker);
+    await controller(root, 'accept', 'task-plan', '--worker', worker);
+    assert.match((await controller(root, 'next')).stdout, /task-build/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(`${root}-authority`, { recursive: true, force: true });
+  }
+});
+
+test('does not invent artifact evidence from an unrelated passing command', async () => {
+  const state = fixtureState();
+  state.executionGraph.edges[0].attributes = {
+    kind: 'feature_handoff',
+    artifacts: [{
+      key: 'approved-plan',
+      type: 'documentation',
+      description: 'The plan required by implementation.',
+      paths: ['docs/plan.md'],
+      requiredEvidence: ['file_hash', 'independent_check'],
+    }],
+  };
+  const root = await setupRepository(state);
+  try {
+    const worker = 'codex:role-node:no-artifact-run';
+    await controller(root, 'claim', 'task-plan', '--worker', worker);
+    await assert.rejects(
+      () => controller(root, 'check', 'task-plan', '--worker', worker),
+      (error) => error.stderr.includes('has no file at its declared paths'),
+    );
+    const runtime = JSON.parse(await readFile(join(root, '.factory', 'runtime.json'), 'utf8'));
+    assert.equal(runtime.nodes['task-plan'].status, 'running');
+    assert.deepEqual(runtime.nodes['task-plan'].producedArtifacts, []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(`${root}-authority`, { recursive: true, force: true });
+  }
+});
+
+test('restores a worker-edited runtime mirror from controller authority', async () => {
+  const root = await setupRepository();
+  try {
+    await controller(root, 'status');
+    const runtimePath = join(root, '.factory', 'runtime.json');
+    const runtime = JSON.parse(await readFile(runtimePath, 'utf8'));
+    for (const node of Object.values(runtime.nodes)) node.status = 'accepted';
+    for (const edge of runtime.edges) edge.status = 'satisfied';
+    await writeFile(runtimePath, `${JSON.stringify(runtime, null, 2)}\n`);
+    const status = JSON.parse((await controller(root, 'status')).stdout);
+    assert.equal(status.status, 'in_progress');
+    const restored = JSON.parse(await readFile(runtimePath, 'utf8'));
+    assert.ok(Object.values(restored.nodes).every((node) => node.status === 'pending'));
+    assert.ok(restored.edges.every((edge) => edge.status === 'pending'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(`${root}-authority`, { recursive: true, force: true });
+  }
+});
+
+test('approved baseline membership includes provisional constraints and exclusions in task prompts', () => {
+  const state = fixtureState();
+  state.intentGraph.nodes.find((item) => item.id === 'constraint-node').status = 'proposed';
+  state.intentGraph.nodes.find((item) => item.id === 'exclusion-node').status = 'proposed';
+  const { manifest } = createBuildPackFiles(state);
+  const instructions = manifest.tasks.flatMap((task) => task.dont).join('\n');
+  assert.match(instructions, /Keep operation local/);
+  assert.match(instructions, /Do not deploy automatically/);
 });
 
 test('uses portable collision-resistant filenames for graph identifiers', async () => {
@@ -373,6 +546,10 @@ test('python controller records blocking drift without inventing a repair', asyn
     const status = JSON.parse((await controller(root, 'status')).stdout);
     assert.equal(status.counts.drift, 1);
     assert.deepEqual(status.next, []);
+    const runtime = JSON.parse(await readFile(join(root, '.factory', 'runtime.json'), 'utf8'));
+    assert.deepEqual(runtime.events.map((event) => event.type), ['claim', 'drift']);
+    assert.equal(runtime.events.at(-1).outcome, 'drift');
+    assert.deepEqual(runtime.nodes['task-plan'].evidenceRefs, ['.factory/drift/task-plan.json']);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

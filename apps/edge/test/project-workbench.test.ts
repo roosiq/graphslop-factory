@@ -2,6 +2,39 @@ import { env } from 'cloudflare:workers';
 import { describe, expect, it } from 'vitest';
 
 describe('ProjectWorkbench', () => {
+  it('keeps hosted Intent review closed while readiness gaps remain', async () => {
+    const workbench = env.PROJECTS.getByName(`readiness-${crypto.randomUUID()}`);
+    const actorId = `user-${crypto.randomUUID()}`;
+    await workbench.create({
+      projectId: `project-${crypto.randomUUID()}`,
+      displayName: 'Incomplete project',
+      actorId,
+      createdAt: '2026-07-29T12:00:00.000Z',
+    });
+    const queued = await workbench.createModelJob({
+      actorId,
+      role: 'owner',
+      expectedRevision: 1,
+      command: 'submit-message',
+      input: { content: 'Need app.' },
+    });
+    await workbench.completeModelJob(queued.job.jobId, {
+      intentNodes: [{
+        type: 'Goal',
+        statement: 'Build an app',
+        sourceQuote: 'Need app.',
+        normalizedInterpretation: 'Build an app',
+        confidence: 0.5,
+        status: 'proposed',
+      }],
+      corrections: [],
+      questions: [],
+    });
+
+    const view = JSON.parse(await workbench.read());
+    expect(view.nextBindings.map((binding: { command: string }) => binding.command)).not.toContain('review-intent');
+  });
+
   it('isolates projects and serializes model-backed graph writes', async () => {
     const first = env.PROJECTS.getByName(`first-${crypto.randomUUID()}`);
     const second = env.PROJECTS.getByName(`second-${crypto.randomUUID()}`);
@@ -39,6 +72,48 @@ describe('ProjectWorkbench', () => {
         statement: 'Score pasted text',
         sourceQuote: 'Paste text. Show score.',
         normalizedInterpretation: 'Score pasted text',
+        confidence: 0.8,
+        status: 'proposed',
+      }, {
+        type: 'UseCase',
+        statement: 'A visitor pastes text to receive a score',
+        sourceQuote: 'Paste text. Show score.',
+        normalizedInterpretation: 'A visitor pastes text to receive a score',
+        confidence: 0.8,
+        status: 'proposed',
+      }, {
+        type: 'Behavior',
+        statement: 'Analyze submitted text',
+        sourceQuote: 'Show score.',
+        normalizedInterpretation: 'Analyze submitted text',
+        confidence: 0.8,
+        status: 'proposed',
+      }, {
+        type: 'Input',
+        statement: 'Pasted text',
+        sourceQuote: 'Paste text.',
+        normalizedInterpretation: 'Pasted text',
+        confidence: 0.89,
+        status: 'proposed',
+      }, {
+        type: 'Output',
+        statement: 'A score',
+        sourceQuote: 'Show score.',
+        normalizedInterpretation: 'A score',
+        confidence: 0.89,
+        status: 'proposed',
+      }, {
+        type: 'Constraint',
+        statement: 'Keep the scoring interaction simple',
+        sourceQuote: 'Need app.',
+        normalizedInterpretation: 'Keep the scoring interaction simple',
+        confidence: 0.6,
+        status: 'proposed',
+      }, {
+        type: 'SuccessCriterion',
+        statement: 'A visitor can paste text and see a score',
+        sourceQuote: 'Paste text. Show score.',
+        normalizedInterpretation: 'A visitor can paste text and see a score',
         confidence: 0.8,
         status: 'proposed',
       }],

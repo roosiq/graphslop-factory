@@ -16,6 +16,7 @@ import {
   type DriftReport,
   type LocalRunner,
   type RunnerTask,
+  type VerifiedArtifact,
 } from '../../../runner/src/index.js';
 
 import type { ExactBindings, OwnerCommand, SafeEvent, StageBindings } from './control.js';
@@ -37,6 +38,7 @@ export type ExecutionControlArtifact = {
   leaseHash: string;
   status?: 'ready' | 'running' | 'accepted' | 'rejected';
   acceptedTaskIds?: string[];
+  acceptedArtifacts?: readonly (VerifiedArtifact & Readonly<{ taskId: string }>)[];
   evidenceHashes?: string[];
   driftId?: string;
   repairTask?: RunnerTask;
@@ -91,6 +93,44 @@ function sameRecord(left: Readonly<Record<string, string>>, right: StageBindings
   const target = right as Readonly<Record<string, string>>;
   const keys = Object.keys(left);
   return keys.length === Object.keys(target).length && keys.every((key) => left[key] === target[key]);
+}
+
+export function dependencyHandoffIsSatisfied(
+  edge: Readonly<{ targetNodeRef: Readonly<{ nodeId: string }>; attributes: Readonly<Record<string, unknown>> }>,
+  acceptedTaskIds: ReadonlySet<string>,
+  acceptedArtifacts: readonly (VerifiedArtifact & Readonly<{ taskId: string }>)[],
+): boolean {
+  if (!acceptedTaskIds.has(edge.targetNodeRef.nodeId)) return false;
+  const contracts = Array.isArray(edge.attributes.artifacts)
+    ? edge.attributes.artifacts as Array<{ key?: unknown; paths?: unknown; requiredEvidence?: unknown }>
+    : [];
+  return contracts.every((contract) => {
+    if (typeof contract.key !== 'string') return false;
+    const artifact = acceptedArtifacts.find((candidate) =>
+      candidate.taskId === edge.targetNodeRef.nodeId && candidate.contract.key === contract.key);
+    if (!artifact?.evidenceHash) return false;
+    const requirements = Array.isArray(contract.requiredEvidence) ? contract.requiredEvidence : [];
+    return requirements.every((requirement) => artifact.evidenceRefs.some((ref) => {
+      if (ref.requirement !== requirement) return false;
+      if (requirement === 'file_hash') {
+        return ref.kind === 'file_hash'
+          && typeof ref.path === 'string'
+          && Array.isArray(contract.paths)
+          && contract.paths.includes(ref.path)
+          && typeof ref.sha256 === 'string'
+          && /^[a-f0-9]{64}$/.test(ref.sha256);
+      }
+      return requirement === 'independent_check'
+        && ref.kind === 'independent_check'
+        && ref.exitCode === 0
+        && Number.isInteger(ref.receiptIndex)
+        && Array.isArray(ref.argv);
+    }));
+  });
+}
+
+export function effectiveArtifactTaskId(task: Pick<RunnerTask, 'taskId' | 'repair'>): string {
+  return task.repair?.sourceTaskId ?? task.taskId;
 }
 
 /**
@@ -149,9 +189,22 @@ export class ProjectRunnerBridge implements AcceptedAuthorityBoundary, RunnerCon
     const durableAccepted = [...(this.execution.acceptedTaskIds ?? [])].sort();
     const expectedEvidence = [...new Set(terminals.map((lease) => lease.terminalResult!.evidenceHash))].sort();
     const durableEvidence = [...(this.execution.evidenceHashes ?? [])].sort();
+    const expectedArtifacts = terminals.flatMap((lease) =>
+      lease.terminalResult?.status === 'accepted'
+        ? (lease.terminalResult.verifiedArtifacts ?? []).map((artifact) => ({
+          taskId: effectiveArtifactTaskId(lease.task),
+          ...artifact,
+        }))
+        : [])
+      .sort((left, right) =>
+        `${left.taskId}:${left.contract.key}`.localeCompare(`${right.taskId}:${right.contract.key}`));
+    const durableArtifacts = [...(this.execution.acceptedArtifacts ?? [])]
+      .sort((left, right) =>
+        `${left.taskId}:${left.contract.key}`.localeCompare(`${right.taskId}:${right.contract.key}`));
     if (
       JSON.stringify(expectedAccepted) !== JSON.stringify(durableAccepted)
       || JSON.stringify(expectedEvidence) !== JSON.stringify(durableEvidence)
+      || JSON.stringify(expectedArtifacts) !== JSON.stringify(durableArtifacts)
     ) throw new Error('Execution acceptance projection does not match durable terminal evidence.');
     const acceptedCheckpoint = [...checkpoints].reverse().find((item) => item.status === 'accepted');
     if ((acceptedCheckpoint?.candidateCommit ?? undefined) !== this.execution.integrationCommit) {
@@ -311,6 +364,9 @@ export class ProjectRunnerBridge implements AcceptedAuthorityBoundary, RunnerCon
       case 'resolve-question':
       case 'review-intent':
         if (!state.intentGraph || !['DISCOVERY', 'INTENT_REVIEW'].includes(project.lifecycleState)) return undefined;
+        if (command === 'review-intent' && (state.currentQuestion?.blocking || this.project.intentReadinessGaps().length)) {
+          return undefined;
+        }
         expected = {
           stage: 'intent-discovery',
           ...common,
@@ -439,6 +495,15 @@ export class ProjectRunnerBridge implements AcceptedAuthorityBoundary, RunnerCon
           ...(this.execution.repairTask?.repair ? [this.execution.repairTask.repair.sourceTaskId] : []),
         ])]
         : this.execution.acceptedTaskIds ?? [],
+      acceptedArtifacts: terminal.status === 'accepted'
+        ? [
+          ...(this.execution.acceptedArtifacts ?? []),
+          ...terminal.verifiedArtifacts.map((artifact) => ({
+            taskId: effectiveArtifactTaskId(durable.task),
+            ...artifact,
+          })),
+        ]
+        : this.execution.acceptedArtifacts ?? [],
       evidenceHashes: [...new Set([...(this.execution.evidenceHashes ?? []), terminal.evidenceHash])],
       ...(terminal.drift ? { driftId: terminal.drift.driftId } : { driftId: undefined }),
       ...(terminal.candidateCommit ? { candidateCommit: terminal.candidateCommit } : {}),
@@ -474,10 +539,11 @@ export class ProjectRunnerBridge implements AcceptedAuthorityBoundary, RunnerCon
       const solution = state.approvedBaselines.find((item) => item.graphKind === 'solution'
         && item.baselineId === state.project.activeSolutionBaselineId)!;
       const accepted = new Set(this.execution.acceptedTaskIds ?? []);
+      const acceptedArtifacts = this.execution.acceptedArtifacts ?? [];
       const selectedTaskId = graph.nodes.filter((node) => !accepted.has(node.id))
         .filter((node) => graph.edges.filter((edge) =>
           edge.type === 'DEPENDS_ON' && edge.sourceNodeRef.nodeId === node.id)
-          .every((edge) => accepted.has(edge.targetNodeRef.nodeId)))
+          .every((edge) => dependencyHandoffIsSatisfied(edge, accepted, acceptedArtifacts)))
         .map((node) => node.id).sort()[0];
       if (selectedTaskId) {
         const current = this.execution;
@@ -490,6 +556,7 @@ export class ProjectRunnerBridge implements AcceptedAuthorityBoundary, RunnerCon
         const carried = {
           ...next, status: 'ready' as const,
           acceptedTaskIds: [...accepted],
+          acceptedArtifacts: [...acceptedArtifacts],
           evidenceHashes: current.evidenceHashes ?? [],
           baseCommit: current.baseCommit,
           integrationCommit: current.integrationCommit,

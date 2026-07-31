@@ -24,6 +24,7 @@ Options:
   --state PATH         Private durable state directory
   --model-url URL      OpenAI-compatible local API base URL
   --model NAME         Loaded model name
+  --model-timeout MS   Local model timeout (default: 300000; range: 300000-1800000)
   --port NUMBER        Local web port (default: 4173)
   --public-host HOST   Optional exact hostname used by a tunnel
   --help               Show this help
@@ -41,6 +42,7 @@ const repository = resolve(option('--repo') ?? process.env.GRAPHSLOP_REPOSITORY 
 const state = resolve(option('--state') ?? process.env.GRAPHSLOP_PROJECT_STATE ?? resolve(root, '.local/state'));
 const modelUrl = option('--model-url') ?? process.env.GRAPHSLOP_QWEN_URL ?? 'http://127.0.0.1:8001/v1';
 const model = option('--model') ?? process.env.GRAPHSLOP_QWEN_MODEL;
+const modelTimeout = option('--model-timeout') ?? process.env.GRAPHSLOP_QWEN_TIMEOUT_MS ?? '300000';
 const port = option('--port') ?? process.env.PORT ?? '4173';
 const publicHost = option('--public-host') ?? process.env.GRAPHSLOP_PUBLIC_HOST;
 const server = resolve(root, 'apps/control-plane/dist/server/control-plane/src/server.js');
@@ -50,6 +52,11 @@ if (!existsSync(server)) {
 }
 if (!Number.isInteger(Number(port)) || Number(port) < 1 || Number(port) > 65_535) {
   throw new Error('Port must be an integer from 1 to 65535.');
+}
+if (!Number.isInteger(Number(modelTimeout))
+  || Number(modelTimeout) < 300_000
+  || Number(modelTimeout) > 1_800_000) {
+  throw new Error('Model timeout must be an integer from 300000 to 1800000 milliseconds.');
 }
 try {
   const inside = execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
@@ -69,6 +76,7 @@ process.stdout.write([
   `Project: ${repository}`,
   `State: ${state}`,
   `Model API: ${modelUrl}`,
+  `Model timeout: ${modelTimeout}ms`,
   '',
 ].join('\n'));
 
@@ -80,6 +88,7 @@ const child = spawn(process.execPath, [server], {
     GRAPHSLOP_REPOSITORY: repository,
     GRAPHSLOP_PROJECT_STATE: state,
     GRAPHSLOP_QWEN_URL: modelUrl,
+    GRAPHSLOP_QWEN_TIMEOUT_MS: String(modelTimeout),
     ...(model ? { GRAPHSLOP_QWEN_MODEL: model } : {}),
     ...(publicHost ? { GRAPHSLOP_PUBLIC_HOST: publicHost } : {}),
   },

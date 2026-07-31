@@ -81,9 +81,26 @@ test('turns Q&A and direct graph edits into a downloadable build pack', async ({
 
   await page.goto(origin);
   await expect(page.getByRole('heading', { name: 'Bring the idea. Leave with a plan.' })).toBeVisible();
+  await expect(page.locator('.hero-product-card')).toContainText('Neighbors got extra food.');
   await expect(page.getByRole('heading', { name: 'Simple questions. Serious plan.' })).toBeVisible();
-  await expect(page.getByRole('img', { name: /linked intent, solution, and execution graph/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Your idea stays your idea.' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'The real neighborhood food app intent, solution, generated roles, and 20 execution jobs' })).toBeVisible();
+  await expect(page.getByText('Real build pack · 20 jobs accepted · 91 checks passed')).toBeVisible();
+  const graphTiming = await page.locator('.drub-graph-node').evaluateAll((nodes) => nodes.map((node) => ({
+    kind: [...node.classList].find((name) => name.startsWith('is-')),
+    delay: Number.parseFloat(getComputedStyle(node).getPropertyValue('--delay')),
+  })));
+  expect(new Set(graphTiming.map((item) => item.delay)).size).toBeGreaterThan(15);
+  const firstDelay = (kind: string) => Math.min(...graphTiming.filter((item) => item.kind === kind).map((item) => item.delay));
+  expect(firstDelay('is-intent')).toBeLessThan(firstDelay('is-solution'));
+  expect(firstDelay('is-solution')).toBeLessThan(firstDelay('is-role'));
+  expect(firstDelay('is-role')).toBeLessThan(firstDelay('is-execution'));
+  await page.getByRole('button', { name: 'replay build' }).click();
+  await page.waitForTimeout(900);
+  await expect(page.locator('.drub-graph-node[title="rough food brief"]')).toHaveCSS('opacity', '1');
+  await expect(page.locator('.drub-graph-node[title="post flow · 4 jobs"]')).toHaveCSS('opacity', '0');
+  await expect(page.getByRole('heading', { name: 'The plan knows what comes next.' })).toBeVisible();
+  await expect(page.locator('.mini-workspace')).toContainText('neighborhood food');
+  await expect(page.getByLabel('Real neighborhood food build pack')).toContainText('91 checks passed');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByRole('link', { name: 'start a project' }).click();
   await expect(page).toHaveURL(/\/workspace$/);
@@ -93,9 +110,9 @@ test('turns Q&A and direct graph edits into a downloadable build pack', async ({
 
   await page.getByRole('link', { name: 'requirements', exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/local-project\/intake$/);
-  await expect(page.getByRole('heading', { name: 'Tell Drub what you’re building' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tell Dun what you’re building' })).toBeVisible();
   await page.getByLabel('What are you building?').fill('Need a small notes analyzer. No login.');
-  await page.getByRole('button', { name: 'Send to Drub' }).click();
+  await page.getByRole('button', { name: 'Send to Dun' }).click();
   await expect(page.locator('.ledger-list article')).toHaveCount(1);
   await expect(page.locator('.model-question p')).toHaveText('What result must the user get first?');
 
@@ -105,16 +122,28 @@ test('turns Q&A and direct graph edits into a downloadable build pack', async ({
   await expect(page.locator('.graph-node-question')).toHaveCount(1);
 
   await page.getByRole('link', { name: 'requirements', exact: true }).click();
-  await page.getByLabel('Answer Drub').fill('Show a useful score with exact examples.');
+  await page.getByLabel('Answer Dun').fill('Show a useful score with exact examples.');
   await page.getByRole('button', { name: 'Answer' }).click();
-  await page.getByText('Add a requirement manually').click();
-  await page.locator('.manual-add select').selectOption('Input');
-  await page.getByPlaceholder('Describe the requirement…').fill('Accept pasted text.');
-  await page.getByRole('button', { name: 'Add requirement' }).click();
+  for (const [type, statement] of [
+    ['UserType', 'People reviewing their own notes.'],
+    ['Behavior', 'Analyze pasted notes for useful signals.'],
+    ['Input', 'Accept pasted text.'],
+    ['Output', 'Show a score with exact examples.'],
+    ['Constraint', 'Do not require login.'],
+    ['SuccessCriterion', 'A user can understand the result.'],
+  ] as const) {
+    const manual = page.locator('.manual-add');
+    if (!await manual.evaluate((element) => (element as HTMLDetailsElement).open)) {
+      await page.getByText('Add a requirement manually').click();
+    }
+    await page.locator('.manual-add select').selectOption(type);
+    await page.getByPlaceholder('Describe the requirement…').fill(statement);
+    await page.getByRole('button', { name: 'Add requirement' }).click();
+  }
 
   await page.getByRole('link', { name: 'graph', exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/local-project\/graph$/);
-  await expect(page.locator('.graph-node-intent')).toHaveCount(4);
+  await expect(page.locator('.graph-node-intent')).toHaveCount(9);
   await expect(page.locator('.graph-node-question')).toHaveCount(1);
   await page.locator('.graph-node-intent').filter({ hasText: 'Accept pasted text.' }).click();
   await expect(page.getByRole('heading', { name: 'Accept pasted text.' })).toBeVisible();
@@ -177,7 +206,7 @@ test('turns Q&A and direct graph edits into a downloadable build pack', async ({
   await page.reload();
   await expect(page).toHaveURL(/\/projects\/local-project\/build$/);
   await page.getByRole('link', { name: 'graph', exact: true }).click();
-  await expect(page.locator('.graph-node-intent')).toHaveCount(4);
+  await expect(page.locator('.graph-node-intent')).toHaveCount(9);
   await expect(page.locator('.graph-node-question')).toHaveCount(1);
   await expect(page.locator('.graph-node-solution')).toHaveCount(1);
   await expect(page.locator('.graph-node-role')).toHaveCount(2);

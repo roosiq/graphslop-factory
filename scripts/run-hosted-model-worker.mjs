@@ -2,7 +2,9 @@
 import {
   CodexProposalProvider,
   LocalQwenClient,
+  parseLocalQwenTimeout,
 } from '@graphslop/codex-adapter';
+import { intentReadinessGaps } from '@graphslop/control-state';
 import { createHash } from 'node:crypto';
 
 const required = [
@@ -30,6 +32,7 @@ const queueOrigin = `https://api.cloudflare.com/client/v4/accounts/${accountId}/
 const qwen = new LocalQwenClient(
   process.env.GRAPHSLOP_QWEN_URL ?? 'http://127.0.0.1:8001/v1',
   process.env.GRAPHSLOP_QWEN_MODEL,
+  parseLocalQwenTimeout(process.env.GRAPHSLOP_QWEN_TIMEOUT_MS, 300_000),
 );
 const provider = new CodexProposalProvider((prompt, output) => qwen.call(prompt, output));
 let stopping = false;
@@ -85,9 +88,28 @@ async function handle(message) {
   const path = `/api/v1/internal/projects/${encodeURIComponent(body.projectId)}/model-jobs/${encodeURIComponent(body.jobId)}`;
   const claimed = await appRequest(path);
   if (['completed', 'failed', 'stale'].includes(claimed.job.status)) return;
-  const proposal = claimed.job.kind === 'propose-solution'
-    ? await provider.planSolution(claimed.job.solutionContext)
-    : await provider.propose(claimed.job.proposalContext);
+  let proposal;
+  if (claimed.job.kind === 'propose-solution') {
+    proposal = await provider.planSolution(claimed.job.solutionContext);
+  } else {
+    proposal = await provider.propose(claimed.job.proposalContext);
+    if (proposal.questions.length === 0) {
+      const readinessGaps = intentReadinessGaps([
+        ...claimed.job.proposalContext.priorIntentNodes.map((node) => ({
+          type: node.type ?? 'Goal',
+          status: node.status ?? 'proposed',
+        })),
+        ...proposal.intentNodes.map((node) => ({ type: node.type, status: node.status })),
+      ]);
+      if (readinessGaps.length) {
+        const retry = await provider.propose({
+          ...claimed.job.proposalContext,
+          readinessGaps,
+        });
+        proposal = { ...proposal, questions: retry.questions };
+      }
+    }
+  }
   await appRequest(`${path}/complete`, {
     method: 'POST',
     body: JSON.stringify({ proposal }),

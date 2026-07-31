@@ -53,6 +53,36 @@ import {
 export const LOOPBACK_HOST = '127.0.0.1';
 const execFileAsync = promisify(execFile);
 
+function positiveTimeout(value: string | undefined): number | undefined {
+  if (value === undefined || value.trim() === '') return undefined;
+  const timeout = Number(value);
+  if (!Number.isInteger(timeout) || timeout < 300_000 || timeout > 1_800_000) {
+    throw new Error('GRAPHSLOP_QWEN_TIMEOUT_MS must be an integer from 300000 to 1800000.');
+  }
+  return timeout;
+}
+
+function activeApprovedBaseline(state: ProjectConversationState, graphKind: 'intent' | 'solution') {
+  const graph = graphKind === 'intent' ? state.intentGraph : state.solutionGraph;
+  const activeId = graphKind === 'intent'
+    ? state.project.activeIntentBaselineId
+    : state.project.activeSolutionBaselineId;
+  const baseline = state.approvedBaselines.find((item) =>
+    item.graphKind === graphKind
+    && item.baselineId === activeId
+    && item.snapshotId === graph?.snapshotId
+    && item.snapshotContentHash === graph?.contentHash);
+  if (!baseline || !graph) throw new Error(`Exact active ${graphKind} baseline is unavailable.`);
+  return baseline;
+}
+
+function approvedIntentBaselineNodes(state: ProjectConversationState) {
+  const baseline = activeApprovedBaseline(state, 'intent');
+  if (!state.intentGraph) throw new Error('Exact active intent graph is unavailable.');
+  const memberIds = new Set(baseline.nodeVersions.map((node) => node.nodeId));
+  return state.intentGraph.nodes.filter((node) => memberIds.has(node.id));
+}
+
 type AuthoritySecrets = {
   version: 1;
   lease: string;
@@ -230,6 +260,7 @@ export function startLocalProduct(input: Readonly<{
   modelCall?: (prompt: string) => Promise<unknown>;
   qwenBaseUrl?: string;
   qwenModel?: string;
+  qwenTimeoutMs?: number;
   publicHost?: string;
   publicHosts?: readonly string[];
 }>) {
@@ -257,9 +288,13 @@ export function startLocalProduct(input: Readonly<{
     authority: ConstructorParameters<typeof ProjectService>[2],
     sink: AtomicProjectStateStore,
   ) => ProjectService;
+  const configuredQwenTimeout = input.qwenTimeoutMs === undefined
+    ? positiveTimeout(process.env.GRAPHSLOP_QWEN_TIMEOUT_MS)
+    : positiveTimeout(String(input.qwenTimeoutMs));
   const qwen = new LocalQwenClient(
     input.qwenBaseUrl ?? process.env.GRAPHSLOP_QWEN_URL ?? 'http://127.0.0.1:8001/v1',
     input.qwenModel ?? process.env.GRAPHSLOP_QWEN_MODEL,
+    configuredQwenTimeout,
   );
   const publicHosts = [...new Set([
     ...(input.publicHosts ?? []),
@@ -323,6 +358,7 @@ export function startLocalProduct(input: Readonly<{
           roleKey: 'product-checker',
           taskTypes: ['Verify'] as ('Decide' | 'Implement' | 'Verify')[],
         }],
+        dependencies: [],
       }),
     }
     : new CodexProposalProvider(input.modelCall ?? ((prompt, output) => qwen.call(prompt, output)));
@@ -383,13 +419,24 @@ export function startLocalProduct(input: Readonly<{
         const state = project.state();
         const effectiveBaseCommit = installed?.integrationCommit ?? baseCommit;
         const task = state.executionGraph?.nodes.find((item) => item.id === request.taskId);
-        const intent = state.approvedBaselines.find((item) => item.graphKind === 'intent');
-        const solution = state.approvedBaselines.find((item) => item.graphKind === 'solution');
+        const intent = activeApprovedBaseline(state, 'intent');
+        const solution = activeApprovedBaseline(state, 'solution');
         if (!task || !intent || !solution || state.executionGraph?.contentHash !== request.executionHash) throw new Error('Stale local task.');
         const roleRef = String(task.attributes.roleRef ?? '');
         const roleNode = state.solutionGraph?.nodes.find((node) => node.id === roleRef && node.type === 'Role');
         if (!roleNode) throw new Error('Task has no approved Role lens.');
         const taskType = task.type as RunnerTask['taskType'];
+        const readOnlyTask = taskType === 'Inspect' || taskType === 'Verify' || taskType === 'Release';
+        const declaredAllowedPaths = Array.isArray(task.attributes.allowedPaths)
+          ? task.attributes.allowedPaths.filter((path): path is string => typeof path === 'string' && Boolean(path.trim()))
+          : [];
+        const allowedPaths = declaredAllowedPaths.length > 0
+          ? declaredAllowedPaths
+          : readOnlyTask
+            ? ['**']
+            : taskType === 'Decide'
+              ? ['docs/plans/**']
+              : ['apps/**', 'packages/**', 'tests/**'];
         const generatedTest = `tests/generated/${task.id}.test.mjs`;
         const acceptanceCommands = taskType === 'Implement'
           ? [{ argv: ['node', '--test', generatedTest] as ['node', '--test', string] },
@@ -403,14 +450,14 @@ export function startLocalProduct(input: Readonly<{
             intentBaseline: { baselineId: intent.baselineId, contentHash: intent.snapshotContentHash },
             solutionBaseline: { baselineId: solution.baselineId, contentHash: solution.snapshotContentHash },
             executionHash: request.executionHash,
-            allowedPaths: taskType === 'Decide' ? ['docs/plans/**'] : ['apps/**', 'packages/**', 'tests/**'],
+            allowedPaths,
             acceptanceCommands,
             brief: {
               job: `${String(task.attributes.objective ?? task.statementOrName)} ${String(roleNode.attributes.job ?? '')}`.trim(),
               use: ['Approved Intent and Solution.', ...(
                 Array.isArray(roleNode.attributes.use) ? roleNode.attributes.use.map(String) : []
               )].join(' '),
-              touch: taskType === 'Verify' ? 'Read only.' : 'Only declared allowed paths.',
+              touch: readOnlyTask ? 'Read only.' : 'Only declared allowed paths.',
               dont: ['Change intent.', 'Add scope.', 'Push or deploy.', ...(
                 Array.isArray(roleNode.attributes.dont) ? roleNode.attributes.dont.map(String) : []
               )].join(' '),
@@ -422,14 +469,20 @@ export function startLocalProduct(input: Readonly<{
             dependencies: state.executionGraph?.edges.filter((edge) =>
               edge.type === 'DEPENDS_ON' && edge.sourceNodeRef.nodeId === task.id)
               .map((edge) => edge.targetNodeRef.nodeId) ?? [],
-            relevantIntentNodes: state.intentGraph?.nodes.filter((node) => node.status === 'confirmed')
+            requiredArtifacts: Array.isArray(task.attributes.requiresArtifacts)
+              ? task.attributes.requiresArtifacts as unknown as RunnerTask['requiredArtifacts']
+              : [],
+            producedArtifacts: Array.isArray(task.attributes.producesArtifacts)
+              ? task.attributes.producesArtifacts as unknown as RunnerTask['producedArtifacts']
+              : [],
+            relevantIntentNodes: approvedIntentBaselineNodes(state)
               .map((node) => ({ id: node.id, statement: node.statementOrName })) ?? [],
             relevantSolutionNodes: state.solutionGraph?.nodes.filter((node) =>
               node.id === task.attributes.solutionNodeId || node.id === roleNode.id)
               .map((node) => ({ id: node.id, name: node.statementOrName })) ?? [],
-            protectedAssertions: state.intentGraph?.nodes.filter((node) => node.type === 'Constraint' && node.status === 'confirmed')
+            protectedAssertions: approvedIntentBaselineNodes(state).filter((node) => node.type === 'Constraint')
               .map((node) => node.statementOrName) ?? [],
-            exclusions: state.intentGraph?.nodes.filter((node) => node.type === 'Exclusion' && node.status === 'confirmed')
+            exclusions: approvedIntentBaselineNodes(state).filter((node) => node.type === 'Exclusion')
               .map((node) => node.statementOrName) ?? [],
             acceptanceChecks: [String((task.attributes.acceptanceChecks as string[] | undefined)?.[0] ?? 'Exact graph trace remains satisfied.')],
           },

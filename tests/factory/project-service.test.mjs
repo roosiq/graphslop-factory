@@ -140,6 +140,189 @@ test('zero questions stop discovery instead of forcing a generic fallback while 
   assert.equal(empty.state().messages.length, 1);
 });
 
+test('readiness gaps retry the model for one generated question and block review', async () => {
+  const contexts = [];
+  const service = setup({
+    propose: async (context) => {
+      contexts.push(context);
+      return {
+        intentNodes: [{
+          type: 'Goal', statement: 'Share neighborhood food', sourceQuote: context.message.content,
+          normalizedInterpretation: 'Share neighborhood food', confidence: 0.6, status: 'proposed',
+        }],
+        corrections: [],
+        questions: context.readinessGaps ? [{
+          text: 'who can collect the food?', category: 'User', uncertaintyReduction: 5,
+          implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true,
+        }] : [],
+      };
+    },
+  });
+  const state = await service.submitMessage('Help neighbors share extra food.');
+  assert.equal(contexts.length, 2);
+  assert.ok(contexts[1].readinessGaps.includes('users or usage context'));
+  assert.equal(state.currentQuestion.text, 'who can collect the food?');
+  assert.throws(() => service.createReviewProjection('intent'), /blocking question/);
+});
+
+test('answer-derived requirements are confirmed owner statements with typed graph links', async () => {
+  let call = 0;
+  const service = setup({
+    propose: async ({ message, priorIntentNodes }) => {
+      call += 1;
+      return call === 1 ? {
+        intentNodes: [{ type: 'Goal', statement: 'Share food', sourceQuote: message.content,
+          normalizedInterpretation: 'Share food', confidence: 0.7, status: 'proposed' }],
+        corrections: [],
+        questions: [{ text: 'what does pickup look like?', category: 'Behavior', uncertaintyReduction: 5,
+          implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true }],
+      } : {
+        intentNodes: [{ type: 'Behavior', statement: 'Neighbors reserve a pickup time', sourceQuote: message.content,
+          normalizedInterpretation: 'Reserve a pickup time', confidence: 0.7, status: 'proposed' },
+        { type: 'Output', statement: 'Show the confirmed pickup time', sourceQuote: message.content,
+          normalizedInterpretation: 'Show confirmed pickup time', confidence: 0.7, status: 'proposed' },
+        { type: 'Preference', statement: 'Integrate with Salesforce', sourceQuote: 'Must integrate with Salesforce',
+          normalizedInterpretation: 'Integrate with Salesforce', confidence: 0.7, status: 'proposed' }],
+        corrections: [{
+          targetStableId: priorIntentNodes[0].stableId,
+          statement: 'Share food through reserved pickup times',
+          sourceQuote: message.content,
+        }],
+        questions: [{ text: 'what makes the sharing safe?', category: 'Constraints', uncertaintyReduction: 5,
+          implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true }],
+      };
+    },
+  });
+  const first = await service.submitMessage('Share food with neighbors.');
+  const state = await service.resolveCurrentQuestion(first.currentQuestion.questionId, 'answered', 'Neighbors reserve a pickup time.', true);
+  const answerMessageId = state.questionResolutions[0].ownerMessageId;
+  const answerNodes = state.intentGraph.nodes.filter((node) =>
+    ['Behavior', 'Output'].includes(node.type) && node.sourceRefs.some((source) => source.sourceId === answerMessageId));
+  assert.equal(answerNodes.length, 2);
+  assert.ok(answerNodes.every((node) => node.status === 'confirmed' && node.approvedByUser));
+  assert.ok(answerNodes.every((node) => node.actorRef.actorId === 'local-owner'));
+  const correctedGoal = state.intentGraph.nodes.find((node) => node.type === 'Goal');
+  assert.equal(correctedGoal.status, 'confirmed');
+  assert.equal(correctedGoal.approvedByUser, true);
+  assert.equal(correctedGoal.actorRef.actorId, 'local-owner');
+  const ungrounded = state.intentGraph.nodes.find((node) => node.statementOrName === 'Integrate with Salesforce');
+  assert.equal(ungrounded.status, 'proposed');
+  assert.equal(ungrounded.approvedByUser, false);
+  assert.ok(answerNodes.every((node) => state.intentGraph.edges.some((edge) =>
+    edge.sourceNodeRef.nodeId === node.id || edge.targetNodeRef.nodeId === node.id)));
+  const output = answerNodes.find((node) => node.type === 'Output');
+  assert.ok(state.intentGraph.edges.some((edge) =>
+    edge.type === 'BEHAVIOR_PRODUCES_OUTPUT' && edge.targetNodeRef.nodeId === output.id));
+});
+
+test('typed relationships choose the matching behavior instead of the newest compatible node', async () => {
+  const service = setup(new FixtureProposalProvider({
+    intentNodes: [{
+      type: 'Behavior', statement: 'Reserve a neighborhood food pickup', sourceQuote: 'Reserve food pickup',
+      normalizedInterpretation: 'Reserve a neighborhood food pickup', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Behavior', statement: 'Send weekly program statistics', sourceQuote: 'weekly statistics',
+      normalizedInterpretation: 'Send weekly program statistics', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Constraint', statement: 'Food pickup reservations expire after one hour', sourceQuote: 'pickup expires',
+      normalizedInterpretation: 'Food pickup reservations expire after one hour', confidence: 0.8, status: 'proposed',
+    }],
+    corrections: [],
+    questions: [{
+      text: 'who can reserve food?', category: 'User', uncertaintyReduction: 5,
+      implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true,
+    }],
+  }));
+  const state = await service.submitMessage('Reserve food pickup. weekly statistics. pickup expires.');
+  const constraint = state.intentGraph.nodes.find((node) => node.type === 'Constraint');
+  const reservation = state.intentGraph.nodes.find((node) => node.statementOrName.includes('Reserve a neighborhood'));
+  assert.ok(state.intentGraph.edges.some((edge) =>
+    edge.type === 'CONSTRAINT_LIMITS'
+    && edge.sourceNodeRef.nodeId === constraint.id
+    && edge.targetNodeRef.nodeId === reservation.id));
+});
+
+test('a follow-up is suppressed when the owner answer already confirms the same issue', async () => {
+  let call = 0;
+  const service = setup({
+    propose: async ({ message }) => {
+      call += 1;
+      if (call === 1) {
+        return {
+          intentNodes: [
+            { type: 'Goal', statement: 'Share food', sourceQuote: message.content,
+              normalizedInterpretation: 'Share food', confidence: 0.7, status: 'proposed' },
+            { type: 'UserType', statement: 'Neighbors', sourceQuote: message.content,
+              normalizedInterpretation: 'Neighbors', confidence: 0.7, status: 'proposed' },
+            { type: 'Behavior', statement: 'Reserve food', sourceQuote: message.content,
+              normalizedInterpretation: 'Reserve food', confidence: 0.7, status: 'proposed' },
+            { type: 'Input', statement: 'Food post', sourceQuote: message.content,
+              normalizedInterpretation: 'Food post', confidence: 0.7, status: 'proposed' },
+            { type: 'Output', statement: 'Reservation', sourceQuote: message.content,
+              normalizedInterpretation: 'Reservation', confidence: 0.7, status: 'proposed' },
+            { type: 'Constraint', statement: 'Private pickup details', sourceQuote: message.content,
+              normalizedInterpretation: 'Private pickup details', confidence: 0.7, status: 'proposed' },
+            { type: 'SuccessCriterion', statement: 'Pickup is confirmed', sourceQuote: message.content,
+              normalizedInterpretation: 'Pickup is confirmed', confidence: 0.7, status: 'proposed' },
+          ],
+          corrections: [],
+          questions: [{ text: 'who sees the pickup area and time?', category: 'Scope',
+            uncertaintyReduction: 5, implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true }],
+        };
+      }
+      return {
+        intentNodes: [{
+          type: 'Constraint',
+          statement: 'Assigned volunteers see details only for their handoff',
+          sourceQuote: message.content,
+          normalizedInterpretation: 'Assigned volunteers see details only for their handoff',
+          confidence: 0.8,
+          status: 'proposed',
+        }],
+        corrections: [],
+        questions: [{ text: 'who can see the assigned volunteer?', category: 'Scope',
+          uncertaintyReduction: 5, implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true }],
+      };
+    },
+  });
+  const first = await service.submitMessage('Neighbors share food with volunteer pickup.');
+  const state = await service.resolveCurrentQuestion(
+    first.currentQuestion.questionId,
+    'answered',
+    'Assigned volunteers see details only for their handoff.',
+    true,
+  );
+  assert.equal(state.currentQuestion, null);
+  assert.deepEqual(service.intentReadinessGaps(), []);
+});
+
+test('question relationships prefer the requirement whose words match the question', async () => {
+  const service = setup(new FixtureProposalProvider({
+    intentNodes: [{
+      type: 'Goal', statement: 'Share neighborhood food', sourceQuote: 'Share food',
+      normalizedInterpretation: 'Share neighborhood food', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Constraint', statement: 'Only assigned people see the volunteer name', sourceQuote: 'volunteer name',
+      normalizedInterpretation: 'Only assigned people see the volunteer name', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Behavior', statement: 'Delete the pickup address after completion', sourceQuote: 'delete address',
+      normalizedInterpretation: 'Delete the pickup address after completion', confidence: 0.8, status: 'proposed',
+    }],
+    corrections: [],
+    questions: [{
+      text: 'who sees the volunteer name?', category: 'Scope', uncertaintyReduction: 5,
+      implementationImpact: 5, driftRisk: 5, dependencyCount: 5, blocking: true,
+    }],
+  }));
+  const state = await service.submitMessage('Share food. volunteer name. delete address.');
+  const question = state.intentGraph.nodes.find((node) => node.type === 'Question');
+  const volunteer = state.intentGraph.nodes.find((node) => node.statementOrName.includes('volunteer name'));
+  assert.ok(state.intentGraph.edges.some((edge) =>
+    edge.type === 'QUESTION_RESOLVES'
+    && edge.sourceNodeRef.nodeId === question.id
+    && edge.targetNodeRef.nodeId === volunteer.id));
+});
+
 test('settled questions are retained and reworded repeats are suppressed', async () => {
   const question = {
     text: 'What is the primary purpose of the website?',
@@ -441,6 +624,27 @@ test('owner approval binds exact graph and projection, then proposals retain com
       normalizedInterpretation: 'Analyze submitted text',
       confidence: 0.8,
       status: 'proposed',
+    }, {
+      type: 'UserType', statement: 'People with text to analyze', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'People with text to analyze', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Behavior', statement: 'Analyze submitted text', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Perform analysis on submitted text', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Input', statement: 'Accept submitted text', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Accept submitted text', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Output', statement: 'Show analysis', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Show analysis', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Constraint', statement: 'Keep analysis deterministic', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Keep analysis deterministic', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'SuccessCriterion', statement: 'Show a clear result', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Show a clear result', confidence: 0.8, status: 'proposed',
+    }, {
+      type: 'Risk', statement: 'Avoid misleading results', sourceQuote: 'analyze text',
+      normalizedInterpretation: 'Avoid misleading results', confidence: 0.8, status: 'proposed',
     }],
     corrections: [],
     questions: [{
@@ -454,7 +658,7 @@ test('owner approval binds exact graph and projection, then proposals retain com
     }],
   }));
   const discovered = await service.submitMessage('analyze text');
-  const blockedProjection = service.createReviewProjection('intent');
+  assert.throws(() => service.createReviewProjection('intent'), /blocking question/);
   assert.notEqual(service.state().currentQuestion, null);
   const blockedApproval = {
     approvalId: 'approval-blocked',
@@ -464,13 +668,13 @@ test('owner approval binds exact graph and projection, then proposals retain com
     artifactId: 'intent-blocked',
     artifactVersion: 1,
     artifactContentHash: discovered.intentGraph.contentHash,
-    displayedProjectionHash: blockedProjection.contentHash,
+    displayedProjectionHash: discovered.intentGraph.contentHash,
     sourceMessageId: discovered.messages[0].messageId,
     sourceQuote: 'Approved',
     approvedAt: '2026-07-28T12:02:00Z',
     includedEdgeRefs: [],
-    renderedDataHash: blockedProjection.contentHash,
-    generatedAt: blockedProjection.generatedAt,
+    renderedDataHash: discovered.intentGraph.contentHash,
+    generatedAt: '2026-07-28T12:02:00Z',
   };
   assert.throws(() => service.approve('intent', blockedApproval));
   const resolved = service.resolveCurrentQuestion(
@@ -651,4 +855,120 @@ test('owner approval binds exact graph and projection, then proposals retain com
     () => staleSolutionService.compileExecution(),
     (error) => error instanceof ProjectServiceError && error.code === 'wrong_state',
   );
+});
+
+test('feature handoffs preserve sparse stage order from Solution through Execution', async () => {
+  const service = setup(new FixtureProposalProvider({
+    intentNodes: [
+      ['Goal', 'Publish a dependable service'], ['UserType', 'Service operators'],
+      ['Behavior', 'Operators publish a service'], ['Input', 'A service configuration'],
+      ['Output', 'A published service'], ['Constraint', 'Keep publication traceable'],
+      ['SuccessCriterion', 'Operators can verify publication'],
+    ].map(([type, statement]) => ({
+      type, statement, sourceQuote: 'Publish a dependable service', normalizedInterpretation: statement,
+      confidence: 0.8, status: 'proposed',
+    })),
+    corrections: [], questions: [],
+  }));
+  const discovered = await service.submitMessage('Publish a dependable service.');
+  const intentProjection = service.createReviewProjection('intent');
+  service.approve('intent', {
+    approvalId: 'topology-intent-approval', actorId: 'owner-one', actorKind: 'authenticated_project_owner',
+    artifactType: 'intent_baseline', artifactId: 'topology-intent-v1', artifactVersion: 1,
+    artifactContentHash: discovered.intentGraph.contentHash, displayedProjectionHash: intentProjection.contentHash,
+    sourceMessageId: discovered.messages[0].messageId, sourceQuote: 'Approved',
+    approvedAt: '2026-07-28T12:02:00Z', includedEdgeRefs: [], renderedDataHash: intentProjection.contentHash,
+    generatedAt: intentProjection.generatedAt,
+  });
+  const intentNodeId = discovered.intentGraph.nodes.find((node) => node.type === 'Goal').id;
+  const role = (key, name, job) => ({
+    key, name, intentNodeIds: [intentNodeId], job, use: ['Approved publication intent.'],
+    touch: ['The scoped publication work.'], dont: ['Change approved intent.'],
+    done: [`${name} work is complete.`],
+  });
+  const handoff = {
+    key: 'published-service-contract', type: 'api-contract',
+    description: 'The published service contract consumed by release work.',
+    paths: ['packages/contracts/src/published-service.ts'],
+    requiredEvidence: ['file_hash', 'independent_check'],
+  };
+  const plan = {
+    features: [
+      { key: 'foundation', name: 'Publication foundation', intentNodeIds: [intentNodeId] },
+      { key: 'release', name: 'Release workflow', intentNodeIds: [intentNodeId] },
+    ],
+    roles: [
+      role('foundation-engineer', 'Foundation engineer', 'Build the foundation.'),
+      role('foundation-reviewer', 'Foundation reviewer', 'Independently verify the foundation.'),
+      role('release-engineer', 'Release engineer', 'Build the release workflow.'),
+      role('release-reviewer', 'Release reviewer', 'Independently verify the release workflow.'),
+    ],
+    assignments: [
+      { featureKey: 'foundation', roleKey: 'foundation-engineer', taskTypes: ['Inspect', 'Implement', 'Test', 'Integrate', 'Document'] },
+      { featureKey: 'foundation', roleKey: 'foundation-reviewer', taskTypes: ['Verify'] },
+      { featureKey: 'release', roleKey: 'release-engineer', taskTypes: ['Implement', 'Test', 'Release'] },
+      { featureKey: 'release', roleKey: 'release-reviewer', taskTypes: ['Verify'] },
+    ],
+    dependencies: [{ featureKey: 'release', dependsOnFeatureKey: 'foundation', artifacts: [handoff] }],
+  };
+  assert.throws(
+    () => service.proposeSolution({
+      ...plan,
+      dependencies: [...plan.dependencies, {
+        featureKey: 'foundation', dependsOnFeatureKey: 'release', artifacts: [handoff],
+      }],
+    }),
+    (error) => error instanceof ProjectServiceError
+      && error.code === 'invalid_trace' && /acyclic/.test(error.message),
+  );
+  const solution = service.proposeSolution(plan, 'topology-solution-v1');
+  const foundation = solution.nodes.find((node) => node.statementOrName === 'Publication foundation');
+  const release = solution.nodes.find((node) => node.statementOrName === 'Release workflow');
+  const solutionHandoff = solution.edges.find((edge) => edge.type === 'DEPENDS_ON');
+  assert.equal(solutionHandoff.sourceNodeRef.nodeId, release.id);
+  assert.equal(solutionHandoff.targetNodeRef.nodeId, foundation.id);
+  assert.deepEqual(solutionHandoff.attributes, { kind: 'feature_handoff', artifacts: [handoff] });
+
+  const solutionProjection = service.createReviewProjection('solution');
+  service.approve('solution', {
+    approvalId: 'topology-solution-approval', actorId: 'owner-one', actorKind: 'authenticated_project_owner',
+    artifactType: 'solution_baseline', artifactId: 'topology-solution-v1', artifactVersion: 1,
+    artifactContentHash: solution.contentHash, displayedProjectionHash: solutionProjection.contentHash,
+    sourceMessageId: discovered.messages[0].messageId, sourceQuote: 'Approved',
+    approvedAt: '2026-07-28T12:03:00Z', includedEdgeRefs: [], renderedDataHash: solutionProjection.contentHash,
+    generatedAt: solutionProjection.generatedAt,
+  });
+  const execution = service.compileExecution();
+  const tasksFor = (feature) => execution.nodes.filter((node) => node.attributes.solutionNodeId === feature.id);
+  const foundationTasks = tasksFor(foundation);
+  const releaseTasks = tasksFor(release);
+  assert.deepEqual(foundationTasks.map((node) => node.type), ['Inspect', 'Implement', 'Test', 'Integrate', 'Document', 'Verify']);
+  assert.deepEqual(releaseTasks.map((node) => node.type), ['Implement', 'Test', 'Release', 'Verify']);
+  assert.ok(execution.nodes.every((node) => node.type !== 'Decide'));
+  assert.deepEqual(foundationTasks.find((node) => node.type === 'Test').attributes.allowedPaths, ['tests/**']);
+  const orderedFoundationEdges = execution.edges.filter((edge) =>
+    edge.attributes.kind !== 'feature_handoff'
+    && foundationTasks.some((task) => task.id === edge.sourceNodeRef.nodeId));
+  assert.deepEqual(
+    orderedFoundationEdges.map((edge) => [
+      execution.nodes.find((node) => node.id === edge.sourceNodeRef.nodeId).type,
+      execution.nodes.find((node) => node.id === edge.targetNodeRef.nodeId).type,
+    ]),
+    [['Implement', 'Inspect'], ['Test', 'Implement'], ['Integrate', 'Test'], ['Document', 'Integrate'], ['Verify', 'Document']],
+  );
+  const executionHandoff = execution.edges.find((edge) => edge.attributes.kind === 'feature_handoff');
+  const dependentEntry = execution.nodes.find((node) => node.id === executionHandoff.sourceNodeRef.nodeId);
+  const prerequisiteTerminal = execution.nodes.find((node) => node.id === executionHandoff.targetNodeRef.nodeId);
+  assert.equal(dependentEntry.type, 'Implement');
+  assert.equal(dependentEntry.attributes.solutionNodeId, release.id);
+  assert.equal(prerequisiteTerminal.type, 'Verify');
+  assert.equal(prerequisiteTerminal.attributes.solutionNodeId, foundation.id);
+  assert.deepEqual(executionHandoff.attributes, { kind: 'feature_handoff', artifacts: [handoff] });
+  assert.deepEqual(dependentEntry.attributes.requiresArtifacts, [handoff]);
+  assert.deepEqual(prerequisiteTerminal.attributes.producesArtifacts, [handoff]);
+  assert.equal(new Set(execution.edges.map((edge) => `${edge.sourceNodeRef.nodeId}:${edge.targetNodeRef.nodeId}`)).size, execution.edges.length);
+  assert.ok(execution.edges.every((edge) =>
+    edge.sourceNodeRef.snapshotContentHash === execution.contentHash
+    && edge.targetNodeRef.snapshotContentHash === execution.contentHash));
+  assert.ok(execution.crossGraphLinks.every((link) => link.source.snapshotContentHash === execution.contentHash));
 });

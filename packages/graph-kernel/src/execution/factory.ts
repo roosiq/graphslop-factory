@@ -273,12 +273,13 @@ function expectedClosure(
         currentSolutionBaseline: solutionBaseline,
         compiledIntentBaseline: intentBaseline,
         compiledSolutionBaseline: solutionBaseline,
-        requiredIntentNodeIds: nodeIds(intent.nodes.filter((node) => node.status === 'confirmed')),
+        // The baseline is bound to this exact immutable snapshot. Every node in
+        // that snapshot is baseline authority, regardless of its pre-freeze
+        // discovery status.
+        requiredIntentNodeIds: nodeIds(intent.nodes),
         requiredSolutionNodeIds: nodeIds(solution.nodes),
         requiredTaskIds: nodeIds(execution.nodes),
-        requiredSuccessCriterionIds: nodeIds(intent.nodes.filter((node) =>
-          node.status === 'confirmed' && node.type === 'SuccessCriterion',
-        )),
+        requiredSuccessCriterionIds: nodeIds(intent.nodes.filter((node) => node.type === 'SuccessCriterion')),
         requiredSystemCheckIds: nodeIds(solution.nodes.filter((node) => node.type === 'TestableBehavior')),
         tasks,
         taskProducers,

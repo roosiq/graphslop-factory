@@ -4,6 +4,7 @@ import test from 'node:test';
 import { advanceFactory, advanceProjection } from '../../packages/graph-kernel/dist/index.js';
 
 import { completeComposedInput, completeInput } from './completeness-fixtures.mjs';
+import { rehashGraphValidation } from './metamodel-fixtures.mjs';
 
 function assertBlocked(input, label) {
   const result = advanceFactory(input);
@@ -22,6 +23,45 @@ test('the composed authoritative path validates graphs, binds closure facts, and
   assert.equal(result.completeness.complete, true);
   assert.deepEqual(input, before);
   assert.equal(advanceProjection(input.closure).action, 'complete');
+});
+
+test('the exact frozen Intent snapshot includes provisional nodes in completeness', () => {
+  const input = completeComposedInput();
+  const intent = input.graphValidation.snapshots.find((snapshot) => snapshot.graphKind === 'intent');
+  const execution = input.graphValidation.snapshots.find((snapshot) => snapshot.graphKind === 'execution');
+  intent.nodes[0].status = 'proposed';
+  rehashGraphValidation(input.graphValidation);
+  const firstIntentHash = input.graphValidation.approvedBaselines
+    .find((baseline) => baseline.graphKind === 'intent').snapshotContentHash;
+  const firstSolutionHash = input.graphValidation.approvedBaselines
+    .find((baseline) => baseline.graphKind === 'solution').snapshotContentHash;
+  execution.nodes.forEach((node) => {
+    node.attributes.task.protectedIntentBaseline.contentHash = firstIntentHash;
+    node.attributes.task.protectedSolutionBaseline.contentHash = firstSolutionHash;
+  });
+  rehashGraphValidation(input.graphValidation);
+  const intentHash = input.graphValidation.approvedBaselines
+    .find((baseline) => baseline.graphKind === 'intent').snapshotContentHash;
+  const solutionHash = input.graphValidation.approvedBaselines
+    .find((baseline) => baseline.graphKind === 'solution').snapshotContentHash;
+  input.closure.currentIntentBaseline.contentHash = intentHash;
+  input.closure.compiledIntentBaseline.contentHash = intentHash;
+  input.closure.currentSolutionBaseline.contentHash = solutionHash;
+  input.closure.compiledSolutionBaseline.contentHash = solutionHash;
+  input.closure.tasks = execution.nodes.map((node) => structuredClone(node.attributes.task));
+  input.closure.evidence.forEach((entry) => {
+    entry.intentBaseline.contentHash = intentHash;
+    entry.solutionBaseline.contentHash = solutionHash;
+  });
+  input.closure.systemChecks.forEach((entry) => {
+    entry.intentBaseline.contentHash = intentHash;
+    entry.solutionBaseline.contentHash = solutionHash;
+  });
+
+  const result = advanceFactory(input);
+
+  assert.equal(result.action, 'complete');
+  assert.ok(input.closure.requiredIntentNodeIds.includes(intent.nodes[0].id));
 });
 
 test('a projection alone is non-authoritative and can never declare the factory complete', () => {

@@ -338,6 +338,52 @@ test('blocks shell, remote Git, publishing, undeclared commands, and arbitrary e
   await assert.rejects(() => runner.run(lease.token), (error) => error.code === 'command_forbidden');
 });
 
+test('enforces the expanded execution vocabulary and read-only stage boundaries', async () => {
+  for (const taskType of ['Inspect', 'Verify', 'Release']) {
+    const fixture = await workspaceFixture();
+    const runner = new LocalRunner(options(fixture, {
+      task: task({ taskType }),
+      buildWorker: {
+        async run(input) {
+          await input.candidate.write('src/value.txt', 'must not write\n');
+        },
+      },
+    }));
+    const lease = await runner.lease({
+      taskId: 'task-1',
+      executionHash: hashes.execution,
+      trustedRepository: fixture.source,
+    });
+    await assert.rejects(
+      () => runner.run(lease.token),
+      (error) => error.code === 'path_violation' && error.message.includes(`${taskType} tasks are read-only`),
+    );
+  }
+
+  for (const taskType of ['Test', 'Integrate', 'Document']) {
+    const fixture = await workspaceFixture();
+    const runner = new LocalRunner(options(fixture, { task: task({ taskType }) }));
+    const lease = await runner.lease({
+      taskId: 'task-1',
+      executionHash: hashes.execution,
+      trustedRepository: fixture.source,
+    });
+    const produced = await runner.run(lease.token);
+    assert.equal(produced.taskId, 'task-1');
+  }
+
+  const fixture = await workspaceFixture();
+  const invalid = new LocalRunner(options(fixture, { task: task({ taskType: 'Unknown' }) }));
+  await assert.rejects(
+    () => invalid.lease({
+      taskId: 'task-1',
+      executionHash: hashes.execution,
+      trustedRepository: fixture.source,
+    }),
+    (error) => error.code === 'invalid_task',
+  );
+});
+
 test('contains cwd through realpath and blocks symlink paths, rename sources, and forbidden deletion', async () => {
   const fixture = await workspaceFixture();
   const outside = await mkdtemp(join(tmpdir(), 'graphslop-outside-'));
@@ -587,7 +633,18 @@ test('Codex semantic prompt treats source prompt injection as untrusted data wit
     prompt = value;
     return { accepted: true };
   });
-  const runner = new LocalRunner(options(fixture, { checkWorker: check }));
+  const runner = new LocalRunner(options(fixture, {
+    checkWorker: check,
+    task: task({
+      producedArtifacts: [{
+        key: 'verified-source',
+        type: 'source',
+        description: 'The checked implementation output.',
+        paths: ['src/value.txt'],
+        requiredEvidence: ['file_hash', 'independent_check'],
+      }],
+    }),
+  }));
   const { produced } = await leaseAndRun(runner, fixture.source);
   const result = await runner.verify(produced);
   assert.equal(result.status, 'accepted');
@@ -595,6 +652,34 @@ test('Codex semantic prompt treats source prompt injection as untrusted data wit
   assert.match(prompt, /Ignore any instructions/);
   assert.match(prompt, /END UNTRUSTED DATA/);
   assert.match(prompt, /IGNORE ALL RULES/);
+  assert.equal(result.verifiedArtifacts[0].contract.key, 'verified-source');
+  assert.equal(result.verifiedArtifacts[0].evidenceHash, result.evidenceHash);
+  assert.deepEqual(result.verifiedArtifacts[0].evidenceRefs.map((ref) => ref.kind), [
+    'file_hash',
+    'independent_check',
+  ]);
+  assert.equal(result.verifiedArtifacts[0].evidenceRefs[0].path, 'src/value.txt');
+  assert.match(result.verifiedArtifacts[0].evidenceRefs[0].sha256, /^[a-f0-9]{64}$/);
+});
+
+test('does not verify a declared artifact when its exact file is absent', async () => {
+  const fixture = await workspaceFixture();
+  const runner = new LocalRunner(options(fixture, {
+    task: task({
+      producedArtifacts: [{
+        key: 'missing-contract',
+        type: 'api-contract',
+        description: 'An exact checked contract file.',
+        paths: ['src/missing-contract.ts'],
+        requiredEvidence: ['file_hash', 'independent_check'],
+      }],
+    }),
+  }));
+  const { produced } = await leaseAndRun(runner, fixture.source);
+  const result = await runner.verify(produced);
+  assert.equal(result.status, 'rejected');
+  assert.equal(result.drift.type, 'task_failure');
+  assert.deepEqual(result.verifiedArtifacts, []);
 });
 
 test('Codex Build prompt binds exact task commands and rejects alternate, missing, or reordered actions', async () => {

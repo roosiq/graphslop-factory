@@ -3,11 +3,15 @@ import { dirname, join } from 'node:path';
 
 import {
   ProjectConversationStateSchema,
+  SolutionArtifactHandoffDraftSchema,
   type GraphNode,
   type ProjectConversationState,
+  type SolutionArtifactHandoffDraft,
 } from '@graphslop/contracts';
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+
+export type PortableArtifact = Readonly<SolutionArtifactHandoffDraft>;
 
 export type PortableTask = Readonly<{
   id: string;
@@ -22,6 +26,8 @@ export type PortableTask = Readonly<{
   dont: readonly string[];
   done: readonly string[];
   dependencies: readonly string[];
+  requiredArtifacts: readonly PortableArtifact[];
+  producedArtifacts: readonly PortableArtifact[];
   solutionNodeIds: readonly string[];
   acceptanceCommands: readonly Readonly<{ argv: readonly string[]; cwd?: string }>[];
 }>;
@@ -38,14 +44,24 @@ export type PortableRole = Readonly<{
   done: readonly string[];
 }>;
 
+export type PortableDependencyEdge = Readonly<{
+  id: string;
+  type: 'DEPENDS_ON';
+  kind: string;
+  sourceTaskId: string;
+  targetTaskId: string;
+  artifacts: readonly PortableArtifact[];
+}>;
+
 export type BuildPackManifest = Readonly<{
-  schemaVersion: '1.1.0';
+  schemaVersion: '1.2.0';
   projectId: string;
   intentBaseline: Readonly<{ id: string; contentHash: string }>;
   solutionBaseline: Readonly<{ id: string; contentHash: string }>;
   executionHash: string;
   roles: readonly PortableRole[];
   tasks: readonly PortableTask[];
+  dependencyEdges: readonly PortableDependencyEdge[];
 }>;
 
 function strings(value: unknown): string[] {
@@ -63,6 +79,11 @@ function commands(value: unknown): { argv: string[]; cwd?: string }[] {
   });
 }
 
+function artifacts(value: unknown): PortableArtifact[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => SolutionArtifactHandoffDraftSchema.parse(item));
+}
+
 function extractState(value: unknown): ProjectConversationState {
   const candidate = value && typeof value === 'object' && 'state' in value
     ? (value as { state: unknown }).state
@@ -75,6 +96,17 @@ function relevantSolutionNode(state: ProjectConversationState, task: GraphNode):
     ? task.attributes.solutionNodeId
     : undefined;
   return state.solutionGraph?.nodes.find((node) => node.id === solutionNodeId);
+}
+
+function approvedIntentBaselineNodes(state: ProjectConversationState): readonly GraphNode[] {
+  const baseline = state.approvedBaselines.find((item) =>
+    item.graphKind === 'intent'
+    && item.baselineId === state.project.activeIntentBaselineId
+    && item.snapshotId === state.intentGraph?.snapshotId
+    && item.snapshotContentHash === state.intentGraph?.contentHash);
+  if (!baseline || !state.intentGraph) throw new Error('Exact approved Intent baseline is required.');
+  const memberIds = new Set(baseline.nodeVersions.map((node) => node.nodeId));
+  return state.intentGraph.nodes.filter((node) => memberIds.has(node.id));
 }
 
 function portableRole(node: GraphNode): PortableRole {
@@ -99,11 +131,17 @@ function makeTask(state: ProjectConversationState, task: GraphNode): PortableTas
   const dependencyIds = state.executionGraph?.edges
     .filter((edge) => edge.type === 'DEPENDS_ON' && edge.sourceNodeRef.nodeId === task.id)
     .map((edge) => edge.targetNodeRef.nodeId) ?? [];
-  const constraints = state.intentGraph?.nodes
-    .filter((node) => node.status === 'confirmed' && node.type === 'Constraint')
+  const incomingHandoffs = state.executionGraph?.edges
+    .filter((edge) => edge.type === 'DEPENDS_ON' && edge.sourceNodeRef.nodeId === task.id)
+    .flatMap((edge) => artifacts(edge.attributes.artifacts)) ?? [];
+  const outgoingHandoffs = state.executionGraph?.edges
+    .filter((edge) => edge.type === 'DEPENDS_ON' && edge.targetNodeRef.nodeId === task.id)
+    .flatMap((edge) => artifacts(edge.attributes.artifacts)) ?? [];
+  const constraints = approvedIntentBaselineNodes(state)
+    .filter((node) => node.type === 'Constraint')
     .map((node) => node.statementOrName) ?? [];
-  const exclusions = state.intentGraph?.nodes
-    .filter((node) => node.status === 'confirmed' && node.type === 'Exclusion')
+  const exclusions = approvedIntentBaselineNodes(state)
+    .filter((node) => node.type === 'Exclusion')
     .map((node) => node.statementOrName) ?? [];
   const acceptedCommands = commands(task.attributes.acceptanceCommands);
   return {
@@ -137,6 +175,8 @@ function makeTask(state: ProjectConversationState, task: GraphNode): PortableTas
       'Return changed files and check results as evidence.',
     ],
     dependencies: dependencyIds,
+    requiredArtifacts: incomingHandoffs,
+    producedArtifacts: outgoingHandoffs,
     solutionNodeIds: solutionNode ? [solutionNode.id] : [],
     acceptanceCommands: acceptedCommands,
   };
@@ -254,7 +294,7 @@ function requireApprovedState(state: ProjectConversationState) {
 
 function factoryYaml(manifest: BuildPackManifest): string {
   return [
-    'schema_version: "1.1.0"',
+    'schema_version: "1.2.0"',
     `project_id: ${JSON.stringify(manifest.projectId)}`,
     'intent_baseline:',
     `  id: ${JSON.stringify(manifest.intentBaseline.id)}`,
@@ -286,6 +326,10 @@ function taskMarkdown(task: PortableTask): string {
     ...section('TOUCH', task.touch),
     ...section("DON'T", task.dont),
     ...section('DONE', task.done),
+    ...section('REQUIRED ARTIFACTS', task.requiredArtifacts.map((artifact) =>
+      `${artifact.key} (${artifact.type}): ${artifact.description}; files: ${artifact.paths.join(', ')}; evidence: ${artifact.requiredEvidence.join(', ')}`)),
+    ...section('PRODUCED ARTIFACTS', task.producedArtifacts.map((artifact) =>
+      `${artifact.key} (${artifact.type}): ${artifact.description}; files: ${artifact.paths.join(', ')}; evidence: ${artifact.requiredEvidence.join(', ')}`)),
     '## ORDER',
     '',
     ...(task.dependencies.length ? task.dependencies.map((id) => `- After ${id}`) : ['- Ready first.']),
@@ -372,7 +416,9 @@ from __future__ import annotations
 
 import datetime as dt
 import fnmatch
+import hashlib
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -384,6 +430,13 @@ EXECUTION = ROOT / "execution.json"
 RUNTIME = ROOT / "runtime.json"
 EVIDENCE = ROOT / "evidence"
 DRIFT = ROOT / "drift"
+STATE_ROOT = pathlib.Path(
+    os.environ.get(
+        "GRAPHSLOP_STATE_ROOT",
+        pathlib.Path(os.environ.get("XDG_STATE_HOME", pathlib.Path.home() / ".local" / "state"))
+        / "graphslop" / "build-packs",
+    )
+)
 
 def read_json(path: pathlib.Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -397,10 +450,147 @@ def write_json(path: pathlib.Path, value: Any) -> None:
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
+def digest_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+def file_digest(path: pathlib.Path) -> str:
+    return digest_bytes(path.read_bytes())
+
+def authority_path(execution: dict[str, Any]) -> pathlib.Path:
+    repository_key = digest_bytes(str(REPO.resolve()).encode("utf-8"))[:16]
+    return STATE_ROOT / repository_key / f"run-{execution['executionHash'][:24]}.json"
+
+def initial_runtime_is_pristine(runtime: dict[str, Any]) -> bool:
+    return (
+        not runtime.get("events")
+        and all(
+            node.get("status") == "pending"
+            and node.get("attempt") == 0
+            and node.get("workerId") is None
+            and not node.get("evidenceRefs")
+            and not node.get("producedArtifacts")
+            for node in runtime.get("nodes", {}).values()
+        )
+        and all(
+            edge.get("status") == "pending"
+            and not edge.get("satisfiedArtifactKeys")
+            and not edge.get("evidenceRefs")
+            for edge in runtime.get("edges", [])
+        )
+    )
+
 def load() -> tuple[dict[str, Any], dict[str, Any]]:
     execution = read_json(EXECUTION)
-    runtime = read_json(RUNTIME)
+    mirror = read_json(RUNTIME)
+    authority = authority_path(execution)
+    if authority.exists():
+        runtime = read_json(authority)
+        if mirror != runtime:
+            write_json(RUNTIME, runtime)
+    else:
+        if not initial_runtime_is_pristine(mirror):
+            fail("Initial Runtime graph was edited before the controller established authority.")
+        runtime = mirror
+        write_json(authority, runtime)
+    expected_run = f"run-{execution['executionHash'][:24]}"
+    if (
+        runtime.get("schemaVersion") != "1.2.0"
+        or runtime.get("projectionKind") != "execution_run"
+        or runtime.get("runId") != expected_run
+        or runtime.get("executionHash") != execution["executionHash"]
+        or runtime.get("intentBaseline") != execution["intentBaseline"]
+        or runtime.get("solutionBaseline") != execution["solutionBaseline"]
+        or not isinstance(runtime.get("nodes"), dict)
+        or not isinstance(runtime.get("edges"), list)
+        or not isinstance(runtime.get("events"), list)
+    ):
+        fail("Runtime graph is not bound to this Execution graph.")
+    task_ids = {task["id"] for task in execution["tasks"]}
+    if set(runtime["nodes"]) != task_ids:
+        fail("Runtime nodes do not match the Execution tasks.")
+    expected_edges = {edge["id"]: edge for edge in execution.get("dependencyEdges", [])}
+    actual_edges = {
+        edge.get("id"): edge
+        for edge in runtime["edges"]
+        if isinstance(edge, dict) and isinstance(edge.get("id"), str)
+    }
+    if len(actual_edges) != len(runtime["edges"]) or set(actual_edges) != set(expected_edges):
+        fail("Runtime edges do not match the Execution dependencies.")
+    for task_id, node in runtime["nodes"].items():
+        if (
+            node.get("taskId") != task_id
+            or node.get("status") not in {"pending", "running", "checked", "accepted", "drift"}
+            or not isinstance(node.get("attempt"), int)
+            or node.get("attempt", -1) < 0
+            or not isinstance(node.get("timestamps"), dict)
+            or not isinstance(node.get("evidenceRefs"), list)
+            or not isinstance(node.get("producedArtifacts"), list)
+            or not (node.get("workerId") is None or isinstance(node.get("workerId"), str))
+        ):
+            fail("Runtime node shape is invalid.")
+    for edge in runtime["edges"]:
+        expected_edge = expected_edges.get(edge.get("id"), {})
+        if (
+            not isinstance(edge, dict)
+            or not isinstance(edge.get("id"), str)
+            or edge.get("sourceTaskId") not in task_ids
+            or edge.get("targetTaskId") not in task_ids
+            or edge.get("status") not in {"pending", "satisfied", "blocked"}
+            or not isinstance(edge.get("artifacts"), list)
+            or not isinstance(edge.get("satisfiedArtifactKeys"), list)
+            or not isinstance(edge.get("evidenceRefs"), list)
+            or edge.get("type") != "DEPENDS_ON"
+            or edge.get("sourceTaskId") != expected_edge.get("sourceTaskId")
+            or edge.get("targetTaskId") != expected_edge.get("targetTaskId")
+            or edge.get("kind") != expected_edge.get("kind")
+            or edge.get("artifacts") != expected_edge.get("artifacts")
+        ):
+            fail("Runtime edge shape is invalid.")
+    for item in runtime["events"]:
+        if (
+            not isinstance(item, dict)
+            or item.get("type") not in {"claim", "check", "accept", "drift"}
+            or item.get("taskId") not in task_ids
+            or not isinstance(item.get("workerId"), str)
+            or not isinstance(item.get("timestamp"), str)
+            or not isinstance(item.get("outcome"), str)
+            or not isinstance(item.get("evidenceRefs"), list)
+        ):
+            fail("Runtime event shape is invalid.")
     return execution, runtime
+
+def persist_runtime(runtime: dict[str, Any]) -> None:
+    runtime["tasks"] = {
+        task_id: dict(record)
+        for task_id, record in runtime["nodes"].items()
+    }
+    execution = read_json(EXECUTION)
+    authoritative = authority_path(execution)
+    write_json(authoritative, runtime)
+    try:
+        authoritative.chmod(0o600)
+    except OSError:
+        pass
+    write_json(RUNTIME, runtime)
+
+def event(
+    runtime: dict[str, Any],
+    event_type: str,
+    task_id: str,
+    worker_id: str,
+    at: str,
+    outcome: str,
+    evidence_refs: list[str] | None = None,
+) -> None:
+    runtime["events"].append({
+        "id": f"event-{len(runtime['events']) + 1}",
+        "type": event_type,
+        "taskId": task_id,
+        "workerId": worker_id,
+        "timestamp": at,
+        "outcome": outcome,
+        "evidenceRefs": evidence_refs or [],
+    })
 
 def task_by_id(execution: dict[str, Any], task_id: str) -> dict[str, Any]:
     for task in execution["tasks"]:
@@ -412,11 +602,17 @@ def task_artifact_stem(task: dict[str, Any]) -> str:
     return pathlib.PurePosixPath(task["taskFile"]).stem
 
 def ready_tasks(execution: dict[str, Any], runtime: dict[str, Any]) -> list[dict[str, Any]]:
-    states = runtime["tasks"]
+    states = runtime["nodes"]
+    traversed = {
+        (edge["sourceTaskId"], edge["targetTaskId"])
+        for edge in runtime["edges"]
+        if edge.get("status") == "satisfied"
+    }
     return sorted([
         task for task in execution["tasks"]
         if states[task["id"]]["status"] == "pending"
         and all(states[item]["status"] == "accepted" for item in task["dependencies"])
+        and all((task["id"], item) in traversed for item in task["dependencies"])
     ], key=lambda task: task["id"])
 
 def run_git(*args: str) -> str:
@@ -443,12 +639,12 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 def require_task_state(runtime: dict[str, Any], task_id: str, expected: str) -> None:
-    actual = runtime["tasks"].get(task_id, {}).get("status")
+    actual = runtime["nodes"].get(task_id, {}).get("status")
     if actual != expected:
         fail(f"{task_id} is {actual or 'unknown'}, expected {expected}.")
 
 def require_worker(runtime: dict[str, Any], task_id: str, worker_id: str) -> None:
-    expected = runtime["tasks"].get(task_id, {}).get("workerId")
+    expected = runtime["nodes"].get(task_id, {}).get("workerId")
     if expected != worker_id:
         fail(f"{task_id} belongs to worker {expected or 'unknown'}, not {worker_id}.")
 
@@ -477,17 +673,17 @@ def producer_workers(
         return set()
     solution_ids = set(task["solutionNodeIds"])
     return {
-        str(runtime["tasks"][candidate["id"]]["workerId"])
+        str(runtime["nodes"][candidate["id"]]["workerId"])
         for candidate in execution["tasks"]
         if candidate["type"] == "Implement"
         and solution_ids.intersection(candidate["solutionNodeIds"])
-        and runtime["tasks"][candidate["id"]].get("status") == "accepted"
-        and runtime["tasks"][candidate["id"]].get("workerId")
+        and runtime["nodes"][candidate["id"]].get("status") == "accepted"
+        and runtime["nodes"][candidate["id"]].get("workerId")
     }
 
 def status(execution: dict[str, Any], runtime: dict[str, Any]) -> None:
     counts: dict[str, int] = {}
-    for record in runtime["tasks"].values():
+    for record in runtime["nodes"].values():
         counts[record["status"]] = counts.get(record["status"], 0) + 1
     complete = counts.get("accepted", 0) == len(execution["tasks"])
     print(json.dumps({
@@ -523,14 +719,19 @@ def claim(
         fail("Claim requires a clean Git worktree. Commit accepted work or stash unrelated changes first.")
     if worker_id in producer_workers(execution, runtime, task):
         fail(f"{task_id} needs a fresh verifier worker. {worker_id} built the feature.")
-    runtime["tasks"][task_id] = {
+    claimed_at = now()
+    runtime["nodes"][task_id] = {
+        **runtime["nodes"][task_id],
         "status": "running",
-        "claimedAt": now(),
+        "attempt": int(runtime["nodes"][task_id].get("attempt", 0)) + 1,
+        "claimedAt": claimed_at,
         "baseCommit": run_git("rev-parse", "HEAD"),
         "workerId": worker_id,
         "roleId": task["roleId"],
+        "timestamps": {**runtime["nodes"][task_id].get("timestamps", {}), "claimedAt": claimed_at},
     }
-    write_json(RUNTIME, runtime)
+    event(runtime, "claim", task_id, worker_id, claimed_at, "running")
+    persist_runtime(runtime)
     print(f"Claimed {task_id} for {worker_id}.")
 
 def check(
@@ -558,23 +759,68 @@ def check(
             "stderr": result.stderr[-20000:],
         })
         if result.returncode:
-            write_json(EVIDENCE / f"{task_artifact_stem(task)}.json", {
+            failed_at = now()
+            failed_file = f".factory/evidence/{task_artifact_stem(task)}.json"
+            write_json(REPO / failed_file, {
                 "schemaVersion": "1.1.0",
-                "taskId": task_id, "status": "failed", "checkedAt": now(),
+                "taskId": task_id, "status": "failed", "checkedAt": failed_at,
                 "workerId": worker_id, "roleId": task["roleId"],
                 "changedPaths": changed_paths(), "receipts": receipts,
             })
+            event(runtime, "check", task_id, worker_id, failed_at, "failed", [failed_file])
+            persist_runtime(runtime)
             fail(f"Acceptance command failed for {task_id}: {' '.join(command['argv'])}")
     changes = changed_paths()
     violations = [path for path in changes if not allowed(path, task["touch"])]
     if violations:
-        write_json(EVIDENCE / f"{task_artifact_stem(task)}.json", {
+        failed_at = now()
+        failed_file = f".factory/evidence/{task_artifact_stem(task)}.json"
+        write_json(REPO / failed_file, {
             "schemaVersion": "1.1.0",
-            "taskId": task_id, "status": "failed", "checkedAt": now(),
+            "taskId": task_id, "status": "failed", "checkedAt": failed_at,
             "workerId": worker_id, "roleId": task["roleId"],
             "changedPaths": changes, "receipts": receipts,
         })
+        event(runtime, "check", task_id, worker_id, failed_at, "failed", [failed_file])
+        persist_runtime(runtime)
         fail("Acceptance commands changed paths outside TOUCH: " + ", ".join(violations))
+    evidence_file = f".factory/evidence/{task_artifact_stem(task)}.json"
+    produced_artifacts = []
+    for artifact in task.get("producedArtifacts", []):
+        matched_files = sorted({
+            path for path in artifact["paths"]
+            if (REPO / path).is_file()
+        })
+        if not matched_files:
+            fail(f"Produced artifact {artifact['key']} has no file at its declared paths.")
+        file_records = [
+            {"path": path, "sha256": file_digest(REPO / path)}
+            for path in matched_files
+        ]
+        refs = []
+        for requirement in artifact["requiredEvidence"]:
+            if requirement == "file_hash":
+                refs.extend({
+                    "requirement": requirement,
+                    "kind": "file_hash",
+                    "path": item["path"],
+                    "sha256": item["sha256"],
+                    "ref": f"{evidence_file}#/producedArtifacts/{artifact['key']}/files/{item['path']}",
+                } for item in file_records)
+            elif requirement == "independent_check":
+                refs.append({
+                    "requirement": requirement,
+                    "kind": "acceptance_command",
+                    "receiptIndex": 0,
+                    "argv": receipts[0]["argv"],
+                    "exitCode": receipts[0]["exitCode"],
+                    "ref": f"{evidence_file}#/receipts/0",
+                })
+        produced_artifacts.append({
+            **artifact,
+            "files": file_records,
+            "evidenceRefs": refs,
+        })
     evidence = {
         "schemaVersion": "1.1.0",
         "taskId": task_id,
@@ -582,26 +828,124 @@ def check(
         "checkedAt": now(),
         "workerId": worker_id,
         "roleId": task["roleId"],
-        "baseCommit": runtime["tasks"][task_id]["baseCommit"],
+        "baseCommit": runtime["nodes"][task_id]["baseCommit"],
         "intentBaseline": execution["intentBaseline"],
         "solutionBaseline": execution["solutionBaseline"],
         "executionHash": execution["executionHash"],
         "changedPaths": changes,
         "receipts": receipts,
+        "producedArtifacts": produced_artifacts,
     }
-    evidence_file = f".factory/evidence/{task_artifact_stem(task)}.json"
     write_json(REPO / evidence_file, evidence)
-    runtime["tasks"][task_id]["status"] = "checked"
-    runtime["tasks"][task_id]["checkedAt"] = evidence["checkedAt"]
-    write_json(RUNTIME, runtime)
+    node = runtime["nodes"][task_id]
+    node["status"] = "checked"
+    node["checkedAt"] = evidence["checkedAt"]
+    node["timestamps"]["checkedAt"] = evidence["checkedAt"]
+    node["evidenceRefs"] = [evidence_file]
+    node["evidenceHash"] = file_digest(REPO / evidence_file)
+    node["producedArtifacts"] = evidence["producedArtifacts"]
+    event(runtime, "check", task_id, worker_id, evidence["checkedAt"], "checked", [evidence_file])
+    persist_runtime(runtime)
     print(f"Checked {task_id}. Evidence: {evidence_file}")
 
-def accept(runtime: dict[str, Any], task_id: str, worker_id: str) -> None:
+def accept(execution: dict[str, Any], runtime: dict[str, Any], task_id: str, worker_id: str) -> None:
     require_task_state(runtime, task_id, "checked")
     require_worker(runtime, task_id, worker_id)
-    runtime["tasks"][task_id]["status"] = "accepted"
-    runtime["tasks"][task_id]["acceptedAt"] = now()
-    write_json(RUNTIME, runtime)
+    accepted_at = now()
+    node = runtime["nodes"][task_id]
+    evidence_refs = node.get("evidenceRefs", [])
+    evidence_path = REPO / evidence_refs[0] if len(evidence_refs) == 1 else None
+    evidence = read_json(evidence_path) if evidence_path and evidence_path.exists() else None
+    evidence_valid = (
+        isinstance(evidence, dict)
+        and evidence.get("taskId") == task_id
+        and evidence.get("workerId") == worker_id
+        and evidence.get("status") == "checked"
+        and file_digest(evidence_path) == node.get("evidenceHash")
+        and evidence.get("producedArtifacts") == node.get("producedArtifacts")
+        and all(
+            receipt.get("exitCode") == 0
+            for receipt in evidence.get("receipts", [])
+        )
+    )
+    if not evidence_valid:
+        rejected_at = now()
+        node["status"] = "running"
+        node["evidenceRefs"] = []
+        node["producedArtifacts"] = []
+        node.pop("evidenceHash", None)
+        for edge in runtime["edges"]:
+            if edge["targetTaskId"] == task_id:
+                edge["status"] = "blocked"
+                edge["blockedArtifactKeys"] = sorted(
+                    contract["key"] for contract in edge.get("artifacts", [])
+                )
+        event(runtime, "accept", task_id, worker_id, rejected_at, "rejected")
+        persist_runtime(runtime)
+        fail("Checked evidence is missing or changed. Run check again.")
+    produced = {
+        artifact["key"]: artifact
+        for artifact in evidence.get("producedArtifacts", [])
+    }
+    blocked_keys = []
+    for edge in runtime["edges"]:
+        if edge["targetTaskId"] != task_id:
+            continue
+        missing = []
+        evidence_refs = []
+        satisfied_keys = []
+        for contract in edge.get("artifacts", []):
+            artifact = produced.get(contract["key"])
+            refs = artifact.get("evidenceRefs", []) if artifact else []
+            requirements = {ref.get("requirement") for ref in refs}
+            required = set(contract.get("requiredEvidence", []))
+            receipts = evidence.get("receipts", [])
+            refs_are_bound = all(
+                (
+                    ref.get("kind") == "acceptance_command"
+                    and isinstance(ref.get("receiptIndex"), int)
+                    and 0 <= ref["receiptIndex"] < len(receipts)
+                    and ref.get("argv") == receipts[ref["receiptIndex"]].get("argv")
+                    and ref.get("exitCode") == 0
+                    and receipts[ref["receiptIndex"]].get("exitCode") == 0
+                ) or (
+                    ref.get("kind") == "file_hash"
+                    and isinstance(ref.get("path"), str)
+                    and isinstance(ref.get("sha256"), str)
+                    and (REPO / ref["path"]).is_file()
+                    and file_digest(REPO / ref["path"]) == ref["sha256"]
+                    and any(fnmatch.fnmatch(ref["path"], pattern) for pattern in contract["paths"])
+                )
+                for ref in refs
+            )
+            if not artifact or not required.issubset(requirements) or not refs_are_bound:
+                missing.append(contract["key"])
+            else:
+                satisfied_keys.append(contract["key"])
+                evidence_refs.extend(ref.get("ref") for ref in refs if ref.get("ref"))
+        if missing:
+            edge["status"] = "blocked"
+            edge["blockedArtifactKeys"] = sorted(missing)
+            blocked_keys.extend(missing)
+        else:
+            edge["status"] = "satisfied"
+            edge["satisfiedAt"] = accepted_at
+            edge["satisfiedArtifactKeys"] = sorted(satisfied_keys)
+            edge["evidenceRefs"] = sorted(set(evidence_refs or node.get("evidenceRefs", [])))
+    if blocked_keys:
+        rejected_at = now()
+        node["status"] = "running"
+        node["evidenceRefs"] = []
+        node["producedArtifacts"] = []
+        node.pop("evidenceHash", None)
+        event(runtime, "accept", task_id, worker_id, rejected_at, "rejected")
+        persist_runtime(runtime)
+        fail("Required handoff evidence is missing: " + ", ".join(sorted(set(blocked_keys))))
+    node["status"] = "accepted"
+    node["acceptedAt"] = accepted_at
+    node["timestamps"]["acceptedAt"] = accepted_at
+    event(runtime, "accept", task_id, worker_id, accepted_at, "accepted", node.get("evidenceRefs", []))
+    persist_runtime(runtime)
     print(f"Accepted {task_id}.")
 
 def report_drift(
@@ -611,7 +955,7 @@ def report_drift(
     worker_id: str,
     reason: str,
 ) -> None:
-    current = runtime["tasks"].get(task_id, {}).get("status")
+    current = runtime["nodes"].get(task_id, {}).get("status")
     if current not in {"running", "checked"}:
         fail(f"{task_id} cannot report drift from {current or 'unknown'}.")
     require_worker(runtime, task_id, worker_id)
@@ -623,9 +967,16 @@ def report_drift(
     }
     drift_file = f".factory/drift/{task_artifact_stem(task)}.json"
     write_json(REPO / drift_file, record)
-    runtime["tasks"][task_id]["status"] = "drift"
-    runtime["tasks"][task_id]["driftFile"] = drift_file
-    write_json(RUNTIME, runtime)
+    reported_at = record["reportedAt"]
+    runtime["nodes"][task_id]["status"] = "drift"
+    runtime["nodes"][task_id]["driftFile"] = drift_file
+    runtime["nodes"][task_id]["timestamps"]["driftAt"] = reported_at
+    runtime["nodes"][task_id]["evidenceRefs"] = sorted(set([
+        *runtime["nodes"][task_id].get("evidenceRefs", []),
+        drift_file,
+    ]))
+    event(runtime, "drift", task_id, worker_id, reported_at, "drift", [drift_file])
+    persist_runtime(runtime)
     print(f"Recorded drift for {task_id}.")
 
 def main(argv: list[str]) -> None:
@@ -640,7 +991,7 @@ def main(argv: list[str]) -> None:
         {
             "claim": claim,
             "check": check,
-            "accept": lambda _e, r, t, w: accept(r, t, w),
+            "accept": accept,
         }[command](execution, runtime, argv[2], worker_id)
     elif command == "report-drift":
         if len(argv) < 6 or argv[3] != "--worker":
@@ -672,10 +1023,20 @@ export function createBuildPackFiles(input: unknown): Readonly<{
   const roles = state.solutionGraph!.nodes.filter((node) => node.type === 'Role').map(portableRole);
   if (roles.length === 0) throw new Error('Approved Solution has no Role nodes.');
   const tasks = state.executionGraph!.nodes.map((task) => makeTask(state, task));
+  const dependencyEdges: PortableDependencyEdge[] = state.executionGraph!.edges
+    .filter((edge) => edge.type === 'DEPENDS_ON')
+    .map((edge) => ({
+      id: edge.id,
+      type: 'DEPENDS_ON',
+      kind: typeof edge.attributes.kind === 'string' ? edge.attributes.kind : 'task_dependency',
+      sourceTaskId: edge.sourceNodeRef.nodeId,
+      targetTaskId: edge.targetNodeRef.nodeId,
+      artifacts: artifacts(edge.attributes.artifacts),
+    }));
   const features = state.solutionGraph!.nodes.filter((node) => node.type === 'Feature');
   for (const feature of features) {
     const featureTasks = tasks.filter((task) => task.solutionNodeIds.includes(feature.id));
-    for (const type of ['Decide', 'Implement', 'Verify']) {
+    for (const type of ['Implement', 'Verify']) {
       if (!featureTasks.some((task) => task.type === type)) {
         throw new Error(`Feature ${feature.id} has no ${type} task.`);
       }
@@ -688,18 +1049,50 @@ export function createBuildPackFiles(input: unknown): Readonly<{
     }
   }
   const manifest: BuildPackManifest = {
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
     projectId: state.project.projectId,
     intentBaseline: { id: intent.baselineId, contentHash: intent.snapshotContentHash },
     solutionBaseline: { id: solution.baselineId, contentHash: solution.snapshotContentHash },
     executionHash: state.executionGraph!.contentHash,
     roles,
     tasks,
+    dependencyEdges,
   };
+  const runtimeNodes = Object.fromEntries(tasks.map((task) => [task.id, {
+    taskId: task.id,
+    type: task.type,
+    roleId: task.roleId,
+    status: 'pending',
+    attempt: 0,
+    workerId: null,
+    timestamps: {},
+    evidenceRefs: [],
+    producedArtifacts: [],
+  }]));
+  const runtimeEdges = dependencyEdges.map((edge) => ({
+      id: edge.id,
+      type: edge.type,
+      kind: edge.kind,
+      sourceTaskId: edge.sourceTaskId,
+      targetTaskId: edge.targetTaskId,
+      artifacts: edge.artifacts,
+      status: 'pending',
+      satisfiedAt: null,
+      satisfiedArtifactKeys: [],
+      evidenceRefs: [],
+    }));
   const runtime = {
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
+    projectionKind: 'execution_run',
+    runId: `run-${manifest.executionHash.slice(0, 24)}`,
+    executionHash: manifest.executionHash,
+    intentBaseline: manifest.intentBaseline,
+    solutionBaseline: manifest.solutionBaseline,
     projectId: manifest.projectId,
-    tasks: Object.fromEntries(tasks.map((task) => [task.id, { status: 'pending' }])),
+    nodes: runtimeNodes,
+    edges: runtimeEdges,
+    events: [],
+    tasks: runtimeNodes,
   };
   const harnessFiles: Record<string, string> = {
     '.agents/skills/graphslop-build-pack/SKILL.md': skillMarkdown,
@@ -710,7 +1103,8 @@ export function createBuildPackFiles(input: unknown): Readonly<{
   };
   for (const role of roles) {
     const assignedTasks = tasks.filter((task) => task.roleId === role.id);
-    const readOnly = assignedTasks.length > 0 && assignedTasks.every((task) => task.type === 'Verify');
+    const readOnly = assignedTasks.length > 0
+      && assignedTasks.every((task) => ['Inspect', 'Verify', 'Release'].includes(task.type));
     const slug = agentSlug(role.id);
     harnessFiles[`.codex/agents/${slug}.toml`] = codexRoleAgent(role, readOnly);
     harnessFiles[`.claude/agents/${slug}.md`] = claudeRoleAgent(role, readOnly);
@@ -727,7 +1121,7 @@ export function createBuildPackFiles(input: unknown): Readonly<{
     'RUN.md': runMarkdown,
     'factory.py': controllerPython,
     'harnesses.json': jsonText({
-      schemaVersion: '1.1.0',
+      schemaVersion: '1.2.0',
       generated: ['codex', 'claude-code', 'cursor'],
       files: Object.keys(harnessFiles).sort(),
     }),

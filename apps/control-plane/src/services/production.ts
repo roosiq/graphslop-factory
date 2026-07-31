@@ -70,6 +70,8 @@ const safeKeys = new Set([
   'attributes', 'intentNodeIds', 'solutionNodeId', 'dependencies', 'blockedReasons',
   'sourceNodeRef', 'targetNodeRef', 'objective', 'allowedPaths', 'acceptanceCommands', 'acceptanceChecks', 'argv',
   'roleKey', 'roleName', 'job', 'use', 'touch', 'dont', 'done', 'taskTypes', 'assignmentIndex',
+  'dependencies', 'dependsOnFeatureKey', 'artifacts', 'key', 'kind', 'description',
+  'requiredEvidence', 'requiresArtifacts', 'producesArtifacts', 'paths',
   'evidence', 'evidenceHash', 'checks', 'drift', 'drifts', 'severity', 'expected',
   'observed', 'instruction', 'nextAction', 'completenessGaps', 'roleRef',
   'impact', 'unaffectedTasks', 'tasksRequiringModification', 'discardedTasks', 'newTasks',

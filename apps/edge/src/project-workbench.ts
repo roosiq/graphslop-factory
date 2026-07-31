@@ -3,6 +3,7 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   ProjectService,
   ProjectServiceError,
+  intentReadinessGaps,
   type IntentGraphEdit,
   type ProjectOwnerActor,
 } from '@graphslop/control-state';
@@ -72,7 +73,12 @@ export type ModelJobDetail = ModelJobSummary & Readonly<{
       content: string;
       createdAt: string;
     }>;
-    priorIntentNodes: readonly Readonly<{ stableId: string; statement: string }>[];
+    priorIntentNodes: readonly Readonly<{
+      stableId: string;
+      statement: string;
+      type: string;
+      status: string;
+    }>[];
     priorQuestions: readonly Readonly<{
       text: string;
       category: string;
@@ -163,7 +169,9 @@ function allowedCommands(state: ProjectConversationState, pending: ModelJobSumma
   if (state.intentGraph && (lifecycle === 'DISCOVERY' || lifecycle === 'INTENT_REVIEW')) {
     output.push('edit-intent-graph');
     if (state.currentQuestion && !pending) output.push('resolve-question');
-    if (!state.currentQuestion) output.push('review-intent');
+    if (!pending && !state.currentQuestion && intentReadinessGaps(state.intentGraph.nodes).length === 0) {
+      output.push('review-intent');
+    }
   }
   const latestIntentProjection = [...state.projections].reverse().find((item) =>
     item.graphKind === 'intent' && item.snapshotId === state.intentGraph?.snapshotId);
@@ -439,6 +447,8 @@ export class ProjectWorkbench extends DurableObject<Env> {
         priorIntentNodes: current.state.intentGraph?.nodes.map((node) => ({
           stableId: node.stableId,
           statement: node.statementOrName,
+          type: node.type,
+          status: node.status,
         })) ?? [],
         priorQuestions,
       },

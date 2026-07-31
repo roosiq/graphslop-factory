@@ -86,9 +86,25 @@ const graphKindLabel: Record<GraphKind, string> = {
   execution: 'task',
 };
 const taskPhaseLabel: Record<string, string> = {
+  Inspect: 'Inspection',
   Decide: 'Decision',
   Implement: 'Implementation',
+  Test: 'Testing',
+  Integrate: 'Integration',
   Verify: 'Verification',
+  Document: 'Documentation',
+  Release: 'Release',
+};
+const taskPhaseOrder = ['Inspect', 'Decide', 'Implement', 'Test', 'Integrate', 'Document', 'Release', 'Verify'];
+const taskPhaseGuideLabel: Record<string, string> = {
+  Inspect: 'inspection',
+  Decide: 'decisions',
+  Implement: 'implementation',
+  Test: 'testing',
+  Integrate: 'integration',
+  Document: 'documentation',
+  Release: 'release',
+  Verify: 'verification',
 };
 
 function readableLabel(value: unknown) {
@@ -164,13 +180,15 @@ function makeFlow(project: AnyProject): { nodes: AppNode[]; edges: Edge[] } {
   const solutionNodes = graphNodes(project, 'solution');
   const executionNodes = graphNodes(project, 'execution');
   const roleNodes = solutionNodes.filter((node) => node.type === 'Role');
-  const phaseX: Record<string, number> = { Decide: 1360, Implement: 1700, Verify: 2040 };
+  const presentPhases = taskPhaseOrder.filter((phase) =>
+    executionNodes.some((node) => node.type === phase));
+  const phaseX = Object.fromEntries(presentPhases.map((phase, index) => [phase, 1360 + index * 340]));
   const roleLaneY = new Map<string, number>();
   let nextLaneY = 220;
   for (const role of roleNodes) {
     roleLaneY.set(role.id, nextLaneY);
     const tasksForRole = executionNodes.filter((node) => node.attributes?.roleRef === role.id);
-    const maxInPhase = Math.max(1, ...['Decide', 'Implement', 'Verify'].map((phase) =>
+    const maxInPhase = Math.max(1, ...taskPhaseOrder.map((phase) =>
       tasksForRole.filter((node) => node.type === phase).length));
     nextLaneY += Math.max(180, maxInPhase * 132 + 54);
   }
@@ -270,7 +288,8 @@ function makeFlow(project: AnyProject): { nodes: AppNode[]; edges: Edge[] } {
   for (const kind of ['intent', 'solution', 'execution'] as const) {
     const graph = asRecord(project[`${kind}Graph`]);
     for (const edge of asList(graph.edges)) {
-      const dependency = kind === 'execution' && edge.type === 'DEPENDS_ON';
+      const dependency = (kind === 'solution' || kind === 'execution') && edge.type === 'DEPENDS_ON';
+      const handoffs = asList(edge.attributes?.artifacts);
       edges.push({
         id: `${kind}-edge:${edge.id}`,
         source: graphFlowId(kind, dependency
@@ -280,7 +299,11 @@ function makeFlow(project: AnyProject): { nodes: AppNode[]; edges: Edge[] } {
           ? edge.sourceNodeRef?.nodeId ?? edge.from
           : edge.targetNodeRef?.nodeId ?? edge.to),
         label: dependency
-          ? 'precedes'
+          ? handoffs.length === 1
+            ? display(handoffs[0]?.description, 'hands off')
+            : handoffs.length > 1
+              ? `${handoffs.length} handoffs`
+              : 'precedes'
           : kind === 'solution' && edge.type === 'USES'
             ? 'requires role'
             : display(edge.type),
@@ -300,7 +323,7 @@ function makeFlow(project: AnyProject): { nodes: AppNode[]; edges: Edge[] } {
               : color[kind],
           strokeWidth: dependency || (kind === 'solution' && edge.type === 'USES') ? 2.8 : 1.25,
         },
-        data: { rawId: edge.id, graphKind: kind },
+        data: { rawId: edge.id, graphKind: kind, raw: edge },
       });
     }
     for (const link of asList(graph.crossGraphLinks)) {
@@ -394,15 +417,23 @@ function IntentInspector({
     setStatement(selected.data.label);
     setType(selected.data.type);
   }, [selected?.id]);
-  if (selectedEdge?.data?.graphKind === 'intent') {
+  if (selectedEdge) {
+    const edge = asRecord(selectedEdge.data?.raw);
+    const artifacts = asList(edge.attributes?.artifacts);
     return <aside className="inspector" aria-label="Graph inspector">
       <p className="eyebrow">link</p>
       <h2>{display(selectedEdge.label)}</h2>
-      <code>{display(selectedEdge.data.rawId)}</code>
-      <button className="danger" disabled={!canEdit || busy} onClick={() => void run('edit-intent-graph', {
-        action: 'delete-edge',
-        edgeId: selectedEdge.data?.rawId,
-      })}>Delete relationship</button>
+      <code>{display(selectedEdge.data?.rawId)}</code>
+      {artifacts.length > 0 && <section className="source-quote">
+        <small>Required handoff</small>
+        {artifacts.map((artifact) => <p key={display(artifact.key)}>
+          <strong>{readableLabel(artifact.type)}</strong> · {display(artifact.description)}
+        </p>)}
+      </section>}
+      {selectedEdge.data?.graphKind === 'intent' && <button className="danger" disabled={!canEdit || busy} onClick={() => void run('edit-intent-graph', {
+          action: 'delete-edge',
+          edgeId: selectedEdge.data?.rawId,
+        })}>Delete relationship</button>}
     </aside>;
   }
   if (!selected) return <aside className="inspector empty-inspector" aria-label="Graph inspector">
@@ -487,9 +518,9 @@ function Conversation({
         <img src="/brand/caveman-concept-c-older-portrait.webp" alt="" />
       </div>
       <div className="conversation-heading-copy">
-        <p className="eyebrow">Drub</p>
+        <p className="eyebrow">Dun</p>
         <h2>Start with what<br />you know.</h2>
-        <p>Drub asks only the questions that affect the product.</p>
+        <p>Dun asks only the questions that affect the product.</p>
       </div>
     </div>
     <div className="thread" tabIndex={0} aria-label="Requirements message history">
@@ -498,12 +529,12 @@ function Conversation({
         <p>Describe the project in your own words. Missing details are fine.</p>
       </div>}
       {messages.slice(-6).map((item) => <article className="owner-message" key={item.messageId}>
-        <small>{item.actor === 'owner' ? 'You' : 'Drub'}</small><p>{display(item.content)}</p>
+        <small>{item.actor === 'owner' ? 'You' : 'Dun'}</small><p>{display(item.content)}</p>
       </article>)}
       {question.questionId && <article className="model-question">
-        <small>Drub asks · {display(question.category)}</small>
+        <small>Dun asks · {display(question.category)}</small>
         <p>{display(question.text)}</p>
-        <textarea aria-label="Answer Drub" rows={3} value={answer} onChange={(event) => setAnswer(event.target.value)}
+        <textarea aria-label="Answer Dun" rows={3} value={answer} onChange={(event) => setAnswer(event.target.value)}
           placeholder="Answer in your own words…" disabled={!bindingFor(bindings, 'resolve-question') || busy} />
         <div className="button-row">
           <button className="primary" disabled={!answer.trim() || busy} onClick={() => void reply('answered')}>Answer</button>
@@ -517,7 +548,7 @@ function Conversation({
         placeholder="I need a simple app that analyzes pasted text and shows a useful score. No login."
         disabled={!bindingFor(bindings, 'submit-message') || busy} />
       <button className="primary" disabled={!message.trim() || !bindingFor(bindings, 'submit-message') || busy}>
-        {thinking ? 'Drub is thinking…' : 'Send to Drub'}
+        {thinking ? 'Dun is thinking…' : 'Send to Dun'}
       </button>
       {thinking && <small className="thinking-note" role="status">Local model: 20–45 seconds.</small>}
     </form>
@@ -557,9 +588,19 @@ function StageActions({
       : null;
   const tasks = graphNodes(project, 'execution');
   const baselines = asList(project.approvedBaselines);
-  const hasOpenQuestion = Boolean(project.currentQuestion?.questionId);
+  const hasBlockingQuestion = Boolean(project.currentQuestion?.questionId && project.currentQuestion?.blocking);
+  const readinessTypes = graphNodes(project, 'intent').filter((node) => node.type !== 'Question'
+    && !['rejected', 'superseded'].includes(String(node.status))).map((node) => String(node.type));
+  const missingReadiness = [
+    !['Goal', 'Problem', 'UseCase'].some((type) => readinessTypes.includes(type)) && 'scope',
+    !['UserType', 'UseCase'].some((type) => readinessTypes.includes(type)) && 'users or usage context',
+    !['Behavior', 'UseCase'].some((type) => readinessTypes.includes(type)) && 'behavior',
+    (!readinessTypes.includes('Input') || !readinessTypes.includes('Output')) && 'input and output',
+    !['Constraint', 'Exclusion'].some((type) => readinessTypes.includes(type)) && 'constraints and exclusions',
+    !readinessTypes.includes('SuccessCriterion') && 'success criteria',
+  ].filter((item): item is string => Boolean(item));
   return <div className="stage-actions">
-    {!hasOpenQuestion && button('review-intent', 'Review requirements')}
+    {!hasBlockingQuestion && missingReadiness.length === 0 && button('review-intent', 'Review requirements')}
     {button('approve-intent', 'Approve requirements', approvalInput(project, 'intent', actorId))}
     {button('propose-solution', 'Generate solution')}
     {button('review-solution', 'Review solution')}
@@ -567,8 +608,10 @@ function StageActions({
     {button('compile-execution', 'Generate build pack')}
     {baselines.length >= 2 && tasks.length > 0 && <button className="stage-action download" disabled={busy}
       onClick={() => void download()}>Download .factory.zip<span>↓</span></button>}
-    {hasOpenQuestion
+    {hasBlockingQuestion
       ? <small>Answer or defer the open question before approving requirements.</small>
+      : missingReadiness.length > 0
+        ? <small>Requirements still need: {missingReadiness.join(', ')}.</small>
       : !bindings.some((item) => ['review-intent', 'approve-intent', 'propose-solution', 'review-solution', 'approve-solution', 'compile-execution'].includes(item.command))
       && tasks.length === 0 && <small>Answer the question or add more context.</small>}
   </div>;
@@ -769,8 +812,8 @@ function IntakePage({
   go: (page: PageKey) => void;
 }) {
   return <div className="page-scroll intake-page">
-    <SectionHeading eyebrow="Project requirements" title="Tell Drub what you’re building"
-      description="Drub records your requirements and asks focused follow-up questions." />
+    <SectionHeading eyebrow="Project requirements" title="Tell Dun what you’re building"
+      description="Dun records your requirements and asks focused follow-up questions." />
     <div className="intake-layout">
       <Conversation project={project} bindings={bindings} busy={busy} thinking={thinking} run={run} />
       <RequirementLedger project={project} go={go} />
@@ -779,6 +822,7 @@ function IntakePage({
 }
 
 function GraphPage({
+  project,
   projectReady,
   nodes,
   edges,
@@ -796,6 +840,7 @@ function GraphPage({
   setSelectedEdgeId,
   run,
 }: {
+  project: AnyProject;
   projectReady: boolean;
   nodes: AppNode[];
   edges: Edge[];
@@ -813,10 +858,20 @@ function GraphPage({
   setSelectedEdgeId: (value?: string) => void;
   run: (command: OwnerCommand, input: unknown) => Promise<void>;
 }) {
+  const authoritativeNodes = (['intent', 'solution', 'execution'] as const)
+    .reduce((total, kind) => total + graphNodes(project, kind).length, 0);
+  const authoritativeLinks = (['intent', 'solution', 'execution'] as const).reduce((total, kind) => {
+    const graph = asRecord(project[`${kind}Graph`]);
+    return total + asList(graph.edges).length + asList(graph.crossGraphLinks).length;
+  }, 0);
+  const sourceNodes = asList(project.messages).length;
+  const sourceLinks = edges.filter((edge) => String(edge.id).startsWith('source:')).length;
+  const presentTaskPhases = taskPhaseOrder.filter((phase) =>
+    graphNodes(project, 'execution').some((node) => node.type === phase));
   return <div className="graph-page">
     <div className="graph-page-head">
       <div><p className="eyebrow">Project traceability</p><h1>Project graph</h1><p>Every planned task traces back to the requirement that authorized it.</p></div>
-      <div className="graph-page-stats"><span>{nodes.length} nodes</span><i /><span>{edges.length} links</span></div>
+      <div className="graph-page-stats"><span>{authoritativeNodes} graph nodes</span><i /><span>{authoritativeLinks} graph links</span><i /><span>{sourceNodes} source nodes / {sourceLinks} source links shown</span></div>
     </div>
     <div className="graph-page-layout">
       <section className="graph-workspace" aria-label="Project knowledge graph">
@@ -833,7 +888,8 @@ function GraphPage({
           </label>
         </div>
         {nodes.some((node) => node.data.kind === 'execution') && <div className="graph-phase-guide" aria-label="Graph execution order">
-          {['source', 'requirements', 'solution', 'roles', 'decisions', 'implementation', 'verification'].map((stage, index) =>
+          {['source', 'requirements', 'solution', 'roles', ...presentTaskPhases.map((phase) =>
+            taskPhaseGuideLabel[phase])].map((stage, index) =>
             <span key={stage}><small>{String(index + 1).padStart(2, '0')}</small>{stage}</span>)}
         </div>}
         {!projectReady && <div className="graph-empty">
@@ -1000,54 +1056,93 @@ function SettingsPage({
 }
 
 const drubWalkthrough = [
-  { speaker: 'you', text: 'Need a site. Paste writing. Show what sounds weak.', adds: 'goal · input · behavior', step: 0 },
-  { speaker: 'Drub', text: 'One score, flagged lines, or both?', adds: 'open question', step: 1 },
-  { speaker: 'you', text: 'Both. Show the exact lines.', adds: 'output · success check', step: 2 },
-  { speaker: 'Drub', text: 'Save the writing?', adds: 'privacy decision', step: 3 },
-  { speaker: 'you', text: 'No. No login either.', adds: '2 hard limits', step: 4 },
+  {
+    speaker: 'you',
+    text: 'Neighbors got extra food. Other people need dinner. Make handoff easy and safe. Maybe volunteers help. No marketplace nonsense. Keep it simple.',
+    adds: 'goal · users · limits',
+    delay: 0,
+  },
+  {
+    speaker: 'Dun',
+    text: 'Who checks if food is safe to eat?',
+    adds: 'one blocking question',
+    delay: 1100,
+  },
+  {
+    speaker: 'you',
+    text: 'Donors confirm freshness and allergens. Recipients choose. Volunteers move sealed food only. Show rough area to everyone; exact address only for the handoff.',
+    adds: 'safety · privacy · success',
+    delay: 2100,
+  },
 ] as const;
 
 const drubGraphNodes = [
-  { label: 'rough brief', kind: 'input', x: 12, y: 16, step: 0 },
-  { label: 'find weak writing', kind: 'intent', x: 11, y: 34, step: 0 },
-  { label: 'pasted text', kind: 'intent', x: 14, y: 54, step: 0 },
-  { label: 'analyze text', kind: 'intent', x: 11, y: 74, step: 0 },
-  { label: 'score + lines', kind: 'intent', x: 16, y: 91, step: 2 },
-  { label: 'single page', kind: 'solution', x: 43, y: 14, step: 1 },
-  { label: 'text editor', kind: 'solution', x: 40, y: 32, step: 2 },
-  { label: 'scoring rules', kind: 'solution', x: 47, y: 50, step: 2 },
-  { label: 'score card', kind: 'solution', x: 41, y: 68, step: 2 },
-  { label: 'flagged lines', kind: 'solution', x: 48, y: 86, step: 2 },
-  { label: 'no accounts', kind: 'guard', x: 65, y: 17, step: 4 },
-  { label: 'no storage', kind: 'guard', x: 66, y: 34, step: 4 },
-  { label: 'build input', kind: 'execution', x: 84, y: 13, step: 2 },
-  { label: 'build scorer', kind: 'execution', x: 83, y: 30, step: 2 },
-  { label: 'render score', kind: 'execution', x: 86, y: 47, step: 2 },
-  { label: 'mark exact lines', kind: 'execution', x: 81, y: 65, step: 2 },
-  { label: 'privacy check', kind: 'execution', x: 86, y: 82, step: 4 },
-  { label: 'browser proof', kind: 'execution', x: 80, y: 94, step: 4 },
+  { label: 'rough food brief', kind: 'input', x: 12, y: 12, delay: 180 },
+  { label: 'safe handoff', kind: 'intent', x: 12, y: 26, delay: 480 },
+  { label: 'donor food details', kind: 'intent', x: 12, y: 40, delay: 2400 },
+  { label: 'reserve + confirm', kind: 'intent', x: 12, y: 54, delay: 2600 },
+  { label: 'exact address private', kind: 'intent', x: 12, y: 68, delay: 2800 },
+  { label: 'sealed volunteer only', kind: 'intent', x: 12, y: 82, delay: 3000 },
+  { label: 'no marketplace', kind: 'guard', x: 12, y: 94, delay: 780 },
+
+  { label: 'food posts', kind: 'solution', x: 38, y: 15, delay: 3300 },
+  { label: 'reservation flow', kind: 'solution', x: 38, y: 33, delay: 3500 },
+  { label: 'location rules', kind: 'solution', x: 38, y: 51, delay: 3700 },
+  { label: 'volunteer handoff', kind: 'solution', x: 38, y: 69, delay: 3900 },
+  { label: 'safety guardrails', kind: 'solution', x: 38, y: 87, delay: 4100 },
+
+  { label: 'interaction design', kind: 'role', x: 63, y: 15, delay: 4400 },
+  { label: 'frontend', kind: 'role', x: 63, y: 33, delay: 4600 },
+  { label: 'backend', kind: 'role', x: 63, y: 51, delay: 4800 },
+  { label: 'privacy review', kind: 'role', x: 63, y: 69, delay: 5000 },
+  { label: 'quality assurance', kind: 'role', x: 63, y: 87, delay: 5200 },
+
+  { label: 'post flow · 4 jobs', kind: 'execution', x: 88, y: 15, delay: 5500 },
+  { label: 'pickup · 4 jobs', kind: 'execution', x: 88, y: 33, delay: 5700 },
+  { label: 'privacy · 4 jobs', kind: 'execution', x: 88, y: 51, delay: 5900 },
+  { label: 'volunteer · 4 jobs', kind: 'execution', x: 88, y: 69, delay: 6100 },
+  { label: 'guardrails · 4 jobs', kind: 'execution', x: 88, y: 87, delay: 6300 },
 ] as const;
 
 const drubGraphEdges = [
-  { path: 'M12 16 C12 23 11 26 11 34', step: 0 },
-  { path: 'M11 34 C12 42 14 46 14 54', step: 0 },
-  { path: 'M14 54 C13 62 11 66 11 74', step: 0 },
-  { path: 'M11 74 C12 82 15 84 16 91', step: 2 },
-  { path: 'M12 16 C24 16 31 14 43 14', step: 1 },
-  { path: 'M14 54 C24 49 31 36 40 32', step: 2 },
-  { path: 'M11 74 C25 70 33 55 47 50', step: 2 },
-  { path: 'M16 91 C27 87 32 72 41 68', step: 2 },
-  { path: 'M16 91 C28 94 37 90 48 86', step: 2 },
-  { path: 'M43 14 C57 10 72 10 84 13', step: 2 },
-  { path: 'M40 32 C55 29 68 28 83 30', step: 2 },
-  { path: 'M47 50 C62 48 73 47 86 47', step: 2 },
-  { path: 'M41 68 C55 66 68 53 86 47', step: 2 },
-  { path: 'M48 86 C60 79 69 69 81 65', step: 2 },
-  { path: 'M65 17 C75 17 79 20 83 30', step: 4 },
-  { path: 'M66 34 C76 48 80 67 86 82', step: 4 },
-  { path: 'M86 47 C85 55 83 59 81 65', step: 2 },
-  { path: 'M81 65 C83 72 85 76 86 82', step: 4 },
-  { path: 'M86 82 C85 88 83 91 80 94', step: 4 },
+  { path: 'M12 12 C12 18 12 20 12 26', delay: 300 },
+  { path: 'M12 12 C8 24 8 33 12 40', delay: 2250 },
+  { path: 'M12 12 C7 32 7 46 12 54', delay: 2450 },
+  { path: 'M12 12 C6 40 7 60 12 68', delay: 2650 },
+  { path: 'M12 12 C5 48 7 73 12 82', delay: 2850 },
+  { path: 'M12 12 C4 55 7 86 12 94', delay: 600 },
+
+  { path: 'M12 40 C21 33 28 20 38 15', delay: 3150 },
+  { path: 'M12 54 C22 48 28 38 38 33', delay: 3350 },
+  { path: 'M12 68 C22 65 28 54 38 51', delay: 3550 },
+  { path: 'M12 82 C22 81 28 72 38 69', delay: 3750 },
+  { path: 'M12 94 C22 96 29 90 38 87', delay: 3950 },
+
+  { path: 'M38 15 C48 15 53 15 63 15', delay: 4250 },
+  { path: 'M38 15 C49 20 54 27 63 33', delay: 4450 },
+  { path: 'M38 33 C49 33 54 33 63 33', delay: 4450 },
+  { path: 'M38 33 C48 40 54 47 63 51', delay: 4650 },
+  { path: 'M38 51 C48 51 54 51 63 51', delay: 4650 },
+  { path: 'M38 51 C49 57 55 65 63 69', delay: 4850 },
+  { path: 'M38 69 C49 69 54 69 63 69', delay: 4850 },
+  { path: 'M38 87 C48 87 54 87 63 87', delay: 5050 },
+  { path: 'M38 87 C49 82 55 74 63 69', delay: 4850 },
+
+  { path: 'M38 15 C56 7 73 9 88 15', delay: 5300 },
+  { path: 'M38 33 C56 26 73 27 88 33', delay: 5500 },
+  { path: 'M38 51 C56 44 73 45 88 51', delay: 5700 },
+  { path: 'M38 69 C56 62 73 63 88 69', delay: 5900 },
+  { path: 'M38 87 C56 80 73 81 88 87', delay: 6100 },
+
+  { path: 'M63 15 C73 15 78 15 88 15', delay: 5300 },
+  { path: 'M63 33 C74 27 79 22 88 15', delay: 5300 },
+  { path: 'M63 33 C73 33 78 33 88 33', delay: 5500 },
+  { path: 'M63 51 C73 45 78 39 88 33', delay: 5500 },
+  { path: 'M63 51 C73 51 78 51 88 51', delay: 5700 },
+  { path: 'M63 69 C73 63 78 57 88 51', delay: 5700 },
+  { path: 'M63 69 C73 69 78 69 88 69', delay: 5900 },
+  { path: 'M63 69 C74 75 79 81 88 87', delay: 6100 },
+  { path: 'M63 87 C73 87 78 87 88 87', delay: 6100 },
 ] as const;
 
 function MeetDrub() {
@@ -1074,13 +1169,13 @@ function MeetDrub() {
   return <section ref={sectionRef} className="marketing-section drub-section" id="drub">
     <header className="drub-section-head">
       <div className="drub-intro">
-        <img src="/brand/caveman-concept-c-older-portrait.webp" alt="Drub, looking curious" />
+        <img src="/brand/caveman-concept-c-older-portrait.webp" alt="Dun, looking curious" />
         <div>
-          <p className="marketing-kicker">meet Drub</p>
+          <p className="marketing-kicker">meet Dun</p>
           <h2>Simple questions.<br />Serious plan.</h2>
         </div>
       </div>
-      <p>Drub turns each answer into linked requirements. The graph grows while you talk.</p>
+      <p>Each answer becomes a requirement. The graph links it to what gets built, who handles it, and what happens next.</p>
     </header>
 
     <div key={run} className={`drub-demo ${started ? 'is-building' : ''}`}>
@@ -1091,9 +1186,9 @@ function MeetDrub() {
         </header>
         <ol>
           {drubWalkthrough.map((item) => <li
-            className={`drub-message is-${item.speaker === 'Drub' ? 'drub' : 'user'}`}
-            key={`${item.step}-${item.speaker}`}
-            style={{ '--step': item.step } as React.CSSProperties}
+            className={`drub-message is-${item.speaker === 'Dun' ? 'drub' : 'user'}`}
+            key={`${item.delay}-${item.speaker}`}
+            style={{ '--delay': `${item.delay}ms` } as React.CSSProperties}
           >
             <span>{item.speaker}</span>
             <p>{item.text}</p>
@@ -1104,26 +1199,27 @@ function MeetDrub() {
 
       <div className="drub-graph">
         <header>
-          <div><span>live project graph</span><i>draft</i></div>
-          <div className="drub-graph-counts"><span>intent 5</span><span>solution 5</span><span>jobs 6</span></div>
+          <div><span>neighborhood food graph</span><i>real build</i></div>
+          <div className="drub-graph-counts"><span>intent 21</span><span>features 5</span><span>roles 5</span><span>jobs 20</span></div>
         </header>
-        <div className="drub-graph-canvas" role="img" aria-label="A linked intent, solution, and execution graph growing from the requirements conversation">
+        <div className="drub-graph-canvas" role="img" aria-label="The real neighborhood food app intent, solution, generated roles, and 20 execution jobs">
           <div className="drub-graph-lanes" aria-hidden="true">
-            <span>intent</span><span>solution</span><span>execution</span>
+            <span>intent</span><span>solution</span><span>role lenses</span><span>execution</span>
           </div>
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {drubGraphEdges.map((edge, index) => <path
               d={edge.path}
               key={index}
               pathLength="1"
-              style={{ '--step': edge.step } as React.CSSProperties}
+              style={{ '--delay': `${edge.delay}ms` } as React.CSSProperties}
             />)}
           </svg>
           {drubGraphNodes.map((node) => <div
             className={`drub-graph-node is-${node.kind}`}
             key={node.label}
+            title={node.label}
             style={{
-              '--step': node.step,
+              '--delay': `${node.delay}ms`,
               left: `${node.x}%`,
               top: `${node.y}%`,
             } as React.CSSProperties}
@@ -1133,12 +1229,12 @@ function MeetDrub() {
           </div>)}
         </div>
         <footer>
-          <span>Every node keeps its source.</span>
+          <span>Real build pack · 20 jobs accepted · 91 checks passed</span>
           <button type="button" onClick={() => { setStarted(true); setRun((value) => value + 1); }}>replay build</button>
         </footer>
       </div>
     </div>
-    <p className="drub-lock-note"><i />Nothing runs until you approve the plan.</p>
+    <p className="drub-lock-note"><i />Not just a picture. The links control build order, approval, verification, and repair.</p>
   </section>;
 }
 
@@ -1157,7 +1253,7 @@ function MarketingHome({ enterWorkspace }: { enterWorkspace: () => void }) {
     <header className="marketing-nav">
       <a className="brand" href="/" aria-label="Graphslop home"><BrandMark /><span>graphslop</span></a>
       <nav aria-label="Public navigation">
-        <a href="#drub" onClick={(event) => scrollTo(event, 'drub')}>meet Drub</a>
+        <a href="#drub" onClick={(event) => scrollTo(event, 'drub')}>meet Dun</a>
         <a href="#how" onClick={(event) => scrollTo(event, 'how')}>how it works</a>
         <a href="#output" onClick={(event) => scrollTo(event, 'output')}>files you get</a>
       </nav>
@@ -1168,7 +1264,7 @@ function MarketingHome({ enterWorkspace }: { enterWorkspace: () => void }) {
       <div className="marketing-hero-copy">
         <p className="marketing-kicker">start with the idea</p>
         <h1>Bring the idea.<br />Leave with a plan.</h1>
-        <p>Drub asks what matters, records decisions, and makes a build pack.</p>
+        <p>Dun asks what matters, records decisions, and makes a build pack.</p>
         <div className="marketing-actions">
           {workspaceLink('marketing-primary', 'start a project')}
           <a className="marketing-secondary" href="#how" onClick={(event) => scrollTo(event, 'how')}>see how it works <span>↓</span></a>
@@ -1182,46 +1278,46 @@ function MarketingHome({ enterWorkspace }: { enterWorkspace: () => void }) {
       <div className="marketing-hero-visual" aria-label="A rough idea becoming a clear software plan">
         <img src="/brand/caveman-grounded-hero.webp" alt="A bald Neanderthal pulling a secured load of rough ideas through shallow cave water" />
         <div className="hero-product-card">
-          <header><span>your initial request</span><i>Drub is listening</i></header>
-          <p>Need app. Upload document. Find repeated language. Show score.</p>
+          <header><span>your initial request</span><i>Dun is listening</i></header>
+          <p>Neighbors got extra food. Other people need dinner. Make handoff easy and safe.</p>
           <div className="hero-graph-row">
-            <span>input</span><b>→</b><span>behavior</span><b>→</b><span>output</span>
+            <span>surplus food</span><b>→</b><span>safe handoff</span><b>→</b><span>confirmed pickup</span>
           </div>
-          <footer><i />one important question to answer</footer>
+          <footer><i />one safety question to answer</footer>
         </div>
       </div>
     </section>
 
     <section className="marketing-signal" aria-label="Product promise">
-      <span>describe the idea</span><i>·</i><span>Drub asks what matters</span><i>·</i><span>approve the plan</span><i>·</i><span>build anywhere</span>
+      <span>describe the idea</span><i>·</i><span>Dun asks what matters</span><i>·</i><span>approve the plan</span><i>·</i><span>build anywhere</span>
     </section>
 
     <MeetDrub />
 
     <section className="marketing-section product-section" id="product">
       <div className="marketing-section-copy">
-        <p className="marketing-kicker">built to remember</p>
-        <h2>Your idea stays your idea.</h2>
-        <p>Requirements and approvals stay linked. Coding tools follow the plan.</p>
+        <p className="marketing-kicker">graph engineering, made simple</p>
+        <h2>The plan knows what comes next.</h2>
+        <p>Work waits for what it needs. Failed checks go back for repair. Every job stays tied to the idea you approved.</p>
         <ul>
-          <li><span>—</span>ask only what matters</li>
-          <li><span>—</span>record every decision</li>
-          <li><span>—</span>wait for approval</li>
+          <li><span>—</span>only the roles this project needs</li>
+          <li><span>—</span>dependencies decide what is ready</li>
+          <li><span>—</span>every completed job needs proof</li>
         </ul>
       </div>
       <div className="marketing-product-shell" aria-label="Graphslop product preview">
         <aside>
           <div className="mini-brand"><BrandMark /></div>
           <i className="is-active">⌂</i><i>✦</i><i>⌘</i><i>▣</i>
-          <div className="mini-presence" aria-label="Drub is online"><i />D</div>
+          <div className="mini-presence" aria-label="Dun is online"><i />D</div>
         </aside>
         <div className="mini-workspace">
-          <header><div><small>current understanding</small><strong>document checker</strong></div><span>4 choices linked</span></header>
+          <header><div><small>current understanding</small><strong>neighborhood food</strong></div><span>21 requirements linked</span></header>
           <div className="mini-canvas">
-            <div className="mini-node mini-node-input"><small>INPUT</small><b>paste document</b></div>
-            <div className="mini-node mini-node-intent"><small>GOAL</small><b>find repeated language</b></div>
-            <div className="mini-node mini-node-solution"><small>OUTPUT</small><b>clear score and examples</b></div>
-            <div className="mini-node mini-node-execution"><small>FIRST TASK</small><b>build scoring step</b></div>
+            <div className="mini-node mini-node-input"><small>INPUT</small><b>food, area, and time</b></div>
+            <div className="mini-node mini-node-intent"><small>GOAL</small><b>safe neighbor handoff</b></div>
+            <div className="mini-node mini-node-solution"><small>OUTPUT</small><b>reservation and pickup</b></div>
+            <div className="mini-node mini-node-execution"><small>FIRST JOB</small><b>design the posting flow</b></div>
             <svg viewBox="0 0 700 320" preserveAspectRatio="none" aria-hidden="true">
               <path d="M140 78 C205 78 195 78 255 78 M390 78 C455 78 455 218 530 218 M390 78 C455 78 455 78 530 78" />
             </svg>
@@ -1245,7 +1341,7 @@ function MarketingHome({ enterWorkspace }: { enterWorkspace: () => void }) {
         </article>
         <article>
           <div className="journey-image"><img src="/brand/caveman-grounded-decision.webp" alt="A bald Neanderthal choosing between two real cave paths" /></div>
-          <span>02 / Drub asks</span>
+          <span>02 / Dun asks</span>
           <h3>Answer what matters.</h3>
           <p>Only questions that change the product.</p>
         </article>
@@ -1262,21 +1358,21 @@ function MarketingHome({ enterWorkspace }: { enterWorkspace: () => void }) {
       <div className="output-copy">
         <p className="marketing-kicker">the build pack</p>
         <h2>A small pack for the whole build.</h2>
-        <p>Requirements, decisions, build order, boundaries, and acceptance checks.</p>
+        <p>The food-sharing idea needed five roles and twenty ordered jobs. Each finished with proof.</p>
         {workspaceLink('marketing-primary', 'make a build pack')}
       </div>
-      <div className="file-pack" aria-label="Example project plan">
-        <header><BrandMark /><strong>approved build pack</strong><span>ready</span></header>
+      <div className="file-pack" aria-label="Real neighborhood food build pack">
+        <header><BrandMark /><strong>approved build pack</strong><span>built</span></header>
         <div className="file-tree">
-          <p><i>▾</i><b>approved project</b></p>
-          <p><i>├</i><span>product summary</span><em>plain language</em></p>
-          <p><i>├</i><span>primary users</span><em>real people</em></p>
-          <p><i>├</i><span>product behavior</span><em>screens and flow</em></p>
-          <p><i>├</i><span>execution plan</span><em>build order</em></p>
-          <p><i>├</i><span>excluded scope</span><em>hard boundaries</em></p>
-          <p><i>└</i><span>acceptance checks</span><em>proof</em></p>
+          <p><i>▾</i><b>neighborhood food</b></p>
+          <p><i>├</i><span>what people need</span><em>21 linked requirements</em></p>
+          <p><i>├</i><span>what gets built</span><em>5 product features</em></p>
+          <p><i>├</i><span>who does the work</span><em>5 role lenses</em></p>
+          <p><i>├</i><span>build order</span><em>20 bounded jobs</em></p>
+          <p><i>├</i><span>hard limits</span><em>no marketplace</em></p>
+          <p><i>└</i><span>proof</span><em>91 checks passed</em></p>
         </div>
-        <footer><span><i /> meaning locked</span><span><i /> plan locked</span><span><i /> ready for code</span></footer>
+        <footer><span><i /> requirements locked</span><span><i /> solution locked</span><span><i /> 20 jobs accepted</span></footer>
       </div>
     </section>
 
@@ -1456,7 +1552,7 @@ export function App() {
       setBindings(response.nextBindings);
       setPendingJob(response.pendingJob ?? null);
       setNotice(response.pendingJob
-        ? 'Drub is thinking. You can leave this page.'
+        ? 'Dun is thinking. You can leave this page.'
         : command === 'edit-intent-graph'
           ? 'Graph updated.'
           : commandNotices[command] ?? 'Action completed.');
@@ -1517,7 +1613,7 @@ export function App() {
       go={go} nodes={nodes} edges={edges} actorId={user?.id} />,
     intake: <IntakePage project={project} bindings={bindings} busy={busy}
       thinking={Boolean(pendingJob) || activeCommand === 'submit-message' || activeCommand === 'resolve-question'} run={run} go={go} />,
-    graph: <GraphPage projectReady={Boolean(projectReady)} nodes={nodes} edges={edges}
+    graph: <GraphPage project={project} projectReady={Boolean(projectReady)} nodes={nodes} edges={edges}
       selected={selected} selectedEdge={selectedEdge} canEdit={canEdit} busy={busy}
       search={search} setSearch={setSearch} edgeType={edgeType} setEdgeType={setEdgeType}
       onNodesChange={onNodesChange} onConnect={onConnect} setSelectedId={setSelectedId}
@@ -1603,7 +1699,7 @@ export function App() {
           </nav>
           <div className="sidebar-foot">
             <img src="/brand/caveman-concept-c-older-portrait.webp" alt="" />
-            <div><strong>From idea to build pack.</strong><small>Drub plans. Your coding tool builds.</small></div>
+            <div><strong>From idea to build pack.</strong><small>Dun plans. Your coding tool builds.</small></div>
           </div>
         </aside>
         <main className="saas-content">{pageContent}</main>

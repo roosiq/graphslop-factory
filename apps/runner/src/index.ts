@@ -10,10 +10,48 @@ const execFileAsync = promisify(execFile);
 export type BaselineBinding = Readonly<{ baselineId: string; contentHash: string }>;
 export type CavemanBrief = Readonly<{ job: string; use: string; touch: string; dont: string; done: string }>;
 export type AcceptanceCommand = Readonly<{ argv: readonly [string, ...string[]]; cwd?: string }>;
+export type ArtifactContract = Readonly<{
+  key: string;
+  type: 'decision' | 'source' | 'test' | 'schema' | 'api-contract' | 'data-contract' | 'documentation' | 'release';
+  description: string;
+  paths: readonly string[];
+  requiredEvidence: readonly ('file_hash' | 'independent_check')[];
+}>;
+export type VerifiedArtifact = Readonly<{
+  contract: ArtifactContract;
+  evidenceHash: string;
+  evidenceRefs: readonly Readonly<{
+    requirement: string;
+    kind: 'independent_check' | 'file_hash';
+    receiptIndex?: number;
+    argv?: readonly string[];
+    exitCode?: 0;
+    path?: string;
+    sha256?: string;
+  }>[];
+}>;
+export type RunnerTaskType =
+  | 'Inspect'
+  | 'Decide'
+  | 'Implement'
+  | 'Test'
+  | 'Integrate'
+  | 'Verify'
+  | 'Document'
+  | 'Release'
+  | 'Repair';
+
+const runnerTaskTypes = new Set<RunnerTaskType>([
+  'Inspect', 'Decide', 'Implement', 'Test', 'Integrate', 'Verify', 'Document', 'Release', 'Repair',
+]);
+const readOnlyTaskTypes = new Set<RunnerTaskType>(['Inspect', 'Verify', 'Release']);
+const changeProducingTaskTypes = new Set<RunnerTaskType>([
+  'Decide', 'Implement', 'Test', 'Integrate', 'Document', 'Repair',
+]);
 
 export type RunnerTask = Readonly<{
   taskId: string;
-  taskType?: 'Decide' | 'Implement' | 'Verify' | 'Repair';
+  taskType?: RunnerTaskType;
   projectId?: string;
   status: 'ready';
   baseCommit: string;
@@ -26,6 +64,8 @@ export type RunnerTask = Readonly<{
   brief: CavemanBrief;
   solutionNodeIds?: readonly string[];
   dependencies?: readonly string[];
+  requiredArtifacts?: readonly ArtifactContract[];
+  producedArtifacts?: readonly ArtifactContract[];
   relevantIntentNodes: readonly Readonly<{ id: string; statement: string }>[];
   relevantSolutionNodes: readonly Readonly<{ id: string; name: string }>[];
   protectedAssertions: readonly string[];
@@ -137,6 +177,7 @@ export type TerminalResult = Readonly<{
   evidenceHash: string;
   evidence: Evidence;
   checkReceipts: readonly CheckReceipt[];
+  verifiedArtifacts: readonly VerifiedArtifact[];
   candidateCommit?: string;
   treeHash?: string;
   checkpointRef?: string;
@@ -166,6 +207,10 @@ export type SemanticCheckContext = Readonly<{
   protectedAssertions: readonly string[];
   exclusions: readonly string[];
   acceptanceChecks: readonly string[];
+  artifactContracts: Readonly<{
+    required: readonly ArtifactContract[];
+    produced: readonly ArtifactContract[];
+  }>;
   changedContentHashes: Readonly<Record<string, string>>;
   transientChunks: readonly Readonly<{ path: string; offset: number; byteLength: number; hash: string; bytesBase64: string }>[];
   semanticCoverage: Readonly<{ complete: boolean; totalBytes: number; coveredBytes: number; coverageHash: string }>;
@@ -588,6 +633,7 @@ export class GitWorktreeBoundary implements WorktreeBoundary {
 function pathMatches(pattern: string, path: string): boolean {
   const expected = pattern.replaceAll('\\', '/');
   const actual = path.replaceAll('\\', '/');
+  if (expected === '**') return true;
   if (expected.endsWith('/**')) {
     const prefix = expected.slice(0, -3);
     return actual === prefix || actual.startsWith(`${prefix}/`);
@@ -645,6 +691,22 @@ async function candidateRead(root: string, task: RunnerTask, path: string): Prom
   const target = await realpath(resolve(root, normalized));
   if (!containedPath(root, target)) throw new RunnerError('path_violation', `Read escapes candidate: ${path}`);
   return readFile(target, 'utf8');
+}
+
+async function candidateFileHash(root: string, task: RunnerTask, path: string): Promise<string | undefined> {
+  const normalized = requireAllowedRelative(task, path);
+  const candidate = resolve(root, normalized);
+  let metadata;
+  try { metadata = await lstat(candidate); }
+  catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw cause;
+  }
+  const target = await realpath(candidate);
+  if (metadata.isSymbolicLink() || !metadata.isFile() || !containedPath(root, target)) {
+    throw new RunnerError('path_violation', `Artifact path is not a contained regular file: ${path}`);
+  }
+  return sha256(await readFile(target));
 }
 
 async function candidateWrite(root: string, task: RunnerTask, path: string, content: string): Promise<void> {
@@ -797,6 +859,9 @@ function validateDriftFinding(value: DriftFinding, task: RunnerTask, sealedChang
 
 function validateTask(task: RunnerTask, executionHash: string): void {
   if (task.status !== 'ready' || task.executionHash !== executionHash) throw new RunnerError('authority_mismatch', 'Authority did not resolve the exact ready task.');
+  if (task.taskType !== undefined && !runnerTaskTypes.has(task.taskType)) {
+    throw new RunnerError('invalid_task', 'Task type is not part of the approved execution vocabulary.');
+  }
   if (![task.intentBaseline.contentHash, task.solutionBaseline.contentHash, task.executionHash].every(validHash)) {
     throw new RunnerError('invalid_task', 'Task hashes are invalid.');
   }
@@ -804,6 +869,26 @@ function validateTask(task: RunnerTask, executionHash: string): void {
   if (task.allowedPaths.length === 0) throw new RunnerError('invalid_task', 'Task allowed path fence is empty.');
   if (task.acceptanceCommands.length === 0) throw new RunnerError('invalid_task', 'Task has no acceptance command.');
   task.acceptanceCommands.forEach(validateCommand);
+  const artifactTypes = new Set([
+    'decision', 'source', 'test', 'schema', 'api-contract', 'data-contract', 'documentation', 'release',
+  ]);
+  for (const contracts of [task.requiredArtifacts ?? [], task.producedArtifacts ?? []]) {
+    const keys = new Set<string>();
+    for (const contract of contracts) {
+      if (
+        typeof contract.key !== 'string' || !contract.key.trim() || keys.has(contract.key)
+        || !artifactTypes.has(contract.type)
+        || typeof contract.description !== 'string' || !contract.description.trim()
+        || !Array.isArray(contract.paths) || contract.paths.length === 0
+        || contract.paths.some((item) => typeof item !== 'string' || !item.trim()
+          || isAbsolute(item) || item === '..' || item.startsWith('../'))
+        || !Array.isArray(contract.requiredEvidence)
+        || contract.requiredEvidence.length === 0
+        || contract.requiredEvidence.some((item) => !['file_hash', 'independent_check'].includes(item))
+      ) throw new RunnerError('invalid_task', 'Task artifact contract is invalid.');
+      keys.add(contract.key);
+    }
+  }
   if (!(['job', 'use', 'touch', 'dont', 'done'] as const).every((key) => task.brief[key]?.trim())) {
     throw new RunnerError('invalid_task', "Brief needs JOB, USE, TOUCH, DON'T, and DONE.");
   }
@@ -955,8 +1040,8 @@ export class LocalRunner {
         execute,
         read: (path: string) => candidateRead(record.worktreeRoot, record.task, path),
         write: (path: string, content: string) => {
-          if (record.task.taskType === 'Verify') {
-            throw new RunnerError('path_violation', 'Verify tasks are read-only.');
+          if (record.task.taskType && readOnlyTaskTypes.has(record.task.taskType)) {
+            throw new RunnerError('path_violation', `${record.task.taskType} tasks are read-only.`);
           }
           return candidateWrite(record.worktreeRoot, record.task, path, content);
         },
@@ -968,9 +1053,9 @@ export class LocalRunner {
       }
       const changes = await this.options.worktrees.changes(record.worktreeRoot);
       await enforceChanges(record.worktreeRoot, record.task, changes);
-      if ((record.task.taskType === 'Decide' || record.task.taskType === 'Implement' || record.task.taskType === 'Repair' || record.task.repair)
+      if ((record.task.taskType && changeProducingTaskTypes.has(record.task.taskType) || record.task.repair)
         && changes.length === 0) {
-        throw new RunnerError('evidence_invalid', 'Decide, Implement, and Repair tasks must produce at least one bounded changed file.');
+        throw new RunnerError('evidence_invalid', 'Change-producing tasks must produce at least one bounded changed file.');
       }
       const seal = await sealCandidate(record.worktreeRoot, record.task, changes);
       const withoutHash = {
@@ -1105,6 +1190,10 @@ export class LocalRunner {
         protectedAssertions: [...(record.task.protectedAssertions ?? [])],
         exclusions: [...(record.task.exclusions ?? [])],
         acceptanceChecks: [...(record.task.acceptanceChecks ?? [])],
+        artifactContracts: {
+          required: [...(record.task.requiredArtifacts ?? [])],
+          produced: [...(record.task.producedArtifacts ?? [])],
+        },
         changedContentHashes: produced.evidence.candidateContentHashes,
         transientChunks: semantic.chunks,
         semanticCoverage: semantic.coverage,
@@ -1142,9 +1231,30 @@ export class LocalRunner {
           },
         };
       }
+      const artifactFiles = await Promise.all((record.task.producedArtifacts ?? []).map(async (contract) => ({
+        contract,
+        files: (await Promise.all(contract.paths.map(async (path) => {
+          const fileHash = await candidateFileHash(record.worktreeRoot, record.task, path);
+          return fileHash ? { path, sha256: fileHash } : undefined;
+        }))).filter((item): item is { path: string; sha256: string } => Boolean(item)),
+      })));
+      const missingArtifact = artifactFiles.find((artifact) => artifact.files.length === 0);
+      if (outcome.accepted && missingArtifact) {
+        outcome = {
+          accepted: false,
+          drift: {
+            type: 'task_failure',
+            severity: 'blocking',
+            expected: `Produced artifact ${missingArtifact.contract.key} has a changed file matching ${missingArtifact.contract.paths.join(', ')}.`,
+            observed: 'No sealed changed file matched the declared artifact paths.',
+            files: currentChanges.map((change) => change.path),
+            instruction: 'Produce the declared handoff file inside the bounded task paths.',
+          },
+        };
+      }
       if (!outcome.accepted) validateDriftFinding(outcome.drift, record.task, currentChanges);
       const shouldCheckpoint = currentChanges.length > 0
-        && (record.task.taskType !== 'Verify' || !outcome.accepted);
+        && (!(record.task.taskType && readOnlyTaskTypes.has(record.task.taskType)) || !outcome.accepted);
       const checkpoint = shouldCheckpoint && this.options.worktrees.sealAndCheckpoint
         ? await this.options.worktrees.sealAndCheckpoint({
           worktreeRoot: record.worktreeRoot,
@@ -1182,6 +1292,34 @@ export class LocalRunner {
         evidenceHash: terminalEvidence.contentHash,
         evidence: terminalEvidence,
         checkReceipts,
+        verifiedArtifacts: outcome.accepted
+          ? artifactFiles.map(({ contract, files }) => {
+            const evidenceRefs: Array<VerifiedArtifact['evidenceRefs'][number]> = [];
+            for (const requirement of contract.requiredEvidence) {
+              if (requirement === 'file_hash') {
+                evidenceRefs.push(...files.map((file) => ({
+                  requirement,
+                  kind: 'file_hash' as const,
+                  path: file.path,
+                  sha256: file.sha256,
+                })));
+              } else {
+                evidenceRefs.push({
+                  requirement,
+                  kind: 'independent_check' as const,
+                  receiptIndex: 0,
+                  argv: [...checkReceipts[0]!.argv],
+                  exitCode: 0 as const,
+                });
+              }
+            }
+            return {
+              contract: structuredClone(contract),
+              evidenceHash: terminalEvidence.contentHash,
+              evidenceRefs,
+            };
+          })
+          : [],
         ...(checkpoint ? checkpoint : {}),
         ...(drift ? { drift } : {}),
       });
@@ -1420,7 +1558,7 @@ export class CodexBuildWorker implements BuildWorker {
   async run(input: Parameters<BuildWorker['run']>[0]): Promise<void> {
     const response = await this.call([
       'JOB', `${input.brief.job} Task ${input.task.taskId}. Type ${input.task.taskType ?? 'Implement'}.`,
-      'USE', `${input.brief.use} Acceptance checks: ${JSON.stringify(input.task.acceptanceChecks)}. Ordered commands: ${JSON.stringify(input.task.acceptanceCommands.map((command) => ({ argv: command.argv, ...(command.cwd ? { cwd: command.cwd } : {}) })))}.`,
+      'USE', `${input.brief.use} Acceptance checks: ${JSON.stringify(input.task.acceptanceChecks)}. Artifact contracts: ${JSON.stringify({ required: input.task.requiredArtifacts ?? [], produced: input.task.producedArtifacts ?? [] })}. Ordered commands: ${JSON.stringify(input.task.acceptanceCommands.map((command) => ({ argv: command.argv, ...(command.cwd ? { cwd: command.cwd } : {}) })))}.`,
       'TOUCH', input.brief.touch,
       "DON'T", input.brief.dont,
       'DONE', `${input.brief.done} Return every declared command exactly once in the exact declared order. Missing, alternate, extra, or reordered commands fail.`,
@@ -1580,6 +1718,7 @@ export class CodexSemanticCheckWorker implements CheckWorker {
         protectedAssertions: input.context.protectedAssertions,
         exclusions: input.context.exclusions,
         acceptanceChecks: input.context.acceptanceChecks,
+        artifactContracts: input.context.artifactContracts,
         changedContentHashes: input.context.changedContentHashes,
         semanticCoverage: input.context.semanticCoverage,
         changes: input.context.changes,

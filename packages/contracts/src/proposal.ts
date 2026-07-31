@@ -45,7 +45,48 @@ export const ProposalOutputJsonSchema = z.toJSONSchema(ProposalOutputSchema, {
   target: 'draft-2020-12',
 });
 
-export const SolutionTaskTypeSchema = z.enum(['Decide', 'Implement', 'Verify']);
+/** Work stages the solution planner may select. Repair remains verifier-created work. */
+export const SolutionTaskTypeSchema = z.enum([
+  'Inspect',
+  'Decide',
+  'Implement',
+  'Test',
+  'Integrate',
+  'Verify',
+  'Document',
+  'Release',
+]);
+
+export const SolutionArtifactHandoffTypeSchema = z.enum([
+  'decision',
+  'source',
+  'test',
+  'schema',
+  'api-contract',
+  'data-contract',
+  'documentation',
+  'release',
+]);
+
+export const SolutionArtifactEvidenceTypeSchema = z.enum([
+  'file_hash',
+  'independent_check',
+]);
+
+export const SolutionArtifactHandoffDraftSchema = z.object({
+  key: IdentifierSchema,
+  type: SolutionArtifactHandoffTypeSchema,
+  description: z.string().min(1).max(512),
+  paths: z.array(z.string().min(1).max(512)
+    .regex(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*[*?\[\]])[^\0]+$/)).min(1),
+  requiredEvidence: z.array(SolutionArtifactEvidenceTypeSchema).min(1),
+}).strict();
+
+export const SolutionFeatureDependencyDraftSchema = z.object({
+  featureKey: IdentifierSchema,
+  dependsOnFeatureKey: IdentifierSchema,
+  artifacts: z.array(SolutionArtifactHandoffDraftSchema).min(1),
+}).strict();
 
 export const SolutionFeatureDraftSchema = z.object({
   key: IdentifierSchema,
@@ -74,6 +115,7 @@ export const SolutionProposalOutputSchema = z.object({
   features: z.array(SolutionFeatureDraftSchema).min(1),
   roles: z.array(SolutionRoleDraftSchema).min(1),
   assignments: z.array(SolutionRoleAssignmentSchema).min(1),
+  dependencies: z.array(SolutionFeatureDependencyDraftSchema).default([]),
 }).strict();
 
 export const SolutionProposalOutputJsonSchema = z.toJSONSchema(SolutionProposalOutputSchema, {
@@ -131,6 +173,10 @@ export type IntentNodeDraft = z.infer<typeof IntentNodeDraftSchema>;
 export type QuestionDraft = z.infer<typeof QuestionDraftSchema>;
 export type ProposalOutput = z.infer<typeof ProposalOutputSchema>;
 export type SolutionTaskType = z.infer<typeof SolutionTaskTypeSchema>;
+export type SolutionArtifactHandoffType = z.infer<typeof SolutionArtifactHandoffTypeSchema>;
+export type SolutionArtifactEvidenceType = z.infer<typeof SolutionArtifactEvidenceTypeSchema>;
+export type SolutionArtifactHandoffDraft = z.infer<typeof SolutionArtifactHandoffDraftSchema>;
+export type SolutionFeatureDependencyDraft = z.infer<typeof SolutionFeatureDependencyDraftSchema>;
 export type SolutionFeatureDraft = z.infer<typeof SolutionFeatureDraftSchema>;
 export type SolutionRoleDraft = z.infer<typeof SolutionRoleDraftSchema>;
 export type SolutionRoleAssignment = z.infer<typeof SolutionRoleAssignmentSchema>;

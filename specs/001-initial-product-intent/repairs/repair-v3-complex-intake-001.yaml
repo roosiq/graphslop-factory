@@ -1,0 +1,83 @@
+schema_version: 1
+task_id: repair-v3-complex-intake-001
+type: Repair
+status: accepted
+authorized_at: '2026-07-30T19:30:00-04:00'
+accepted_at: '2026-07-30T20:10:45-04:00'
+evidence: ../evidence/repair-v3-complex-intake-001/result.yaml
+authorization:
+  actor: authenticated_project_owner
+  quote: Fix graphslop
+  protected_baselines: [intent-v3, solution-v3]
+objective: Make vague complex intake converge into a complete, correctly connected, locally generated build pack.
+protected_baselines:
+  intent:
+    id: intent-v3
+    sha256: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution:
+    id: solution-v3
+    sha256: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+expected_base_commit: 1888d431eec4eb3db947a2038dbf7901e3541ea2
+observed_failures:
+  - Discovery stopped while material requirements still needed review.
+  - Explicit answers created provisional requirements instead of confirmed owner decisions.
+  - Question relationships selected unrelated targets and the persisted Intent graph remained sparse.
+  - The graph screen mixed source visualization counts with authoritative graph counts.
+  - A valid complex Solution request exceeded the fixed 120 second local-model timeout.
+  - Build packs and runner prompts omitted approved provisional constraints and exclusions.
+  - Follow-up selection re-asked an issue already answered in newly confirmed owner requirements.
+allowed_paths:
+  - packages/codex-adapter/src/index.ts
+  - packages/control-state/src/project-service.ts
+  - packages/build-pack/src/index.ts
+  - packages/graph-kernel/src/execution/factory.ts
+  - apps/control-plane/src/server.ts
+  - apps/control-plane/src/services/bridge.ts
+  - apps/control-plane/src/web/App.tsx
+  - apps/edge/src/project-workbench.ts
+  - apps/edge/test/project-workbench.test.ts
+  - scripts/start-local.mjs
+  - scripts/run-hosted-model-worker.mjs
+  - .env.example
+  - tests/provider/proposal-provider.test.mjs
+  - tests/factory/project-service.test.mjs
+  - tests/build-pack/build-pack.test.mjs
+  - tests/control-plane/control-plane.test.ts
+  - tests/e2e/owner-workspace.spec.ts
+  - tests/kernel/flywheel-composition-contract.test.mjs
+  - specs/001-initial-product-intent/repairs/repair-v3-complex-intake-001.yaml
+  - specs/001-initial-product-intent/evidence/repair-v3-complex-intake-001/result.yaml
+forbidden_changes:
+  - Add canned or hard-coded public follow-up questions.
+  - Add a new graph, service, dependency, persona system, or product feature.
+  - Change approved Intent or Solution meaning.
+  - Push, merge, publish, or deploy.
+acceptance_checks:
+  - id: COMPLEX-INTAKE-01
+    statement: When the model stops early, deterministic readiness gaps trigger one model-generated high-impact question.
+  - id: COMPLEX-INTAKE-02
+    statement: Intent review is unavailable while a blocking question or required readiness category remains unresolved.
+  - id: COMPLEX-INTAKE-03
+    statement: Requirements extracted from a direct answer are confirmed owner statements and trace to that answer.
+  - id: COMPLEX-INTAKE-04
+    statement: New Intent nodes receive valid typed relationships, and questions target the most relevant requirement.
+  - id: COMPLEX-INTAKE-05
+    statement: Graph screen counts report authoritative graph nodes and links separately from source visualization.
+  - id: COMPLEX-INTAKE-06
+    statement: Local model timeout is configurable and defaults to enough time for a 4096-token Solution response.
+  - id: COMPLEX-INTAKE-07
+    statement: Every node in the approved Intent baseline is available to Solution planning, execution prompts, protected assertions, exclusions, and build packs regardless of its earlier provisional status.
+  - id: COMPLEX-INTAKE-08
+    statement: The neighborhood food-sharing scenario reaches a generated Solution and build pack with requirement-derived roles.
+  - id: COMPLEX-INTAKE-09
+    statement: Hosted and local intake use the same readiness gate and never expose Intent approval while required understanding is missing.
+  - id: COMPLEX-INTAKE-10
+    statement: Model output is promoted to an owner-confirmed requirement only when its source quote is grounded in that owner's answer.
+  - id: COMPLEX-INTAKE-11
+    statement: A proposed follow-up is suppressed when confirmed owner statements already resolve the same issue.
+brief:
+  job: Fix the hard vague-project path.
+  use: The failed neighborhood food-sharing run and approved v3 baselines.
+  touch: Only the listed intake, graph, model, pack, runner, and test files.
+  dont: Add canned questions. Add product scope. Push or deploy.
+  done: The same complex idea reaches a traced build pack. Tests and browser proof pass.

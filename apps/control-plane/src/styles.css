@@ -2230,7 +2230,7 @@ button.danger {
 .drub-message {
   max-width: 88%;
   padding: 12px 14px 10px;
-  opacity: .08;
+  opacity: 0;
   background: rgba(236, 226, 212, .04);
   border-radius: 5px 13px 13px 13px;
   transform: translateY(8px);
@@ -2262,7 +2262,7 @@ button.danger {
 }
 .drub-demo.is-building .drub-message {
   animation: drub-message-in .42s ease-out forwards;
-  animation-delay: calc(var(--step) * .7s);
+  animation-delay: var(--delay, 0ms);
 }
 .drub-graph {
   min-width: 0;
@@ -2300,7 +2300,7 @@ button.danger {
   left: 5%;
   right: 5%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   pointer-events: none;
 }
 .drub-graph-lanes span {
@@ -2328,7 +2328,7 @@ button.danger {
 }
 .drub-demo.is-building .drub-graph-canvas path {
   animation: drub-edge-in .62s ease-out forwards;
-  animation-delay: calc(var(--step) * .7s + .18s);
+  animation-delay: var(--delay, 0ms);
 }
 .drub-graph-node {
   position: absolute;
@@ -2339,7 +2339,7 @@ button.danger {
   align-items: center;
   gap: 7px;
   padding: 7px 8px;
-  opacity: .06;
+  opacity: 0;
   color: #cbc4bb;
   background: rgba(24, 27, 32, .96);
   border-radius: 7px;
@@ -2361,11 +2361,12 @@ button.danger {
 }
 .drub-graph-node.is-intent i { background: #9489d8; }
 .drub-graph-node.is-solution i { background: #65b6a6; }
+.drub-graph-node.is-role i { background: #d5ad74; }
 .drub-graph-node.is-execution i { background: #cf7866; }
 .drub-graph-node.is-guard i { background: #d5ad74; }
 .drub-demo.is-building .drub-graph-node {
   animation: drub-node-in .4s ease-out forwards;
-  animation-delay: calc(var(--step) * .7s + .08s);
+  animation-delay: var(--delay, 0ms);
 }
 .drub-graph > footer {
   display: flex;
@@ -3359,10 +3360,11 @@ button.danger,
   right: 18px;
   left: 18px;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(90px, 1fr);
   gap: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: auto;
   color: #bcb4aa;
   background: rgba(16, 19, 24, .94);
   border-color: rgba(224, 177, 111, .16);

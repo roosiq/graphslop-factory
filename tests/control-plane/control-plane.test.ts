@@ -15,7 +15,12 @@ import {
 import { createControlPlane } from '../../apps/control-plane/src/api/app.js';
 import { SoleOwnerSessions } from '../../apps/control-plane/src/auth/session.js';
 import { redactBoundedSummary } from '../../apps/control-plane/src/services/control.js';
-import { ProjectRunnerBridge, unleasedArtifact } from '../../apps/control-plane/src/services/bridge.js';
+import {
+  ProjectRunnerBridge,
+  dependencyHandoffIsSatisfied,
+  effectiveArtifactTaskId,
+  unleasedArtifact,
+} from '../../apps/control-plane/src/services/bridge.js';
 import {
   FileExecutionArtifactStore,
   FileRepairAuthorityStore,
@@ -47,6 +52,77 @@ const envelope = {
   },
   input: { content: 'Need app.' },
 };
+
+test('dependency release requires the exact independently verified handoff', () => {
+  const edge = {
+    targetNodeRef: { nodeId: 'task-producer' },
+    attributes: {
+      artifacts: [{
+        key: 'api-contract',
+        paths: ['src/api.ts'],
+        requiredEvidence: ['file_hash'],
+      }],
+    },
+  };
+  const accepted = new Set(['task-producer']);
+  expect(dependencyHandoffIsSatisfied(edge, accepted, [])).toBe(false);
+  expect(dependencyHandoffIsSatisfied(edge, accepted, [{
+    taskId: 'task-producer',
+    contract: {
+      key: 'api-contract',
+      type: 'api-contract',
+      description: 'The checked API boundary.',
+      paths: ['src/api.ts'],
+      requiredEvidence: ['file_hash'],
+    },
+    evidenceHash: 'e'.repeat(64),
+    evidenceRefs: [{
+      requirement: 'file_hash',
+      kind: 'file_hash',
+      path: 'src/api.ts',
+      sha256: 'f'.repeat(64),
+    }],
+  }])).toBe(true);
+});
+
+test('accepted repair artifacts satisfy the repaired producer task', () => {
+  const taskId = effectiveArtifactTaskId({
+    taskId: 'repair-task-producer',
+    repair: {
+      repairId: 'repair-one',
+      sourceTaskId: 'task-producer',
+      instruction: 'Restore the exact handoff.',
+      attempt: 1,
+    },
+  });
+  expect(taskId).toBe('task-producer');
+  expect(dependencyHandoffIsSatisfied({
+    targetNodeRef: { nodeId: 'task-producer' },
+    attributes: {
+      artifacts: [{
+        key: 'source',
+        paths: ['src/value.ts'],
+        requiredEvidence: ['file_hash'],
+      }],
+    },
+  }, new Set(['task-producer']), [{
+    taskId,
+    contract: {
+      key: 'source',
+      type: 'source',
+      description: 'Repaired source handoff.',
+      paths: ['src/value.ts'],
+      requiredEvidence: ['file_hash'],
+    },
+    evidenceHash: 'e'.repeat(64),
+    evidenceRefs: [{
+      requirement: 'file_hash',
+      kind: 'file_hash',
+      path: 'src/value.ts',
+      sha256: 'f'.repeat(64),
+    }],
+  }])).toBe(true);
+});
 const conversationEnvelope = {
   bindings: {
     stage: 'conversation',
@@ -56,6 +132,27 @@ const conversationEnvelope = {
   },
   input: { content: 'Need app.' },
 } as const;
+
+function readyIntentNodes(statement = 'Build flow') {
+  const draft = (type: 'Goal' | 'UserType' | 'Behavior' | 'Input' | 'Output' | 'Constraint' | 'SuccessCriterion',
+    value: string) => ({
+    type,
+    statement: value,
+    sourceQuote: statement,
+    normalizedInterpretation: value,
+    confidence: 0.8,
+    status: 'proposed' as const,
+  });
+  return [
+    draft('Goal', statement),
+    draft('UserType', 'A person uses the flow'),
+    draft('Behavior', 'Run the flow'),
+    draft('Input', 'Accept the flow input'),
+    draft('Output', 'Show the flow result'),
+    draft('Constraint', 'Keep the flow bounded'),
+    draft('SuccessCriterion', 'The flow completes'),
+  ];
+}
 
 function cookies(response: Response): string {
   return response.headers.getSetCookie().map((value) => value.split(';', 1)[0]).join('; ');
@@ -542,14 +639,7 @@ describe('production adapter', () => {
           implementationImpact: 1, driftRisk: 1, dependencyCount: 1, blocking: false,
         }],
       }) : ({
-        intentNodes: [{
-          type: 'Goal' as const,
-          statement: 'Build the thing',
-          sourceQuote: 'Build thing',
-          normalizedInterpretation: 'Build the thing',
-          confidence: 0.8,
-          status: 'proposed' as const,
-        }],
+        intentNodes: readyIntentNodes('Build the thing'),
         corrections: [],
         questions: [{
           text: 'Anything else?',
@@ -815,10 +905,7 @@ describe('production adapter', () => {
       corrections: [], currentQuestion: null, questionResolutions: [], projections: [], approvedBaselines: [],
     }, {
       propose: async () => ({
-        intentNodes: [{
-          type: 'Goal' as const, statement: 'Build flow', sourceQuote: 'Build flow',
-          normalizedInterpretation: 'Build flow', confidence: 0.8, status: 'proposed' as const,
-        }],
+        intentNodes: readyIntentNodes('Build flow'),
         corrections: [],
         questions: [{
           text: 'Defer this?', category: 'Scope' as const, uncertaintyReduction: 1,

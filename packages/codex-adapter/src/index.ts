@@ -13,6 +13,8 @@ export type ProposalContext = {
   readonly priorIntentNodes: readonly {
     readonly stableId: string;
     readonly statement: string;
+    readonly type?: string;
+    readonly status?: string;
   }[];
   readonly priorQuestions?: readonly {
     readonly text: string;
@@ -20,6 +22,8 @@ export type ProposalContext = {
     readonly disposition: 'open' | 'answered' | 'deferred';
     readonly ownerContent?: string;
   }[];
+  /** Present only when deterministic intake checks need one more model question. */
+  readonly readinessGaps?: readonly string[];
 };
 
 export interface ProposalProvider {
@@ -76,6 +80,20 @@ export type CodexProposalCall = (
   output: StructuredOutputContract,
 ) => Promise<unknown>;
 
+function solutionProposalSchemaFor(intentNodeIds: readonly string[]): Readonly<Record<string, unknown>> {
+  const schema = structuredClone(SolutionProposalOutputJsonSchema) as {
+    properties?: {
+      features?: { items?: { properties?: { intentNodeIds?: { items?: Record<string, unknown> } } } };
+      roles?: { items?: { properties?: { intentNodeIds?: { items?: Record<string, unknown> } } } };
+    };
+  };
+  for (const collection of [schema.properties?.features, schema.properties?.roles]) {
+    const itemSchema = collection?.items?.properties?.intentNodeIds?.items;
+    if (itemSchema) itemSchema.enum = [...intentNodeIds];
+  }
+  return schema as Readonly<Record<string, unknown>>;
+}
+
 export type LocalModelInfo = Readonly<{
   connected: boolean;
   name: string;
@@ -94,19 +112,36 @@ type OpenAIChatCompletion = {
   }[];
 };
 
+export function parseLocalQwenTimeout(value: unknown, minimum = 1): number {
+  const timeout = value === undefined || value === null || value === '' ? 300_000 : Number(value);
+  if (!Number.isInteger(timeout) || timeout < minimum || timeout > 1_800_000) {
+    throw new Error(`Local model timeout must be an integer from ${minimum} to 1800000 milliseconds.`);
+  }
+  return timeout;
+}
+
 /**
  * Small OpenAI-compatible client for the loopback llama.cpp server. It never
  * sends project text anywhere except the configured local URL.
  */
 export class LocalQwenClient {
   private resolvedModel?: string;
+  private readonly baseUrl: string;
+  private readonly configuredModel?: string;
+  private readonly timeoutMs: number;
+  private readonly fetcher: typeof fetch;
 
   constructor(
-    private readonly baseUrl = 'http://127.0.0.1:8001/v1',
-    private readonly configuredModel?: string,
-    private readonly timeoutMs = 120_000,
-    private readonly fetcher: typeof fetch = fetch,
-  ) {}
+    baseUrl = 'http://127.0.0.1:8001/v1',
+    configuredModel?: string,
+    timeoutMs = 300_000,
+    fetcher: typeof fetch = fetch,
+  ) {
+    this.baseUrl = baseUrl;
+    this.configuredModel = configuredModel;
+    this.timeoutMs = parseLocalQwenTimeout(timeoutMs);
+    this.fetcher = fetcher;
+  }
 
   async info(): Promise<LocalModelInfo> {
     try {
@@ -169,7 +204,21 @@ export class LocalQwenClient {
         ...init,
         signal: controller.signal,
       });
-      if (!response.ok) throw new Error(`Local Qwen request failed (${response.status}).`);
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const body = await response.json() as { error?: { message?: unknown } };
+          if (typeof body.error?.message === 'string') {
+            const message = body.error.message.replace(/\s+/g, ' ').trim();
+            if (/failed to initialize samplers: failed to parse grammar/i.test(message)) {
+              detail = 'Failed to initialize samplers: failed to parse grammar';
+            }
+          }
+        } catch {
+          // A status code is still useful when the local server returns no JSON.
+        }
+        throw new Error(`Local Qwen request failed (${response.status})${detail ? `: ${detail}` : '.'}`);
+      }
       return response;
     } finally {
       clearTimeout(timeout);
@@ -183,17 +232,33 @@ function shortModelName(model: string): string {
 }
 
 /**
- * llama.cpp expands maxLength into grammar rules and rejects these product
- * schemas before inference. Keep the structural constraints in generation;
- * the authoritative Zod parse below still enforces string length.
+ * llama.cpp expands maxLength and some regular expressions into grammar rules
+ * it cannot compile. Keep structural constraints in generation; the
+ * authoritative Zod parse below still enforces string length and patterns.
  */
 function llamaCppGenerationSchema(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(llamaCppGenerationSchema);
   if (!value || typeof value !== 'object') return value;
   return Object.fromEntries(
     Object.entries(value as Record<string, unknown>)
-      .filter(([key]) => key !== 'maxLength')
-      .map(([key, child]) => [key, llamaCppGenerationSchema(child)]),
+      .filter(([key]) => key !== 'maxLength' && key !== 'pattern')
+      .map(([key, child]) => {
+        if (['properties', 'patternProperties', '$defs', 'definitions', 'dependentSchemas'].includes(key)) {
+          if (!child || typeof child !== 'object' || Array.isArray(child)) return [key, child];
+          return [key, Object.fromEntries(
+            Object.entries(child as Record<string, unknown>)
+              .map(([name, schema]) => [name, llamaCppGenerationSchema(schema)]),
+          )];
+        }
+        if (['items', 'contains', 'additionalProperties', 'unevaluatedProperties', 'propertyNames',
+          'not', 'if', 'then', 'else', 'unevaluatedItems', 'contentSchema'].includes(key)) {
+          return [key, llamaCppGenerationSchema(child)];
+        }
+        if (['prefixItems', 'allOf', 'anyOf', 'oneOf'].includes(key) && Array.isArray(child)) {
+          return [key, child.map(llamaCppGenerationSchema)];
+        }
+        return [key, child];
+      }),
   );
 }
 
@@ -214,13 +279,19 @@ export class CodexProposalProvider implements ProposalProvider, SolutionProposal
       'CURRENT INTENT',
       ...(context.priorIntentNodes.length === 0
         ? ['None yet.']
-        : context.priorIntentNodes.map((node) => `${node.stableId}: ${node.statement}`)),
+        : context.priorIntentNodes.map((node) =>
+          `${node.stableId}${node.type ? ` [${node.type}]` : ''}${node.status ? ` (${node.status})` : ''}: ${node.statement}`)),
       'QUESTION HISTORY',
       ...(priorQuestions.length === 0
         ? ['None yet.']
         : priorQuestions.map((question) =>
           `${question.disposition.toUpperCase()} [${question.category}] ${question.text}`
           + (question.ownerContent ? ` ANSWER: ${question.ownerContent}` : ''))),
+      ...(context.readinessGaps?.length ? [
+        'READINESS GAPS',
+        ...context.readinessGaps,
+        'Ask exactly one new, high-impact question that helps resolve one listed gap.',
+      ] : []),
       'TOUCH',
       'Suggestions only.',
       "DON'T",
@@ -250,22 +321,24 @@ export class CodexProposalProvider implements ProposalProvider, SolutionProposal
       'USE',
       ...context.intentNodes.map((node) => `${node.id} [${node.type}] ${node.statement}`),
       'TOUCH',
-      'Suggested Feature nodes, Role nodes, and Feature USES Role assignments only.',
+      'Suggested Feature nodes, Role nodes, Feature USES Role assignments, and Feature dependency handoff contracts only.',
       "DON'T",
-      'Change the needs. Add generic roles by habit. Use Plan, Build, Check, Decide, Implement, or Verify as role names. Create IDs, approval, time, files, or code.',
+      'Change the needs. Add generic roles by habit. Use Plan, Build, Check, Decide, Implement, or Verify as role names. Create IDs, approval, time, files, code, or Repair work.',
       'DONE',
       'Return exactly one JSON object with these keys:',
-      '{"features":[{"key":"short-key","name":"product behavior","intentNodeIds":["exact intent id"]}],"roles":[{"key":"short-key","name":"specific expert lens","intentNodeIds":["exact intent id"],"job":"one short sentence","use":["short input"],"touch":["short responsibility"],"dont":["short boundary"],"done":["short proof"]}],"assignments":[{"featureKey":"exact feature key","roleKey":"exact role key","taskTypes":["Decide|Implement|Verify"]}]}',
+      '{"features":[{"key":"short-key","name":"product behavior","intentNodeIds":["exact intent id"]}],"roles":[{"key":"short-key","name":"specific expert lens","intentNodeIds":["exact intent id"],"job":"one short sentence","use":["short input"],"touch":["short responsibility"],"dont":["short boundary"],"done":["short proof"]}],"assignments":[{"featureKey":"exact feature key","roleKey":"exact role key","taskTypes":["Inspect|Decide|Implement|Test|Integrate|Verify|Document|Release"]}],"dependencies":[{"featureKey":"dependent feature key","dependsOnFeatureKey":"prerequisite feature key","artifacts":[{"key":"handoff-key","type":"decision|source|test|schema|api-contract|data-contract|documentation|release","description":"short handoff description","paths":["exact/repo/relative/file"],"requiredEvidence":["file_hash","independent_check"]}]}]}',
       'Pick roles from the needs. Examples are lenses like interaction design, frontend engineering, privacy review, model integration, accessibility, or quality assurance. These are examples, not a required list.',
       'Merge overlapping roles. Do not create a role unless a need makes it useful.',
       'Every feature and role must trace to exact IDs from USE.',
-      'Every feature must receive Decide, Implement, and Verify work across its assigned roles.',
+      'Select only the work stages each feature needs. Every feature must receive Implement and Verify work across its assigned roles.',
       'Verification must be assigned to a role that does not implement the same feature.',
+      'Dependencies are optional. When one feature needs another, use exact feature keys, name the dependent feature first, and include one or more typed artifact handoffs with the evidence required to prove each handoff.',
+      'Never create Repair work. Repair is verifier-created work, not planner scope.',
       'Keep every role instruction blunt, short, and plain.',
     ].join('\n');
     return validateSolutionProposal(await this.call(prompt, {
       name: 'solution_proposal',
-      schema: SolutionProposalOutputJsonSchema,
+      schema: solutionProposalSchemaFor(context.intentNodes.map((node) => node.id)),
     }), context);
   }
 }
@@ -304,6 +377,40 @@ export function validateSolutionProposal(
     }
   }
 
+  const dependencyKeys = new Set<string>();
+  const artifactKeysByProducer = new Map<string, Set<string>>();
+  const prerequisitesByFeature = new Map<string, string[]>();
+  for (const dependency of proposal.dependencies) {
+    if (!featureKeys.has(dependency.featureKey) || !featureKeys.has(dependency.dependsOnFeatureKey)) {
+      throw new Error('Every feature dependency must reference proposed features.');
+    }
+    if (dependency.featureKey === dependency.dependsOnFeatureKey) {
+      throw new Error('A feature cannot depend on itself.');
+    }
+    const dependencyKey = `${dependency.featureKey}:${dependency.dependsOnFeatureKey}`;
+    if (dependencyKeys.has(dependencyKey)) {
+      throw new Error('Feature dependencies must be unique.');
+    }
+    dependencyKeys.add(dependencyKey);
+    const artifactKeys = new Set<string>();
+    const producerArtifactKeys = artifactKeysByProducer.get(dependency.dependsOnFeatureKey) ?? new Set<string>();
+    for (const artifact of dependency.artifacts) {
+      if (artifactKeys.has(artifact.key)) {
+        throw new Error('Artifact handoff keys must be unique within a feature dependency.');
+      }
+      if (producerArtifactKeys.has(artifact.key)) {
+        throw new Error('Artifact handoff keys must be unique for each producing feature.');
+      }
+      artifactKeys.add(artifact.key);
+      producerArtifactKeys.add(artifact.key);
+    }
+    artifactKeysByProducer.set(dependency.dependsOnFeatureKey, producerArtifactKeys);
+    const prerequisites = prerequisitesByFeature.get(dependency.featureKey) ?? [];
+    prerequisites.push(dependency.dependsOnFeatureKey);
+    prerequisitesByFeature.set(dependency.featureKey, prerequisites);
+  }
+  assertAcyclicFeatureDependencies(featureKeys, prerequisitesByFeature);
+
   const tasksByFeature = new Map<string, Set<string>>();
   const rolesByFeatureAndTask = new Map<string, Set<string>>();
   const usedRoles = new Set<string>();
@@ -327,8 +434,8 @@ export function validateSolutionProposal(
   }
   for (const featureKey of featureKeys) {
     const taskTypes = tasksByFeature.get(featureKey) ?? new Set<string>();
-    if (!['Decide', 'Implement', 'Verify'].every((taskType) => taskTypes.has(taskType))) {
-      throw new Error('Every feature needs Decide, Implement, and Verify work.');
+    if (!['Implement', 'Verify'].every((taskType) => taskTypes.has(taskType))) {
+      throw new Error('Every feature needs Implement and Verify work.');
     }
     const implementRoles = rolesByFeatureAndTask.get(`${featureKey}:Implement`) ?? new Set<string>();
     const verifyRoles = rolesByFeatureAndTask.get(`${featureKey}:Verify`) ?? new Set<string>();
@@ -337,6 +444,25 @@ export function validateSolutionProposal(
     }
   }
   return proposal;
+}
+
+function assertAcyclicFeatureDependencies(
+  featureKeys: ReadonlySet<string>,
+  prerequisitesByFeature: ReadonlyMap<string, readonly string[]>,
+): void {
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (featureKey: string): void => {
+    if (visiting.has(featureKey)) {
+      throw new Error('Feature dependencies must be acyclic.');
+    }
+    if (visited.has(featureKey)) return;
+    visiting.add(featureKey);
+    for (const prerequisite of prerequisitesByFeature.get(featureKey) ?? []) visit(prerequisite);
+    visiting.delete(featureKey);
+    visited.add(featureKey);
+  };
+  for (const featureKey of featureKeys) visit(featureKey);
 }
 
 function canonicalName(value: string): string {

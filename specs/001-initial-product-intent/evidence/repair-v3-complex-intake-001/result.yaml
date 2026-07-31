@@ -1,0 +1,53 @@
+schema_version: 1
+task_id: repair-v3-complex-intake-001
+outcome: accepted
+verified_at: '2026-07-30T20:10:45-04:00'
+base_commit: 1888d431eec4eb3db947a2038dbf7901e3541ea2
+protected_baselines:
+  intent-v3: 04a584cf9c1936806d152b5a7f0ebd77b36a3e598bebccc3379a12c79949313a
+  solution-v3: 356684d777608959c1d5b0dcce613219377c6c2d36937117698291b0f4ada727
+verification:
+  - command: npm run ci
+    outcome: pass
+    evidence:
+      - workspace build and typecheck passed
+      - Cloudflare Worker dry-run build passed
+      - all workspace tests passed
+      - UI model tests passed 5 of 5
+      - browser tests passed 8 of 8 at 320, 360, 768, 1280, and 3840 pixels
+  - command: npm test --workspace @graphslop/edge
+    outcome: pass
+    evidence:
+      - edge tests passed 4 of 4 after final hosted readiness guard
+  - command: npm run build --workspace @graphslop/codex-adapter && node --test tests/provider/proposal-provider.test.mjs
+    outcome: pass
+    evidence:
+      - provider tests passed 6 of 6 after hosted timeout wiring
+  - command: node --check scripts/run-hosted-model-worker.mjs && node --check scripts/start-local.mjs
+    outcome: pass
+  - command: git diff --check
+    outcome: pass
+browser_acceptance:
+  model: Qwen3.6-27B-UD-Q4_K_XL
+  scenario: Neighborhood food-sharing application from vague language
+  initial_message: Need app. Neighbors got extra food. Other people need dinner. Make handoff easy and safe. No marketplace nonsense. Maybe volunteers help. Keep it simple.
+  focused_questions_asked: 1
+  repeated_questions: 0
+  authoritative_intent_nodes: 21
+  authoritative_intent_edges: 10
+  solution_features: 5
+  generated_roles:
+    - Interaction Design
+    - Frontend Engineering
+    - Backend Engineering
+    - Privacy and Security Review
+    - Quality Assurance
+  execution_tasks: 20
+  build_pack_download_available: true
+  browser_console_errors: 0
+independent_review:
+  specification: approved
+  quality: approved
+deployment:
+  pushed: false
+  deployed: false
