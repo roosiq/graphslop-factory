@@ -28,7 +28,11 @@ import {
   HmacCheckDriftReceiptAuthority,
 } from '../../apps/control-plane/src/services/durable-authority.js';
 import { ProductionControlAdapter } from '../../apps/control-plane/src/services/production.js';
-import { nextProjectQuestion, unresolvedQuestionNodes } from '../../apps/control-plane/src/web/progress.js';
+import {
+  nextProjectQuestion,
+  preferredRequirementsAction,
+  unresolvedQuestionNodes,
+} from '../../apps/control-plane/src/web/progress.js';
 import { LOOPBACK_HOST, MemoryControlAdapter, startControlPlane } from '../../apps/control-plane/src/server.js';
 
 const hash = 'a'.repeat(64);
@@ -88,6 +92,11 @@ test('project progress prefers the active question and ignores settled graph que
     text: 'What should the result show?',
     source: 'active',
   });
+});
+
+test('project progress prefers requirements review over collecting optional extra detail', () => {
+  expect(preferredRequirementsAction(['submit-message', 'review-intent'])).toBe('review-intent');
+  expect(preferredRequirementsAction(['submit-message'])).toBe('submit-message');
 });
 
 test('dependency release requires the exact independently verified handoff', () => {

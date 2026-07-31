@@ -1,5 +1,12 @@
 import { asRecord, display, graphNodes, type AnyRecord } from './model.js';
 
+export function preferredRequirementsAction(commands: readonly string[]) {
+  if (commands.includes('approve-intent')) return 'approve-intent' as const;
+  if (commands.includes('review-intent')) return 'review-intent' as const;
+  if (commands.includes('submit-message')) return 'submit-message' as const;
+  return null;
+}
+
 export function unresolvedQuestionNodes(project: AnyRecord) {
   return graphNodes(project, 'intent').filter((node) =>
     node.type === 'Question'

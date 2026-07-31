@@ -30,7 +30,7 @@ import {
 } from './api.js';
 import { demoProject } from './demo.js';
 import { asList, asRecord, display, graphNodes, lifecycleLabel, stringList } from './model.js';
-import { nextProjectQuestion, unresolvedQuestionNodes } from './progress.js';
+import { nextProjectQuestion, preferredRequirementsAction, unresolvedQuestionNodes } from './progress.js';
 
 const api = new OwnerApi();
 const demoMode = import.meta.env.VITE_REMOTE_DEMO === '1';
@@ -773,6 +773,7 @@ function OverviewPage({
   const lifecycle = String(project.project?.lifecycleState ?? 'CAPTURE');
   const buildPackReady = ['EXECUTION', 'VERIFICATION', 'REPAIR', 'COMPLETE'].includes(lifecycle);
   const has = (command: OwnerCommand) => Boolean(bindingFor(bindings, command));
+  const requirementsAction = preferredRequirementsAction(bindings.map((binding) => binding.command));
   const questionCanBeAnswered = projectQuestion?.source === 'active'
     ? has('resolve-question')
     : Boolean(projectQuestion) && has('submit-message');
@@ -780,12 +781,12 @@ function OverviewPage({
     ? { title: 'Answer this question', detail: display(projectQuestion.text), label: 'Answer question', page: 'intake' as PageKey }
     : requirements.length === 0
       ? { title: 'Describe what you want to build', detail: 'Start rough. Dun will record the requirements and ask what matters.', label: 'Add requirements', page: 'intake' as PageKey }
-      : has('submit-message') && baselines.length === 0
-        ? { title: 'Continue the requirements', detail: `${requirements.length} captured. Add the missing detail that will move the project to review.`, label: 'Continue requirements', page: 'intake' as PageKey }
-      : has('approve-intent')
+      : requirementsAction === 'approve-intent'
         ? { title: 'Approve the requirements', detail: 'Confirm the product needs before Dun creates a solution.', label: 'Review requirements', page: 'build' as PageKey }
-        : has('review-intent')
+        : requirementsAction === 'review-intent'
           ? { title: 'Review the requirements', detail: 'Check the captured needs and relationships before approval.', label: 'Open requirements', page: 'graph' as PageKey }
+          : requirementsAction === 'submit-message' && baselines.length === 0
+            ? { title: 'Continue the requirements', detail: `${requirements.length} captured. Add the missing detail that will move the project to review.`, label: 'Continue requirements', page: 'intake' as PageKey }
           : has('propose-solution')
             ? { title: 'Create the solution', detail: 'Turn the approved requirements into features, roles, and work.', label: 'Create solution', page: 'build' as PageKey }
             : has('approve-solution')
