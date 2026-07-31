@@ -738,7 +738,9 @@ code { font-family: "DM Mono", monospace; font-size: .92em; }
   text-decoration: none;
   font-size: 11px;
   font-weight: 750;
+  cursor: pointer;
 }
+.primary-link:disabled { cursor: wait; opacity: .68; }
 .primary-link:hover { background: #d8ff86; }
 .metric-grid {
   max-width: 1220px;
@@ -762,6 +764,7 @@ code { font-family: "DM Mono", monospace; font-size: .92em; }
   grid-template-columns: minmax(0, 1.5fr) minmax(300px, .7fr);
   gap: 18px;
 }
+.overview-columns.overview-single-column { grid-template-columns: 1fr; }
 .card, .ledger-card {
   background: #11150f;
   border: 1px solid var(--line);
@@ -1642,6 +1645,12 @@ button.primary:hover:not(:disabled) {
   background: var(--ember-bright);
   border-color: var(--ember-bright);
 }
+.project-flow article.is-current > span {
+  color: var(--ember-bright);
+  border-color: var(--ember-bright);
+  box-shadow: 0 0 0 4px rgba(224, 177, 111, .11);
+}
+.project-flow article.is-current strong { color: var(--bone); }
 .project-flow strong { color: #ddd5ca; }
 .project-flow small { color: #8f8b85; }
 .project-flow article > i { background: rgba(226, 205, 176, .13); }

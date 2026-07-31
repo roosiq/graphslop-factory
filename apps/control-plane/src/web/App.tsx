@@ -588,6 +588,8 @@ function StageActions({
       : null;
   const tasks = graphNodes(project, 'execution');
   const baselines = asList(project.approvedBaselines);
+  const buildPackReady = ['EXECUTION', 'VERIFICATION', 'REPAIR', 'COMPLETE']
+    .includes(String(project.project?.lifecycleState));
   const hasBlockingQuestion = Boolean(project.currentQuestion?.questionId && project.currentQuestion?.blocking);
   const readinessTypes = graphNodes(project, 'intent').filter((node) => node.type !== 'Question'
     && !['rejected', 'superseded'].includes(String(node.status))).map((node) => String(node.type));
@@ -606,7 +608,7 @@ function StageActions({
     {button('review-solution', 'Review solution')}
     {button('approve-solution', 'Approve solution', approvalInput(project, 'solution', actorId))}
     {button('compile-execution', 'Generate build pack')}
-    {baselines.length >= 2 && tasks.length > 0 && <button className="stage-action download" disabled={busy}
+    {buildPackReady && baselines.length >= 2 && tasks.length > 0 && <button className="stage-action download" disabled={busy}
       onClick={() => void download()}>Download .factory.zip<span>↓</span></button>}
     {hasBlockingQuestion
       ? <small>Answer or defer the open question before approving requirements.</small>
@@ -618,6 +620,15 @@ function StageActions({
 }
 
 type PageKey = 'overview' | 'intake' | 'graph' | 'build' | 'settings';
+type ProjectNextStep = Readonly<{
+  title: string;
+  detail: string;
+  label: string;
+} & (
+  | { page: PageKey; command?: never; download?: never }
+  | { command: OwnerCommand; page?: never; download?: never }
+  | { download: true; page?: never; command?: never }
+)>;
 
 const pageMeta: Record<PageKey, { label: string; short: string; description: string }> = {
   overview: { label: 'overview', short: '⌂', description: 'Review the project and next step' },
@@ -722,7 +733,6 @@ function OverviewPage({
   go,
   nodes,
   edges,
-  actorId,
 }: {
   project: AnyProject;
   bindings: readonly NextBinding[];
@@ -732,7 +742,6 @@ function OverviewPage({
   go: (page: PageKey) => void;
   nodes: AppNode[];
   edges: Edge[];
-  actorId?: string;
 }) {
   const intent = graphNodes(project, 'intent');
   const solution = graphNodes(project, 'solution');
@@ -740,10 +749,37 @@ function OverviewPage({
   const questions = intent.filter((node) => node.type === 'Question' && !['confirmed', 'superseded'].includes(String(node.status))).length
     + (project.currentQuestion?.questionId ? 1 : 0);
   const baselines = asList(project.approvedBaselines);
-  const nextPage: PageKey = project.currentQuestion?.questionId || intent.length === 0 ? 'intake'
-    : baselines.length < 2 ? 'build'
-    : execution.length === 0 ? 'build'
-    : 'graph';
+  const lifecycle = String(project.project?.lifecycleState ?? 'CAPTURE');
+  const buildPackReady = ['EXECUTION', 'VERIFICATION', 'REPAIR', 'COMPLETE'].includes(lifecycle);
+  const has = (command: OwnerCommand) => Boolean(bindingFor(bindings, command));
+  const nextStep: ProjectNextStep = project.currentQuestion?.questionId && has('resolve-question')
+    ? { title: 'Answer Dun’s question', detail: 'One answer will resolve the next important requirement.', label: 'Answer question', page: 'intake' as PageKey }
+    : intent.length === 0 || (has('submit-message') && baselines.length === 0)
+      ? { title: 'Describe what you want to build', detail: 'Start rough. Dun will record the requirements and ask what matters.', label: 'Add requirements', page: 'intake' as PageKey }
+      : has('approve-intent')
+        ? { title: 'Approve the requirements', detail: 'Confirm the product needs before Dun creates a solution.', label: 'Review requirements', page: 'build' as PageKey }
+        : has('review-intent')
+          ? { title: 'Review the requirements', detail: 'Check the captured needs and relationships before approval.', label: 'Open requirements', page: 'graph' as PageKey }
+          : has('propose-solution')
+            ? { title: 'Create the solution', detail: 'Turn the approved requirements into features, roles, and work.', label: 'Create solution', page: 'build' as PageKey }
+            : has('approve-solution')
+              ? { title: 'Approve the solution', detail: 'Confirm what will be built and who the work needs.', label: 'Review solution', page: 'build' as PageKey }
+              : has('review-solution')
+                ? { title: 'Review the solution', detail: 'Check the proposed features and roles before approval.', label: 'Open solution', page: 'build' as PageKey }
+                : has('compile-execution')
+                  ? { title: 'Generate the build pack', detail: 'Both baselines are approved. Compile the tasks and files your coding tool can run.', label: 'Generate build pack', command: 'compile-execution' }
+                  : buildPackReady
+                    ? { title: 'Your build pack is ready', detail: 'Download it, unzip it in a repository, and run it with your coding harness.', label: 'Download .factory.zip', download: true }
+                    : { title: 'Review the project graph', detail: 'Trace the approved requirements to the planned work.', label: 'Open graph', page: 'graph' as PageKey };
+  const intentApproved = baselines.some((item) => item.graphKind === 'intent');
+  const solutionApproved = baselines.some((item) => item.graphKind === 'solution');
+  const workflow = [
+    ['1', 'requirements', intentApproved, 'capture and approve the goal'],
+    ['2', 'solution', solutionApproved, 'approve features and roles'],
+    ['3', 'tasks', buildPackReady && execution.length > 0, 'compile bounded work'],
+    ['4', 'build pack', buildPackReady && execution.length > 0, 'download and build anywhere'],
+  ] as const;
+  const currentStep = workflow.findIndex((item) => !item[2]);
   return <div className="page-scroll overview-page">
     <SectionHeading
       eyebrow="Project overview"
@@ -753,44 +789,35 @@ function OverviewPage({
     />
     <section className="next-step-card">
       <div className="next-step-copy">
-        <span className="step-number">next</span>
+        <span className="step-number">{currentStep === -1 ? 'done' : `${currentStep + 1} / 4`}</span>
         <div>
           <p className="eyebrow">recommended next step</p>
-          <h2>{pageMeta[nextPage].description}</h2>
-          <p>{nextPage === 'intake'
-            ? 'Answer the question or add context.'
-            : nextPage === 'build'
-              ? 'Review, approve, and compile.'
-              : 'Trace requirements to planned work.'}</p>
+          <h2>{nextStep.title}</h2>
+          <p>{nextStep.detail}</p>
         </div>
       </div>
-      <PageLink page={nextPage} go={go} className="primary-link">Open {pageMeta[nextPage].label}<span>→</span></PageLink>
+      {nextStep.command !== undefined
+        ? <button className="primary-link" disabled={busy} onClick={() => void run(nextStep.command, {})}>{nextStep.label}<span>→</span></button>
+        : nextStep.download
+          ? <button className="primary-link" disabled={busy} onClick={() => void download()}>{nextStep.label}<span>↓</span></button>
+          : <PageLink page={nextStep.page} go={go} className="primary-link">{nextStep.label}<span>→</span></PageLink>}
     </section>
     <section className="metric-grid" aria-label="Project metrics">
       <article><small>requirements</small><strong>{intent.filter((node) => node.type !== 'Question').length}</strong><span>{questions ? `${questions} open question${questions === 1 ? '' : 's'}` : 'No blocking questions'}</span></article>
       <article><small>solution</small><strong>{solution.length}</strong><span>{baselines.some((item) => item.graphKind === 'solution') ? 'Baseline approved' : 'Approval required'}</span></article>
-      <article><small>tasks</small><strong>{execution.length}</strong><span>{execution.length ? 'Tasks ready' : 'No tasks yet'}</span></article>
+      <article><small>tasks</small><strong>{execution.length}</strong><span>{buildPackReady ? 'Compiled and ready' : execution.length ? 'Planned, not compiled' : 'No tasks yet'}</span></article>
       <article><small>relationships</small><strong>{edges.length}</strong><span>{nodes.length} graph nodes</span></article>
     </section>
-    <div className="overview-columns">
+    <div className="overview-columns overview-single-column">
       <section className="card project-flow-card">
         <header><div><p className="eyebrow">Project workflow</p><h2>From requirements to build pack</h2></div></header>
         <div className="project-flow">
-          {[
-            ['1', 'requirements', intent.length > 0, 'capture the goal'],
-            ['2', 'solution', solution.length > 0, 'shape the product'],
-            ['3', 'tasks', execution.length > 0, 'create bounded tasks'],
-            ['4', 'build pack', execution.length > 0 && baselines.length >= 2, 'use files anywhere'],
-          ].map(([number, label, done, help], index) => <article key={String(label)} className={done ? 'is-done' : ''}>
+          {workflow.map(([number, label, done, help], index) => <article key={String(label)} className={done ? 'is-done' : workflow.slice(0, index).every((item) => item[2]) ? 'is-current' : ''}>
             <span>{done ? '✓' : number}</span>
             <div><strong>{label}</strong><small>{help}</small></div>
             {index < 3 && <i />}
           </article>)}
         </div>
-      </section>
-      <section className="card action-card">
-        <header><div><p className="eyebrow">available actions</p><h2>Move the project forward</h2></div></header>
-        <StageActions project={project} bindings={bindings} busy={busy} run={run} download={download} actorId={actorId} />
       </section>
     </div>
   </div>;
@@ -948,10 +975,12 @@ function BuildPage({
   const roles = solution.filter((node) => node.type === 'Role');
   const roleName = new Map(roles.map((node) => [node.id, display(node.statementOrName)]));
   const tasks = graphNodes(project, 'execution');
+  const buildPackReady = ['EXECUTION', 'VERIFICATION', 'REPAIR', 'COMPLETE']
+    .includes(String(project.project?.lifecycleState));
   return <div className="page-scroll build-page">
     <SectionHeading eyebrow="Export" title="Build pack"
       description="Approve the requirements and solution, then download the complete project plan."
-      aside={tasks.length > 0 && baselines.length >= 2
+      aside={buildPackReady && tasks.length > 0 && baselines.length >= 2
         ? <button className="primary" disabled={busy} onClick={() => void download()}>Download .factory.zip</button>
         : undefined} />
     <section className="build-action-band">
@@ -1610,7 +1639,7 @@ export function App() {
 
   const pageContent = project && ({
     overview: <OverviewPage project={project} bindings={bindings} busy={busy} run={run} download={download}
-      go={go} nodes={nodes} edges={edges} actorId={user?.id} />,
+      go={go} nodes={nodes} edges={edges} />,
     intake: <IntakePage project={project} bindings={bindings} busy={busy}
       thinking={Boolean(pendingJob) || activeCommand === 'submit-message' || activeCommand === 'resolve-question'} run={run} go={go} />,
     graph: <GraphPage project={project} projectReady={Boolean(projectReady)} nodes={nodes} edges={edges}
